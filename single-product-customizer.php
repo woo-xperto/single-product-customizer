@@ -5,8 +5,8 @@
 * Description:       An esential helper tool for woocommerce single product page. Borderless freedom to customize single product page. 
 * Requires at least:  6.5
 * Requires PHP:       8.1
-* Tested up to:       7.0
-* Version:           1.0.7
+* Tested up to:       7.1
+* Version:           1.0.8
 * Author:            WebCartisan
 * Author URI:        http://webcartisan.com/
 * License:           GPL-2.0+
@@ -67,7 +67,7 @@ if ( ! defined( 'SPPCFW_DEV' ) ) {
 }
 
 if ( ! defined( 'SPPCFW_VERSION' ) ) {
-	define( 'SPPCFW_VERSION', '1.0.7' );
+	define( 'SPPCFW_VERSION', '1.0.8' );
 }
 
 if ( ! defined( 'SPPCFW_DIR_URL' ) ) {

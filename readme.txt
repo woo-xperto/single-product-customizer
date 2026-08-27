@@ -2,9 +2,9 @@
 Contributors: wooxperto,hasan350,mahmudul47
 Tags: customize woocommerce, woocommerce, product tab, product customizer, variation swatches, quick checkout
 Requires at least: 6.5
-Tested up to: 7.0
+Tested up to: 7.1
 Requires PHP: 8.1
-Stable tag: 1.0.7
+Stable tag: 1.0.8
 License: GPL v2 or later
 License URI: https://www.gnu.org/licenses/old-licenses/gpl-2.0.html
 
@@ -274,6 +274,18 @@ Yes! The plugin is designed to be compatible with standard WooCommerce themes as
 Yes, the Free version includes Quick Checkout with Template 1 (Modern Horizontal layout). Upgrading to Pro unlocks additional templates (Classic Vertical & Split Layout), component visibility controls, and inline billing/shipping checkout forms.
 
 == Changelog ==
+
+### 1.0.8 (August 27, 2026)
+
+- **Fix:** Resolved Quick Checkout item removal errors.
+- **New:** Added Quick Checkout WooCommerce tabs.
+- **Fix:** Fixed Quick Checkout template structure issues.
+- **Fix:** Resolved template selection issues for active licenses.
+- **Fix:** Fixed Pro template image display for active licenses.
+- **Fix:** Resolved Product Details feature display issues for active licenses.
+- **Fix:** Fixed Pro feature visibility issues for active licenses.
+- **Fix:** Improved Quick Checkout compatibility with default WordPress themes.
+- **Fix:** Verified compatibility with WordPress 7.1.
 
 ### 1.0.7 (August 20, 2026)
 - **Fix:** backend category page settings issue resolved.
