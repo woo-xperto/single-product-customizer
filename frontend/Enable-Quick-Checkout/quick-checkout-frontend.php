@@ -503,10 +503,9 @@ if (!class_exists('Sppcfw_Frontend_Quick_Checkout')) {
             remove_action('woocommerce_single_product_summary', 'woocommerce_template_single_meta', 40);
             remove_action('woocommerce_single_product_summary', 'woocommerce_template_single_sharing', 50);
 
-            // Remove after single product summary hooks (related products, upsell products, product data tabs)
+            // Remove after single product summary hooks (related products, upsell products)
             remove_action('woocommerce_after_single_product_summary', 'woocommerce_output_related_products', 20);
             remove_action('woocommerce_after_single_product_summary', 'woocommerce_upsell_display', 15);
-            remove_action('woocommerce_after_single_product_summary', 'woocommerce_output_product_data_tabs', 10);
 
             // Some themes output summary pieces through generic/title hooks.
             remove_action('woocommerce_after_shop_loop_item', 'woocommerce_template_loop_add_to_cart', 10);
@@ -535,6 +534,7 @@ if (!class_exists('Sppcfw_Frontend_Quick_Checkout')) {
             add_action('woocommerce_single_product_summary', [$this, 'sppcfw_display_quick_checkout_template'], 5);
             add_action('woocommerce_after_single_product_summary', [$this, 'sppcfw_auto_add_product_to_cart_template_3'], 4);
             add_action('woocommerce_after_single_product_summary', [$this, 'sppcfw_display_template_3'], 5);
+            add_action('woocommerce_after_single_product_summary', 'woocommerce_output_product_data_tabs', 10);
 
             $this->sppcfw_single_hooks_prepared = true;
         }

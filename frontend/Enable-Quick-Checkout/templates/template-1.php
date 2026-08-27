@@ -17,11 +17,11 @@ if (! defined('ABSPATH')) {
 
         <?php do_action('woocommerce_checkout_before_customer_details'); ?>
 
-        <div class="sppcfw-accordion" id="sppcfw-checkout-accordion">
-            <!-- Cart Section -->
-            <div name="checkout" method="post" class="sppcfw-checkout-wrapper">
+        <form name="checkout" method="post" class="checkout woocommerce-checkout sppcfw-checkout-form" action="<?php echo esc_url(wc_get_checkout_url()); ?>" enctype="multipart/form-data" aria-label="<?php echo esc_attr__('Checkout', 'woocommerce'); ?>">
+
+            <div class="sppcfw-accordion" id="sppcfw-checkout-accordion">
+                <!-- Cart Section -->
                 <div class="sppcfw-accordion-item sppcfw-accordion-item-active" id="sppcfw-cart-section">
-                    <!-- <div class="sppcfw-accordion-item" id="sppcfw-cart-section"> -->
                     <div class="sppcfw-accordion-header" data-section="sppcfw-cart-section">
                         <div class="sppcfw-accordion-header-left">
                             <span class="sppcfw-accordion-icon"><i class="fa-solid fa-cart-shopping"></i></span>
@@ -41,8 +41,6 @@ if (! defined('ABSPATH')) {
 
                     </div>
                 </div>
-            </div>
-            <form name="checkout" method="post" class="checkout woocommerce-checkout sppcfw-checkout-form" action="<?php echo esc_url(wc_get_checkout_url()); ?>" enctype="multipart/form-data" aria-label="<?php echo esc_attr__('Checkout', 'woocommerce'); ?>">
 
                 <!-- Billing Section -->
                 <div class="sppcfw-accordion-item" id="sppcfw-billing-section">
@@ -115,17 +113,16 @@ if (! defined('ABSPATH')) {
                         <?php do_action('sppcfw_after_quick_checkout_initial_payment'); ?>
                     </div>
                 </div>
-            </form>
-        </div>
+            </div><!-- .sppcfw-accordion -->
 
-        <?php wp_nonce_field('woocommerce-process_checkout', 'woocommerce-process-checkout-nonce'); ?>
+            <?php wp_nonce_field('woocommerce-process_checkout', 'woocommerce-process-checkout-nonce'); ?>
 
+            <?php do_action('woocommerce_after_checkout_form', $checkout); ?>
 
-        <?php do_action('woocommerce_after_checkout_form', $checkout); ?>
+        </form>
 
     <?php endif; ?>
 <?php endif; ?>
-</div>
 
 <script>
     // Accordion functionality
