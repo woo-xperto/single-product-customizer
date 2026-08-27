@@ -16,6 +16,13 @@ if (!class_exists('Sppcfw_Frontend_Quick_Checkout')) {
          */
         private $sppcfw_single_hooks_prepared = false;
 
+        /**
+         * Track whether Quick Checkout template has already rendered on the page.
+         *
+         * @var bool
+         */
+        private static $sppcfw_template_rendered = false;
+
         public function __construct()
         {
             // Check if Quick Checkout is enabled and remove hooks
@@ -56,6 +63,39 @@ if (!class_exists('Sppcfw_Frontend_Quick_Checkout')) {
 
             // Render quick checkout product details from a dedicated template.
             add_action('woocommerce_checkout_before_customer_details', array($this, 'sppcfw_render_product_details_before_customer_details'));
+
+            // Filter Gutenberg single product summary blocks in block themes
+            add_filter('render_block', array($this, 'sppcfw_hide_block_theme_summary_blocks'), 10, 2);
+        }
+
+        /**
+         * Filter Gutenberg single product summary blocks in block themes when Quick Checkout is active.
+         *
+         * @param string $block_content Rendered block HTML.
+         * @param array  $block         Block data.
+         * @return string
+         */
+        public function sppcfw_hide_block_theme_summary_blocks($block_content, $block)
+        {
+            if (!$this->sppcfw_is_quick_checkout_active() || !is_product()) {
+                return $block_content;
+            }
+
+            $blocks_to_hide = array(
+                'core/post-title',
+                'core/post-excerpt',
+                'woocommerce/product-rating',
+                'woocommerce/product-price',
+                'woocommerce/add-to-cart-form',
+                'woocommerce/product-meta',
+                'woocommerce/product-sku',
+            );
+
+            if (isset($block['blockName']) && in_array($block['blockName'], $blocks_to_hide, true)) {
+                return '';
+            }
+
+            return $block_content;
         }
 
         /* Check if current theme is a block theme */
@@ -70,7 +110,7 @@ if (!class_exists('Sppcfw_Frontend_Quick_Checkout')) {
         {
             // Guard against recursive rendering (e.g. variable/grouped add-to-cart templates
             // triggering woocommerce_before_add_to_cart_form again while already rendering fallback).
-            if ($this->sppcfw_rendering_fallback) {
+            if ($this->sppcfw_rendering_fallback || self::$sppcfw_template_rendered) {
                 return;
             }
 
@@ -91,6 +131,9 @@ if (!class_exists('Sppcfw_Frontend_Quick_Checkout')) {
 
             // Get the selected template
             $selected_template = get_option('sppcfw_enable_qc', 'default');
+            if (!sppcfw_is_pro_active() && $selected_template !== 'default') {
+                $selected_template = 'template-1';
+            }
 
             // Get template path
             $template_path = $this->sppcfw_get_template_path($selected_template);
@@ -99,6 +142,7 @@ if (!class_exists('Sppcfw_Frontend_Quick_Checkout')) {
             $this->sppcfw_rendering_fallback = true;
             try {
                 if (file_exists($template_path)) {
+                    self::$sppcfw_template_rendered = true;
                     echo '<div class="sppcfw-quick-checkout-wrapper" style="margin: 20px 0;">';
                     include $template_path;
                     echo '</div>';
@@ -106,6 +150,7 @@ if (!class_exists('Sppcfw_Frontend_Quick_Checkout')) {
                     // Fallback to default if template doesn't exist
                     $default_path = $this->sppcfw_get_template_path('default');
                     if (file_exists($default_path)) {
+                        self::$sppcfw_template_rendered = true;
                         echo '<div class="sppcfw-quick-checkout-wrapper" style="margin: 20px 0;">';
                         include $default_path;
                         echo '</div>';
@@ -300,6 +345,13 @@ if (!class_exists('Sppcfw_Frontend_Quick_Checkout')) {
                     'all'
                 );
 
+                if ($this->sppcfw_is_block_theme()) {
+                    wp_add_inline_style(
+                        'sppcfw-quick-checkout-frontend-css',
+                        '.single-product .wp-block-post-title, .single-product .wp-block-woocommerce-product-rating, .single-product .wp-block-woocommerce-product-price, .single-product .wp-block-post-excerpt, .single-product .wp-block-woocommerce-add-to-cart-form, .single-product .wp-block-woocommerce-product-meta, .single-product .wc-block-grid__product-rating, .single-product .wc-block-grid__product-price, .single-product div.product form.cart:not(.checkout) { display: none !important; }'
+                    );
+                }
+
                 // Enqueue Quick Checkout template styles
                 wp_enqueue_style(
                     'sppcfw-quick-checkout-template-css',
@@ -342,6 +394,10 @@ if (!class_exists('Sppcfw_Frontend_Quick_Checkout')) {
         /* Display Quick Checkout Template on Single Product Page (template-1, template-2-free) */
         public function sppcfw_display_quick_checkout_template()
         {
+            if (self::$sppcfw_template_rendered) {
+                return;
+            }
+
             // Check if Quick Checkout is enabled
             $sppcfw_enable_quick_checkout = get_option('sppcfw_enable_quick_checkout', 0);
 
@@ -362,6 +418,7 @@ if (!class_exists('Sppcfw_Frontend_Quick_Checkout')) {
 
                 // Load the template
                 if (file_exists($template_path)) {
+                    self::$sppcfw_template_rendered = true;
                     // Wrap template in a container
                     echo '<div class="sppcfw-quick-checkout-wrapper">';
                     include $template_path;
@@ -370,6 +427,7 @@ if (!class_exists('Sppcfw_Frontend_Quick_Checkout')) {
                     // Fallback to default if template doesn't exist
                     $default_path = $this->sppcfw_get_template_path('default');
                     if (file_exists($default_path)) {
+                        self::$sppcfw_template_rendered = true;
                         echo '<div class="sppcfw-quick-checkout-wrapper">';
                         include $default_path;
                         echo '</div>';
@@ -381,6 +439,10 @@ if (!class_exists('Sppcfw_Frontend_Quick_Checkout')) {
         /* Display template-3 on woocommerce_after_single_product_summary hook */
         public function sppcfw_display_template_3()
         {
+            if (self::$sppcfw_template_rendered) {
+                return;
+            }
+
             // Check if Quick Checkout is enabled
             $sppcfw_enable_quick_checkout = get_option('sppcfw_enable_quick_checkout', 0);
 
@@ -402,6 +464,7 @@ if (!class_exists('Sppcfw_Frontend_Quick_Checkout')) {
 
                 // Load the template
                 if (file_exists($template_path)) {
+                    self::$sppcfw_template_rendered = true;
                     // Wrap template in a container
                     echo '<div class="sppcfw-quick-checkout-wrapper">';
                     include $template_path;

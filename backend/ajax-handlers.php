@@ -125,15 +125,6 @@ class Sppcfw_Quick_Checkout
             wp_send_json_error(array('message' => __('You do not have permission', 'single-product-customizer')));
         }
 
-        $sppcfw_theme = wp_get_theme();
-        if ($sppcfw_theme->exists() && method_exists($sppcfw_theme, 'is_block_theme') && $sppcfw_theme->is_block_theme()) {
-            wp_send_json_error(
-                array(
-                    'message' => __('Quick Checkout cannot be saved while a block theme is active. Switch to a classic theme to change these settings.', 'single-product-customizer'),
-                )
-            );
-        }
-
         $sppcfw_enable_quick_checkout = isset($_POST['sppcfw_enable_quick_checkout']) ? 1 : 0;
         self::sync_quick_checkout_enabled_store((bool) $sppcfw_enable_quick_checkout);
 

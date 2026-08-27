@@ -26,10 +26,9 @@ if (!sppcfw_is_pro_active()) {
     $sppcfw_current_template = 'template-1';
 }
 
-// Template / extra rows only when Quick Checkout is on and a classic theme is active.
-$show_template_selector = !$sppcfw_is_block_theme && !empty($sppcfw_enable_quick_checkout);
-
-$sppcfw_qc_disabled_attr = $sppcfw_is_block_theme ? ' disabled="disabled"' : '';
+// Template / extra rows when Quick Checkout is on.
+$show_template_selector = !empty($sppcfw_enable_quick_checkout);
+$sppcfw_qc_disabled_attr = '';
 ?>
 
 <div>
@@ -46,8 +45,7 @@ $sppcfw_qc_disabled_attr = $sppcfw_is_block_theme ? ' disabled="disabled"' : '';
                             <label for="sppcfw_enable_quick_checkout">
                                 <?php _e('Enable Quick Checkout', 'single-product-customizer'); ?>
                                 <input type="checkbox" name="sppcfw_enable_quick_checkout" id="sppcfw_enable_quick_checkout" value="1" class="sppcfw-enable-quick-checkout-toggle" 
-                                <?php echo $sppcfw_qc_disabled_attr; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?> 
-                                <?php checked(!$sppcfw_is_block_theme && !empty($sppcfw_enable_quick_checkout), 1); ?> />
+                                <?php checked(!empty($sppcfw_enable_quick_checkout), 1); ?> />
                             </label>
                         </th>
                         <td>
@@ -56,11 +54,6 @@ $sppcfw_qc_disabled_attr = $sppcfw_is_block_theme ? ' disabled="disabled"' : '';
                                 <strong>ℹ️ <?php _e('Note:', 'single-product-customizer'); ?></strong>
                                 <?php _e('Enabling this will automatically enable "AJAX add to cart buttons on archives" in WooCommerce settings. Disabling this will automatically disable that setting as well.', 'single-product-customizer'); ?>
                             </p>
-                            <?php if ($sppcfw_is_block_theme): ?>
-                                <p class="description" style="color: #b32d2e;">
-                                    <?php esc_html_e('Quick Checkout is saved as off while a block theme is active and cannot be changed here. Switch to a classic theme to enable and save Quick Checkout again.', 'single-product-customizer'); ?>
-                                </p>
-                            <?php endif; ?>
                         </td>
                     </tr>
                     <tr class="sppcfw_product_options_row" style="<?php echo !$show_template_selector ? 'display:none;' : ''; ?>">
@@ -153,8 +146,7 @@ $sppcfw_qc_disabled_attr = $sppcfw_is_block_theme ? ' disabled="disabled"' : '';
                     null,
                     'primary',
                     'submit_sppcfw_quick_checkout',
-                    true,
-                    $sppcfw_is_block_theme ? array('disabled' => 'disabled') : array()
+                    true
                 );
                 ?>
             </div>
