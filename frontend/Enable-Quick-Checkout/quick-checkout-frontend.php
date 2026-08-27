@@ -360,12 +360,12 @@ if (!class_exists('Sppcfw_Frontend_Quick_Checkout')) {
                     (defined('SPPCFW_DEV') && SPPCFW_DEV ? time() : SPPCFW_VERSION),
                     'all'
                 );
-                // Load Font Awesome for quick checkout template icons.
+                // Load Font Awesome locally for quick checkout template icons.
                 wp_enqueue_style(
                     'sppcfw-font-awesome',
-                    'https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css',
+                    plugins_url('../../backend/backend-variable-switcher/fontawesome.min.css', __FILE__),
                     array(),
-                    '6.5.2',
+                    (defined('SPPCFW_DEV') && SPPCFW_DEV ? time() : SPPCFW_VERSION),
                     'all'
                 );
 
