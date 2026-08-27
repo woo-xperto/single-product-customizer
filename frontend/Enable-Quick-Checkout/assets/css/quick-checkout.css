@@ -85,6 +85,7 @@
 /* --------------------------------------------------------
    TAB NAVIGATION
 ---------------------------------------------------------*/
+.checkout-tabs,
 .sppcfw-checkout-tabs {
   width: 100%;
   max-width: 1200px;
@@ -95,6 +96,7 @@
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
 }
 
+.tab-nav,
 .sppcfw-tab-nav {
   display: flex;
   background: #f9fafb;
@@ -104,16 +106,18 @@
   margin: 0;
 }
 
+.tab-content-wrapper,
 .sppcfw-tab-content-wrapper {
   padding: 24px;
   display: flex;
   flex-direction: column;
 }
 
+.tab-nav button,
 .sppcfw-tab-nav button {
   flex: 1;
-  background: transparent;
-  border: none;
+  background: transparent !important;
+  border: none !important;
   padding: 16px 20px;
   font-size: 16px;
   font-weight: 600;
@@ -124,28 +128,48 @@
   align-items: center;
   justify-content: center;
   gap: 10px;
-  border-bottom: 3px solid transparent;
+  border-bottom: 3px solid transparent !important;
   margin-bottom: -1px;
+  box-shadow: none !important;
+  outline: none;
 }
 
-.sppcfw-tab-nav button:hover {
-  color: #2563eb;
-  border-bottom-color: #2563eb;
+.tab-nav button[type="button"]:hover,
+.tab-nav button[type="button"]:focus,
+.sppcfw-tab-nav button[type="button"]:hover,
+.sppcfw-tab-nav button[type="button"]:focus,
+.tab-nav button:hover,
+.tab-nav button:focus,
+.sppcfw-tab-nav button:hover,
+.sppcfw-tab-nav button:focus {
+  color: #fff !important;
+  border-bottom-color: rgb(17, 126, 136) !important;
+  background-color: rgb(17, 126, 136) !important;
 }
 
-.sppcfw-tab-nav button.sppcfw-active {
-  color: #2563eb;
-  border-bottom-color: #2563eb;
-  background: #ffffff;
+.tab-nav button.active,
+.tab-nav button.sppcfw-active,
+.sppcfw-tab-nav button.active,
+.sppcfw-tab-nav button.sppcfw-active,
+.tab-nav button[type="button"].active,
+.sppcfw-tab-nav button[type="button"].active {
+  color: rgb(17, 126, 136) !important;
+  border-bottom-color: rgb(17, 126, 136) !important;
+  background: #ffffff !important;
+  background-color: #ffffff !important;
 }
 
 /* --------------------------------------------------------
    TAB CONTENT
 ---------------------------------------------------------*/
+.tab-content,
 .sppcfw-tab-content {
   display: none;
 }
 
+.tab-content.active,
+.tab-content.sppcfw-active,
+.sppcfw-tab-content.active,
 .sppcfw-tab-content.sppcfw-active {
   display: block;
 }
@@ -153,6 +177,7 @@
 /* --------------------------------------------------------
    NEXT BUTTON STYLE
 ---------------------------------------------------------*/
+.tab-navigation-buttons,
 .sppcfw-tab-navigation-buttons {
   display: flex;
   justify-content: space-between;
@@ -163,17 +188,21 @@
   gap: 16px;
 }
 
+.next-tab-btn:hover,
 .sppcfw-next-tab-btn:hover {
-  background: #1d4ed8;
+  background: #0e6870;
   transform: translateX(2px);
-  box-shadow: 0 4px 12px rgba(37, 99, 235, 0.3);
+  box-shadow: 0 4px 12px rgba(17, 126, 136, 0.3);
 }
 
+.next-btn-primary,
 .sppcfw-next-btn-primary {
-  background: #2563eb;
+  background: rgb(17, 126, 136);
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
+.next-tab-btn,
+.prev-tab-btn,
 .sppcfw-next-tab-btn,
 .sppcfw-prev-tab-btn {
   padding: 12px 28px;
@@ -186,24 +215,39 @@
   font-family: inherit;
 }
 
+.next-tab-btn,
 .sppcfw-next-tab-btn {
-  background: #2563eb;
+  background: rgb(17, 126, 136);
   color: white;
   margin-left: auto;
 }
 
+.prev-tab-btn,
+.sppcfw-prev-tab-btn {
+  background: #f3f4f6;
+  color: #374151;
+}
+
+.prev-tab-btn:hover,
+.sppcfw-prev-tab-btn:hover {
+  background: #e5e7eb;
+}
+
 /* Responsive */
 @media (max-width: 768px) {
+  .tab-nav,
   .sppcfw-tab-nav {
     flex-wrap: wrap;
     gap: 10px;
   }
 
+  .tab-nav li,
   .sppcfw-tab-nav li {
     padding: 10px 14px;
     font-size: 14px;
   }
 
+  .tab-content,
   .sppcfw-tab-content {
     padding: 15px 0;
   }

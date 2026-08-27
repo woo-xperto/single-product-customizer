@@ -1,5 +1,5 @@
 <?php
-if (! defined('ABSPATH')) {
+if (!defined('ABSPATH')) {
     exit;
 }
 
@@ -13,17 +13,17 @@ if (!($sppcfw_show_product_title || $sppcfw_show_review || $sppcfw_show_product_
 ?>
 
 <div class="sppcfw-product-details">
-    <?php if ($sppcfw_show_product_title) : ?>
+    <?php if ($sppcfw_show_product_title): ?>
         <h1 class="sppcfw-product-title"><?php the_title(); ?></h1>
     <?php endif; ?>
 
-    <?php if ($sppcfw_show_review) : ?>
+    <?php if ($sppcfw_show_review): ?>
         <div class="sppcfw-product-review">
             <?php woocommerce_template_single_rating(); ?>
         </div>
     <?php endif; ?>
 
-    <?php if ($sppcfw_show_product_short_description) : ?>
+    <?php if ($sppcfw_show_product_short_description): ?>
         <div class="sppcfw-product-short-description">
             <?php woocommerce_template_single_excerpt(); ?>
         </div>

@@ -254,26 +254,3 @@ if ( ! function_exists( 'sppcfw_render_help_link' ) ) {
 		return '<span class="wwodgc_youtube-link"><a href="' . esc_url( $url ) . '" target="_blank" rel="noopener noreferrer" style="text-decoration: none;"><span class="dashicons dashicons-youtube" style="color: #FF0000;"></span></a></span>';
 	}
 }
-
-/**
- * Check if current request or referer URL originated from a single product page.
- *
- * @return bool
- */
-if ( ! function_exists( 'sppcfw_is_valid_single_product_referer' ) ) {
-	function sppcfw_is_valid_single_product_referer() {
-		if ( function_exists( 'is_product' ) && is_product() ) {
-			return true;
-		}
-
-		$referer = wp_get_referer();
-		if ( $referer ) {
-			$post_id = url_to_postid( $referer );
-			if ( $post_id && 'product' === get_post_type( $post_id ) ) {
-				return true;
-			}
-		}
-
-		return false;
-	}
-}

@@ -1,12 +1,14 @@
 <?php
 if (!class_exists('Sppcfw_Frontend_Quick_Checkout')) {
-    class Sppcfw_Frontend_Quick_Checkout {
+    class Sppcfw_Frontend_Quick_Checkout
+    {
         /**
          * Prevent recursive fallback rendering in block themes.
          *
          * @var bool
          */
         private $sppcfw_rendering_fallback = false;
+
         /**
          * Prevent re-registering summary hooks multiple times in one request.
          *
@@ -14,7 +16,8 @@ if (!class_exists('Sppcfw_Frontend_Quick_Checkout')) {
          */
         private $sppcfw_single_hooks_prepared = false;
 
-        public function __construct() {
+        public function __construct()
+        {
             // Check if Quick Checkout is enabled and remove hooks
             if ($this->sppcfw_is_quick_checkout_enabled()) {
                 // $this->sppcfw_remove_default_product_hooks();
@@ -23,7 +26,7 @@ if (!class_exists('Sppcfw_Frontend_Quick_Checkout')) {
             // Register WooCommerce template directory
             add_filter('woocommerce_locate_template', [$this, 'sppcfw_locate_custom_template'], 10, 3);
 
-            add_action("wp_enqueue_scripts", [$this, "sppcfw_enqueue_quick_checkout_assets"]);
+            add_action('wp_enqueue_scripts', [$this, 'sppcfw_enqueue_quick_checkout_assets']);
             // Ensure removal runs after WooCommerce has registered its hooks
             add_action('wp', [$this, 'sppcfw_remove_shared_hooks_on_single_product'], 20);
             // Astra/OceanWP and some optimizers can re-attach Woo hooks late,
@@ -33,12 +36,12 @@ if (!class_exists('Sppcfw_Frontend_Quick_Checkout')) {
             add_action('woocommerce_before_single_product', [$this, 'sppcfw_prepare_single_product_hooks_for_quick_checkout'], -999);
 
             // For both block and classic themes, use these hooks
-            // Display template-1 and template-2 on woocommerce_single_product_summary
-            add_action("woocommerce_single_product_summary", [$this, "sppcfw_display_quick_checkout_template"], 5);
+            // Display template-1 and template-2-free on woocommerce_single_product_summary
+            add_action('woocommerce_single_product_summary', [$this, 'sppcfw_display_quick_checkout_template'], 5);
             add_action('woocommerce_single_product_summary', [$this, 'sppcfw_auto_add_product_to_cart'], 4);
 
             // Display template-3 on woocommerce_after_single_product_summary
-            add_action("woocommerce_after_single_product_summary", [$this, "sppcfw_display_template_3"], 5);
+            add_action('woocommerce_after_single_product_summary', [$this, 'sppcfw_display_template_3'], 5);
             add_action('woocommerce_after_single_product_summary', [$this, 'sppcfw_auto_add_product_to_cart_template_3'], 4);
 
             // Fallback hook for block themes that may not fire the above hooks
@@ -50,7 +53,7 @@ if (!class_exists('Sppcfw_Frontend_Quick_Checkout')) {
 
             // Hook into update_order_review to handle empty cart gracefully
             add_action('woocommerce_checkout_update_order_review', array($this, 'sppcfw_handle_empty_cart_order_review'), 5, 1);
- 
+
             // Render quick checkout product details from a dedicated template.
             add_action('woocommerce_checkout_before_customer_details', array($this, 'sppcfw_render_product_details_before_customer_details'));
         }
@@ -116,7 +119,6 @@ if (!class_exists('Sppcfw_Frontend_Quick_Checkout')) {
         /* Register custom templates directory with WooCommerce */
         public function sppcfw_locate_custom_template($template, $template_name, $template_path)
         {
- 
             // Only apply custom templates on single product pages
             if (is_product()) {
                 // Override review-order template for quick checkout
@@ -136,12 +138,11 @@ if (!class_exists('Sppcfw_Frontend_Quick_Checkout')) {
                 }
             }
 
-
             // For checkout templates in subdirectories
-            $is_quick_checkout_request = $this->sppcfw_is_quick_checkout_active()
-                && (
-                    is_product()
-                    || (function_exists('sppcfw_is_valid_single_product_referer') && sppcfw_is_valid_single_product_referer())
+            $is_quick_checkout_request = $this->sppcfw_is_quick_checkout_active() &&
+                (
+                    is_product() ||
+                    (function_exists('sppcfw_is_valid_single_product_referer') && sppcfw_is_valid_single_product_referer())
                 );
 
             if ($is_quick_checkout_request) {
@@ -169,7 +170,7 @@ if (!class_exists('Sppcfw_Frontend_Quick_Checkout')) {
         }
 
         /**
-         * Auto-add product to cart on initial page load for quick checkout (template-1, template-2)
+         * Auto-add product to cart on initial page load for quick checkout (template-1, template-2-free)
          */
         public function sppcfw_auto_add_product_to_cart()
         {
@@ -257,12 +258,11 @@ if (!class_exists('Sppcfw_Frontend_Quick_Checkout')) {
                 ]);
             }
         }
- 
-        /* Register frontend assets for Quick Checkout*/
+
+        /* Register frontend assets for Quick Checkout */
         public function sppcfw_enqueue_quick_checkout_assets()
         {
-
-            if (! is_product()) {
+            if (!is_product()) {
                 return;
             }
             // Check if Quick Checkout is enabled
@@ -339,14 +339,18 @@ if (!class_exists('Sppcfw_Frontend_Quick_Checkout')) {
             }
         }
 
-        /* Display Quick Checkout Template on Single Product Page (template-1, template-2) */
-        public function sppcfw_display_quick_checkout_template() {
+        /* Display Quick Checkout Template on Single Product Page (template-1, template-2-free) */
+        public function sppcfw_display_quick_checkout_template()
+        {
             // Check if Quick Checkout is enabled
             $sppcfw_enable_quick_checkout = get_option('sppcfw_enable_quick_checkout', 0);
 
             if (!empty($sppcfw_enable_quick_checkout) && sppcfw_is_singular()) {
                 // Get selected template
                 $selected_template = get_option('sppcfw_enable_qc', 'default');
+                if (!sppcfw_is_pro_active()) {
+                    $selected_template = 'template-1';
+                }
 
                 // Skip template-3 here (it will be displayed via woocommerce_after_single_product_summary)
                 if ($selected_template === 'template-3') {
@@ -375,7 +379,8 @@ if (!class_exists('Sppcfw_Frontend_Quick_Checkout')) {
         }
 
         /* Display template-3 on woocommerce_after_single_product_summary hook */
-        public function sppcfw_display_template_3() {
+        public function sppcfw_display_template_3()
+        {
             // Check if Quick Checkout is enabled
             $sppcfw_enable_quick_checkout = get_option('sppcfw_enable_quick_checkout', 0);
 
@@ -385,6 +390,10 @@ if (!class_exists('Sppcfw_Frontend_Quick_Checkout')) {
 
                 // Only display template-3 here
                 if ($selected_template !== 'template-3') {
+                    return;
+                }
+
+                if (!sppcfw_is_pro_active()) {
                     return;
                 }
 
@@ -416,6 +425,14 @@ if (!class_exists('Sppcfw_Frontend_Quick_Checkout')) {
 
             $template_file = isset($template_map[$template_name]) ? $template_map[$template_name] : 'quick-checkout-form.php';
             $full_path = $template_dir . $template_file;
+
+            if (!file_exists($full_path) && defined('SPPCFW_PRO_DIR_PATH')) {
+                $pro_path = SPPCFW_PRO_DIR_PATH . 'frontend/Enable-Quick-Checkout/templates/' . $template_file;
+                if (file_exists($pro_path)) {
+                    return $pro_path;
+                }
+            }
+
             return $full_path;
         }
 
@@ -428,7 +445,7 @@ if (!class_exists('Sppcfw_Frontend_Quick_Checkout')) {
         public function sppcfw_allow_empty_cart_checkout($redirect)
         {
             if ($this->sppcfw_is_quick_checkout_active()) {
-                return false; // Don't redirect, allow checkout form to show
+                return false;  // Don't redirect, allow checkout form to show
             }
             return $redirect;
         }
@@ -442,7 +459,7 @@ if (!class_exists('Sppcfw_Frontend_Quick_Checkout')) {
         public function sppcfw_allow_empty_cart_order_review($expired)
         {
             if ($this->sppcfw_is_quick_checkout_active()) {
-                return false; // Don't show expired message, allow empty cart
+                return false;  // Don't show expired message, allow empty cart
             }
             return $expired;
         }
@@ -473,7 +490,7 @@ if (!class_exists('Sppcfw_Frontend_Quick_Checkout')) {
         public function sppcfw_remove_shared_hooks_on_single_product()
         {
             // Only run if Quick Checkout is active and we are on a product page
-            if (! $this->sppcfw_is_quick_checkout_active() || ! is_product()) {
+            if (!$this->sppcfw_is_quick_checkout_active() || !is_product()) {
                 return;
             }
 
@@ -505,7 +522,7 @@ if (!class_exists('Sppcfw_Frontend_Quick_Checkout')) {
          */
         public function sppcfw_prepare_single_product_hooks_for_quick_checkout()
         {
-            if (! $this->sppcfw_is_quick_checkout_active() || ! is_product() || $this->sppcfw_single_hooks_prepared) {
+            if (!$this->sppcfw_is_quick_checkout_active() || !is_product() || $this->sppcfw_single_hooks_prepared) {
                 return;
             }
 
@@ -521,8 +538,6 @@ if (!class_exists('Sppcfw_Frontend_Quick_Checkout')) {
 
             $this->sppcfw_single_hooks_prepared = true;
         }
-
-
 
         /**
          * Render product details block before customer details section.
@@ -543,7 +558,7 @@ if (!class_exists('Sppcfw_Frontend_Quick_Checkout')) {
                 include $template_path;
             }
         }
-    } // Sppcfw_Frontend_Quick_Checkout class end
+    }  // Sppcfw_Frontend_Quick_Checkout class end
 
     new Sppcfw_Frontend_Quick_Checkout();
-} // Sppcfw_Frontend_Quick_Checkout class checking end
+}  // Sppcfw_Frontend_Quick_Checkout class checking end

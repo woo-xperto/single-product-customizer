@@ -1,6 +1,6 @@
 <?php
 // Exit if accessed directly
-if (! defined('ABSPATH')) {
+if (!defined('ABSPATH')) {
     exit;
 }
 
@@ -12,20 +12,22 @@ $template_files = array(
     'template-2' => __('Template 2 - Classic Vertical', 'single-product-customizer'),
 );
 
-$sppcfw_theme          = wp_get_theme();
-$sppcfw_is_block_theme = $sppcfw_theme->exists()
-    && method_exists($sppcfw_theme, 'is_block_theme')
-    && $sppcfw_theme->is_block_theme();
+$sppcfw_theme = wp_get_theme();
+$sppcfw_is_block_theme = $sppcfw_theme->exists() &&
+    method_exists($sppcfw_theme, 'is_block_theme') &&
+    $sppcfw_theme->is_block_theme();
 
 // Get current options (block themes force Quick Checkout off on init priority 11 before this admin view loads).
 $sppcfw_enable_quick_checkout = (int) get_option('sppcfw_enable_quick_checkout', 0);
-$sppcfw_current_template      = get_option('sppcfw_enable_qc', 'template-1');
+$sppcfw_current_template = get_option('sppcfw_enable_qc', 'template-1');
 
-// Force template-1 in admin (no other template selectable/savable from this screen).
-$sppcfw_current_template = 'template-1';
+if (!sppcfw_is_pro_active()) {
+    // Force template-1 in admin when Pro is inactive
+    $sppcfw_current_template = 'template-1';
+}
 
 // Template / extra rows only when Quick Checkout is on and a classic theme is active.
-$show_template_selector = ! $sppcfw_is_block_theme && ! empty($sppcfw_enable_quick_checkout);
+$show_template_selector = !$sppcfw_is_block_theme && !empty($sppcfw_enable_quick_checkout);
 
 $sppcfw_qc_disabled_attr = $sppcfw_is_block_theme ? ' disabled="disabled"' : '';
 ?>
@@ -45,7 +47,7 @@ $sppcfw_qc_disabled_attr = $sppcfw_is_block_theme ? ' disabled="disabled"' : '';
                                 <?php _e('Enable Quick Checkout', 'single-product-customizer'); ?>
                                 <input type="checkbox" name="sppcfw_enable_quick_checkout" id="sppcfw_enable_quick_checkout" value="1" class="sppcfw-enable-quick-checkout-toggle" 
                                 <?php echo $sppcfw_qc_disabled_attr; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?> 
-                                <?php checked(! $sppcfw_is_block_theme && ! empty($sppcfw_enable_quick_checkout), 1); ?> />
+                                <?php checked(!$sppcfw_is_block_theme && !empty($sppcfw_enable_quick_checkout), 1); ?> />
                             </label>
                         </th>
                         <td>
@@ -54,7 +56,7 @@ $sppcfw_qc_disabled_attr = $sppcfw_is_block_theme ? ' disabled="disabled"' : '';
                                 <strong>ℹ️ <?php _e('Note:', 'single-product-customizer'); ?></strong>
                                 <?php _e('Enabling this will automatically enable "AJAX add to cart buttons on archives" in WooCommerce settings. Disabling this will automatically disable that setting as well.', 'single-product-customizer'); ?>
                             </p>
-                            <?php if ($sppcfw_is_block_theme) : ?>
+                            <?php if ($sppcfw_is_block_theme): ?>
                                 <p class="description" style="color: #b32d2e;">
                                     <?php esc_html_e('Quick Checkout is saved as off while a block theme is active and cannot be changed here. Switch to a classic theme to enable and save Quick Checkout again.', 'single-product-customizer'); ?>
                                 </p>
@@ -77,9 +79,21 @@ $sppcfw_qc_disabled_attr = $sppcfw_is_block_theme ? ' disabled="disabled"' : '';
                         </th>
                         <td>
                             <div class="sppcfw_product_checkboxes">
-                                <p class ="sppcfw_show_product_title">Pro Features </p>
-                                <p class ="sppcfw_show_review">Pro Features</p>
-                                <p class ="sppcfw_show_short_description">Pro Features</p>
+                                <?php if (sppcfw_is_pro_active()): ?>
+                                    <p class="sppcfw_show_product_title">
+                                        <input type="checkbox" name="sppcfw_show_product_title" id="sppcfw_show_product_title_cb" value="1" <?php checked((int) get_option('sppcfw_show_product_title', 1), 1); ?> />
+                                    </p>
+                                    <p class="sppcfw_show_review">
+                                        <input type="checkbox" name="sppcfw_show_review" id="sppcfw_show_review_cb" value="1" <?php checked((int) get_option('sppcfw_show_review', 1), 1); ?> />
+                                    </p>
+                                    <p class="sppcfw_show_short_description">
+                                        <input type="checkbox" name="sppcfw_show_short_description" id="sppcfw_show_short_description_cb" value="1" <?php checked((int) get_option('sppcfw_show_short_description', 1), 1); ?> />
+                                    </p>
+                                <?php else: ?>
+                                    <p class="sppcfw_show_product_title"><?php esc_html_e('Pro Features', 'single-product-customizer'); ?></p>
+                                    <p class="sppcfw_show_review"><?php esc_html_e('Pro Features', 'single-product-customizer'); ?></p>
+                                    <p class="sppcfw_show_short_description"><?php esc_html_e('Pro Features', 'single-product-customizer'); ?></p>
+                                <?php endif; ?>
                             </div>
                         </td>
                     </tr>
@@ -92,21 +106,22 @@ $sppcfw_qc_disabled_attr = $sppcfw_is_block_theme ? ' disabled="disabled"' : '';
                                 <div class="sppcfw-template-left">
                                     <div class="sppcfw-fixed-template">
                                         <strong><?php esc_html_e('Selected template:', 'single-product-customizer'); ?></strong>
-                                        <span><?php echo esc_html($template_files['template-1']); ?></span>
+                                        <span><?php echo esc_html(isset($template_files[$sppcfw_current_template]) ? $template_files[$sppcfw_current_template] : $template_files['template-1']); ?></span>
                                     </div>
 
-                                    <!-- Always submit template-1 (cannot be changed) -->
-                                    <input type="hidden" name="sppcfw_enable_qc" id="sppcfw_enable_qc" value="template-1" />
+                                    <input type="hidden" name="sppcfw_enable_qc" id="sppcfw_enable_qc" value="<?php echo esc_attr($sppcfw_current_template); ?>" />
 
                                     <div class="sppcfw-template-image-selector sppcfw-template-preview-picker">
-                                        <?php foreach ($template_files as $value => $label): ?>
-                                            <div class="sppcfw-template-item <?php echo $value === 'template-1' ? 'is-active' : ''; ?>"
+                                        <?php foreach ($template_files as $value => $label): 
+                                            $is_pro_active = sppcfw_is_pro_active();
+                                            $img_name = ($value === 'template-2') ? ($is_pro_active ? 'template-2-pro' : 'template-2-free') : $value;
+                                        ?>
+                                            <div class="sppcfw-template-item <?php echo $value === $sppcfw_current_template ? 'is-active' : ''; ?>"
                                                 role="button"
                                                 tabindex="0"
                                                 data-template="<?php echo esc_attr($value); ?>">
                                                 <div class="sppcfw-template-thumb">
-                                                    <img src="<?php echo plugin_dir_url(__FILE__) . '/assets/img/' . $value . '.png'; ?>" alt="<?php echo esc_attr($label); ?>">
-
+                                                    <img src="<?php echo plugin_dir_url(__FILE__) . 'assets/img/' . $img_name . '.png'; ?>" alt="<?php echo esc_attr($label); ?>">
                                                 </div>
                                                 <span class="sppcfw-template-title"><?php echo esc_html($label); ?></span>
                                             </div>
@@ -116,9 +131,12 @@ $sppcfw_qc_disabled_attr = $sppcfw_is_block_theme ? ' disabled="disabled"' : '';
 
                                 <div class="sppcfw-selected-template-preview">
                                     <div class="sppcfw-select-template-thumb">
+                                        <?php 
+                                        $preview_img = ($sppcfw_current_template === 'template-2') ? (sppcfw_is_pro_active() ? 'template-2-pro' : 'template-2-free') : $sppcfw_current_template;
+                                        ?>
                                         <img id="sppcfw-selected-template-preview-img"
-                                            src="<?php echo plugin_dir_url(__FILE__) . '/assets/img/' . $sppcfw_current_template . '.png'; ?>"
-                                            alt="<?php echo esc_attr($template_files[$sppcfw_current_template]); ?>">
+                                            src="<?php echo plugin_dir_url(__FILE__) . 'assets/img/' . $preview_img . '.png'; ?>"
+                                            alt="<?php echo esc_attr(isset($template_files[$sppcfw_current_template]) ? $template_files[$sppcfw_current_template] : $template_files['template-1']); ?>">
                                     </div>
                                 </div>
                             </div>

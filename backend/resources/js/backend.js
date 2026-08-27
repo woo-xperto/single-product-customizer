@@ -91,16 +91,26 @@ jQuery(document).ready(function(){
 });
 
 
-    // Preview picker: clicking an image updates the right-side preview only.
+    // Preview picker: clicking an image updates selected template input, label, and right-side preview.
     jQuery(document).on('click', '#sppcfw_quick_checkout .sppcfw-template-preview-picker .sppcfw-template-item', function() {
+        var templateVal = jQuery(this).attr('data-template');
         var selectedTemplateImg = jQuery(this).find('.sppcfw-template-thumb img');
         var previewImg = jQuery('#sppcfw-selected-template-preview-img');
+        var titleText = jQuery(this).find('.sppcfw-template-title').text();
 
         jQuery(this)
             .closest('.sppcfw-template-preview-picker')
             .find('.sppcfw-template-item')
             .removeClass('is-active');
         jQuery(this).addClass('is-active');
+
+        if (templateVal) {
+            jQuery('#sppcfw_enable_qc').val(templateVal);
+        }
+
+        if (titleText) {
+            jQuery('.sppcfw-fixed-template span').text(titleText);
+        }
 
         if (selectedTemplateImg.length && previewImg.length) {
             previewImg.attr('src', selectedTemplateImg.attr('src'));
@@ -145,7 +155,23 @@ function sppcfw_submit_quick_checkout_ajax(form) {
                     : 'An error occurred. Please try again.';
 
             if (isSuccess) {
-                sppcfw_show_notice(message, 'success', form);
+                if (isValidObject && response.data && response.data.is_pro_template) {
+                    sppcfw_show_notice('This is a Pro Template', 'danger', form);
+                    // Reset template selection back to template-1 in UI since template-1 remains saved
+                    jQuery('#sppcfw_enable_qc').val('template-1');
+                    jQuery('.sppcfw-template-item').removeClass('is-active');
+                    jQuery('.sppcfw-template-item[data-template="template-1"]').addClass('is-active');
+                    var t1Title = jQuery('.sppcfw-template-item[data-template="template-1"] .sppcfw-template-title').text();
+                    if (t1Title) {
+                        jQuery('.sppcfw-fixed-template span').text(t1Title);
+                    }
+                    var t1Img = jQuery('.sppcfw-template-item[data-template="template-1"] .sppcfw-template-thumb img');
+                    if (t1Img.length && jQuery('#sppcfw-selected-template-preview-img').length) {
+                        jQuery('#sppcfw-selected-template-preview-img').attr('src', t1Img.attr('src'));
+                    }
+                } else {
+                    sppcfw_show_notice(message, 'success', form);
+                }
             } else {
                 sppcfw_show_notice(message, 'error', form);
             }
@@ -156,13 +182,6 @@ function sppcfw_submit_quick_checkout_ajax(form) {
             } else {
                 submitBtn.text(originalText);
             }
-            submitBtn.prop('disabled', false).text(originalText);
-            submitBtn.prop('disabled', false).text(originalText);
-            submitBtn.prop('disabled', false).text(originalText);
-            submitBtn.prop('disabled', false).text(originalText);
-            submitBtn.prop('disabled', false).text(originalText);
-            submitBtn.prop('disabled', false).text(originalText);
-            submitBtn.prop('disabled', false).text(originalText);
         },
         error: function() {
             sppcfw_show_notice('An error occurred. Please try again.', 'error', form);
@@ -173,7 +192,7 @@ function sppcfw_submit_quick_checkout_ajax(form) {
 
 // Display notice message
 function sppcfw_show_notice(message, type, form) {
-    var noticeClass = type === 'success' ? 'notice-success' : 'notice-error';
+    var noticeClass = type === 'success' ? 'notice-success' : (type === 'danger' ? 'notice-danger notice-error' : 'notice-error');
     var noticeHtml = '<div class="notice ' + noticeClass + ' is-dismissible" style="margin: 15px 0;"><p>' + message + '</p><button type="button" class="notice-dismiss"></button></div>';
     
     form.find('.notice').remove();
