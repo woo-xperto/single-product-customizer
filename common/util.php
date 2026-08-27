@@ -254,3 +254,39 @@ if ( ! function_exists( 'sppcfw_render_help_link' ) ) {
 		return '<span class="wwodgc_youtube-link"><a href="' . esc_url( $url ) . '" target="_blank" rel="noopener noreferrer" style="text-decoration: none;"><span class="dashicons dashicons-youtube" style="color: #FF0000;"></span></a></span>';
 	}
 }
+
+/**
+ * Check if the HTTP referer is a valid single product page URL.
+ *
+ * @return bool
+ */
+if ( ! function_exists( 'sppcfw_is_valid_single_product_referer' ) ) {
+	function sppcfw_is_valid_single_product_referer() {
+		$referer = $_SERVER['HTTP_REFERER'] ?? '';
+		$referer = esc_url_raw( $referer );
+
+		// Must be a valid URL
+		if ( empty( $referer ) || ! filter_var( $referer, FILTER_VALIDATE_URL ) ) {
+			return false;
+		}
+
+		// Must be from same site
+		if ( strpos( $referer, home_url() ) !== 0 ) {
+			return false;
+		}
+
+		// Get post ID from URL
+		$post_id = url_to_postid( $referer );
+		if ( ! $post_id ) {
+			return false;
+		}
+
+		// Must be a WooCommerce product
+		if ( get_post_type( $post_id ) !== 'product' ) {
+			return false;
+		}
+
+		// Passed all checks
+		return true;
+	}
+}
