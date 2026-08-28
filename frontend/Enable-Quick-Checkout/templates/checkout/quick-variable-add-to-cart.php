@@ -7,22 +7,26 @@ if (!defined('ABSPATH')) {
     <?php
      global $product;
 
-     if (! $product) {
-         $referer = $_SERVER['HTTP_REFERER'] ?? '';
-         $referer = esc_url_raw($referer);
+     $sppcfw_product = $product;
+
+     if (! $sppcfw_product) {
+         $sppcfw_referer = isset($_SERVER['HTTP_REFERER']) ? esc_url_raw(wp_unslash($_SERVER['HTTP_REFERER'])) : '';
 
          // Get post ID from URL
-         $post_id = url_to_postid($referer);
-         if (! $post_id) {
+         $sppcfw_post_id = url_to_postid($sppcfw_referer);
+         if (! $sppcfw_post_id) {
              return false;
          }
-         $product = wc_get_product($post_id);
+         $sppcfw_product = wc_get_product($sppcfw_post_id);
+         $product        = $sppcfw_product; // phpcs:ignore WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedVariableFound, WordPress.WP.GlobalVariablesOverride.Prohibited
      }
 
-    if ($product->is_type('variable')) {
-        woocommerce_variable_add_to_cart();
-    } else if ($product->is_type('grouped')) {
-        woocommerce_grouped_add_to_cart();
+    if ($sppcfw_product && is_a($sppcfw_product, 'WC_Product')) {
+        if ($sppcfw_product->is_type('variable')) {
+            woocommerce_variable_add_to_cart();
+        } else if ($sppcfw_product->is_type('grouped')) {
+            woocommerce_grouped_add_to_cart();
+        }
     }
     ?>
 </div>

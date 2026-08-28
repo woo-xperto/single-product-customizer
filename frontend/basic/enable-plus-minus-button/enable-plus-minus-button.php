@@ -26,7 +26,7 @@ if( !class_exists("Sppcfw_Frontend_Enable_Plus_Minus_Button")){
                 );
 
                 // Add small inline style to ensure quantity wrapper displays as flex
-                wp_register_style('sppcfw-plus-minus-inline', false);
+                wp_register_style('sppcfw-plus-minus-inline', false, array(), (defined('SPPCFW_VERSION') ? SPPCFW_VERSION : '1.0.0'));
                 wp_enqueue_style('sppcfw-plus-minus-inline');
                 $css = '.quantity{display:flex !important; align-items:center; gap:0.25rem;} .quantity .button, .sppcfw_minus_button, .sppcfw_plus_button{margin-bottom:0 !important;}';
                 wp_add_inline_style('sppcfw-plus-minus-inline', $css);

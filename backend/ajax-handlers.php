@@ -79,7 +79,8 @@ class Sppcfw_Quick_Checkout
      */
     public function handle_save_settings()
     {
-        if (!isset($_POST['nonce']) || !wp_verify_nonce($_POST['nonce'], 'sppcfw_settings_nonce')) {
+        $nonce = isset($_POST['nonce']) ? sanitize_text_field(wp_unslash($_POST['nonce'])) : '';
+        if (empty($nonce) || !wp_verify_nonce($nonce, 'sppcfw_settings_nonce')) {
             wp_send_json_error(array('message' => __('Security check failed', 'single-product-customizer')));
         }
 
@@ -87,25 +88,25 @@ class Sppcfw_Quick_Checkout
             wp_send_json_error(array('message' => __('You do not have permission', 'single-product-customizer')));
         }
 
-        $section_id = isset($_POST['section']) ? sanitize_text_field($_POST['section']) : '';
+        $section_id = isset($_POST['section']) ? sanitize_text_field(wp_unslash($_POST['section'])) : '';
         if (empty($section_id)) {
             wp_send_json_error(array('message' => __('Invalid section', 'single-product-customizer')));
         }
 
-        $form_data = isset($_POST['form_data']) ? $_POST['form_data'] : '';
-        if (empty($form_data)) {
+        $form_data = isset($_POST['form_data']) ? sanitize_text_field(wp_unslash($_POST['form_data'])) : '';
+        if (empty($form_data) || !is_string($form_data)) {
             wp_send_json_error(array('message' => __('No data provided', 'single-product-customizer')));
         }
 
         parse_str($form_data, $parsed_data);
-        $settings_data = isset($parsed_data[$section_id]) ? $parsed_data[$section_id] : array();
+        $settings_data = isset($parsed_data[$section_id]) && is_array($parsed_data[$section_id]) ? $parsed_data[$section_id] : array();
 
         $sanitized_settings = array();
         foreach ($settings_data as $key => $value) {
-            $sanitized_settings[$key] = ($value === 'on') ? 'on' : sanitize_text_field($value);
+            $sanitized_settings[sanitize_key($key)] = ($value === 'on') ? 'on' : sanitize_text_field($value);
         }
 
-        update_option($section_id, $sanitized_settings);
+        update_option(sanitize_key($section_id), $sanitized_settings);
 
         wp_send_json_success(array(
             'message' => __('Settings saved successfully!', 'single-product-customizer'),
@@ -117,7 +118,8 @@ class Sppcfw_Quick_Checkout
      */
     public function handle_save_quick_checkout()
     {
-        if (!isset($_POST['nonce']) || !wp_verify_nonce($_POST['nonce'], 'sppcfw_qc_nonce')) {
+        $nonce = isset($_POST['nonce']) ? sanitize_text_field(wp_unslash($_POST['nonce'])) : '';
+        if (empty($nonce) || !wp_verify_nonce($nonce, 'sppcfw_qc_nonce')) {
             wp_send_json_error(array('message' => __('Security check failed', 'single-product-customizer')));
         }
 
@@ -130,7 +132,7 @@ class Sppcfw_Quick_Checkout
 
         $is_pro_template_attempt = false;
         if ($sppcfw_enable_quick_checkout && isset($_POST['sppcfw_enable_qc'])) {
-            $selected_template = sanitize_text_field($_POST['sppcfw_enable_qc']);
+            $selected_template = sanitize_text_field(wp_unslash($_POST['sppcfw_enable_qc']));
             if (!sppcfw_is_pro_active() && $selected_template !== 'template-1') {
                 $is_pro_template_attempt = true;
                 $selected_template = 'template-1';
@@ -167,10 +169,13 @@ class Sppcfw_Quick_Checkout
      */
     public function update_cart_quantity()
     {
-        check_ajax_referer('sppcfw-quick-checkout', 'nonce');
+        $nonce = isset($_POST['nonce']) ? sanitize_text_field(wp_unslash($_POST['nonce'])) : '';
+        if (empty($nonce) || !wp_verify_nonce($nonce, 'sppcfw-quick-checkout')) {
+            wp_send_json_error(array('message' => __('Security check failed', 'single-product-customizer')));
+        }
 
-        $cart_item_key = isset($_POST['cart_item_key']) ? sanitize_text_field($_POST['cart_item_key']) : '';
-        $quantity = isset($_POST['quantity']) ? absint($_POST['quantity']) : 1;
+        $cart_item_key = isset($_POST['cart_item_key']) ? sanitize_text_field(wp_unslash($_POST['cart_item_key'])) : '';
+        $quantity = isset($_POST['quantity']) ? absint(wp_unslash($_POST['quantity'])) : 1;
 
         if (empty($cart_item_key)) {
             wp_send_json_error(array('message' => __('Invalid cart item.', 'single-product-customizer')));
@@ -212,9 +217,12 @@ class Sppcfw_Quick_Checkout
      */
     public function remove_cart_item()
     {
-        check_ajax_referer('sppcfw-quick-checkout', 'nonce');
+        $nonce = isset($_POST['nonce']) ? sanitize_text_field(wp_unslash($_POST['nonce'])) : '';
+        if (empty($nonce) || !wp_verify_nonce($nonce, 'sppcfw-quick-checkout')) {
+            wp_send_json_error(array('message' => __('Security check failed', 'single-product-customizer')));
+        }
 
-        $cart_item_key = isset($_POST['cart_item_key']) ? sanitize_text_field($_POST['cart_item_key']) : '';
+        $cart_item_key = isset($_POST['cart_item_key']) ? sanitize_text_field(wp_unslash($_POST['cart_item_key'])) : '';
 
         if (empty($cart_item_key)) {
             wp_send_json_error(array('message' => __('Invalid cart item.', 'single-product-customizer')));

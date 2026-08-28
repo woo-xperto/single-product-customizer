@@ -186,7 +186,7 @@ if ( ! class_exists( 'SPPCFW_Pro_Admin_Placeholders' ) ) {
 				wp_die( esc_html__( 'You do not have permission to access this page.', 'single-product-customizer' ) );
 			}
 
-			$page = isset( $_GET['page'] ) ? sanitize_key( wp_unslash( (string) $_GET['page'] ) ) : '';
+			$page = isset( $_GET['page'] ) ? sanitize_key( wp_unslash( (string) $_GET['page'] ) ) : ''; // phpcs:ignore WordPress.Security.NonceVerification.Recommended
 
 			$sppcfw_pro_placeholder_title       = __( 'Single Product Customizer Pro', 'single-product-customizer' );
 			$sppcfw_pro_placeholder_description = '';

@@ -208,7 +208,7 @@ if ( ! class_exists( 'SPPCFW_Setup_Help_Notice' ) ) {
 				return;
 			}
 
-			if ( isset( $_GET['page'] ) && 'sppcfw-welcome' === $_GET['page'] ) {
+			if ( isset( $_GET['page'] ) && 'sppcfw-welcome' === sanitize_key( wp_unslash( $_GET['page'] ) ) ) { // phpcs:ignore WordPress.Security.NonceVerification.Recommended
 				return;
 			}
 

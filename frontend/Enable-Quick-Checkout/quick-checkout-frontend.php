@@ -254,11 +254,11 @@ if (!class_exists('Sppcfw_Frontend_Quick_Checkout')) {
             }
 
             // Add to cart if not already present
-            if (!$in_cart && !isset($_GET['added-to-cart'])) {
+            if (!$in_cart && !isset($_GET['added-to-cart'])) { // phpcs:ignore WordPress.Security.NonceVerification.Recommended
                 WC()->cart->add_to_cart($product_id, 1);
                 wp_safe_remote_post(add_query_arg('added-to-cart', $product_id, home_url()), [
                     'blocking' => false,
-                    'sslverify' => apply_filters('https_local_ssl_verify', false),
+                    'sslverify' => apply_filters('https_local_ssl_verify', false), // phpcs:ignore WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedHooknameFound
                 ]);
             }
         }
@@ -299,11 +299,11 @@ if (!class_exists('Sppcfw_Frontend_Quick_Checkout')) {
             }
 
             // Add to cart if not already present
-            if (!$in_cart && !isset($_GET['added-to-cart'])) {
+            if (!$in_cart && !isset($_GET['added-to-cart'])) { // phpcs:ignore WordPress.Security.NonceVerification.Recommended
                 WC()->cart->add_to_cart($product_id, 1);
                 wp_safe_remote_post(add_query_arg('added-to-cart', $product_id, home_url()), [
                     'blocking' => false,
-                    'sslverify' => apply_filters('https_local_ssl_verify', false),
+                    'sslverify' => apply_filters('https_local_ssl_verify', false), // phpcs:ignore WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedHooknameFound
                 ]);
             }
         }

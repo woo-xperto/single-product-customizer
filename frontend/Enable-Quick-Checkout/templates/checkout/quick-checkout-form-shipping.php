@@ -18,7 +18,11 @@
 
 defined('ABSPATH') || exit;
 
-$fields = WC()->checkout()->get_checkout_fields('shipping');
+if ( ! isset( $sppcfw_checkout ) || ! is_a( $sppcfw_checkout, 'WC_Checkout' ) ) {
+	$sppcfw_checkout = WC()->checkout();
+}
+
+$sppcfw_fields = $sppcfw_checkout->get_checkout_fields('shipping');
 
 ?>
 <div class="woocommerce-shipping-fields">
@@ -32,26 +36,26 @@ $fields = WC()->checkout()->get_checkout_fields('shipping');
 
 		<div class="shipping_address">
 
-			<?php do_action( 'woocommerce_before_checkout_shipping_form', $checkout ); ?>
+			<?php do_action( 'woocommerce_before_checkout_shipping_form', $sppcfw_checkout ); ?>
 
 			<div class="woocommerce-shipping-fields__field-wrapper">
 				<?php
-				$fields = $checkout->get_checkout_fields( 'shipping' );
+				$sppcfw_fields = $sppcfw_checkout->get_checkout_fields( 'shipping' );
 
-				foreach ( $fields as $key => $field ) {
-					woocommerce_form_field( $key, $field, $checkout->get_value( $key ) );
+				foreach ( $sppcfw_fields as $sppcfw_key => $sppcfw_field ) {
+					woocommerce_form_field( $sppcfw_key, $sppcfw_field, $sppcfw_checkout->get_value( $sppcfw_key ) );
 				}
 				?>
 			</div>
 
-			<?php do_action( 'woocommerce_after_checkout_shipping_form', $checkout ); ?>
+			<?php do_action( 'woocommerce_after_checkout_shipping_form', $sppcfw_checkout ); ?>
 
 		</div>
 
 	<?php endif; ?>
 </div>
 <div class="woocommerce-additional-fields">
-	<?php do_action( 'woocommerce_before_order_notes', $checkout ); ?>
+	<?php do_action( 'woocommerce_before_order_notes', $sppcfw_checkout ); ?>
 
 	<?php if ( apply_filters( 'woocommerce_enable_order_notes_field', 'yes' === get_option( 'woocommerce_enable_order_comments', 'yes' ) ) ) : ?>
 
@@ -62,12 +66,12 @@ $fields = WC()->checkout()->get_checkout_fields('shipping');
 		<?php endif; ?>
 
 		<div class="woocommerce-additional-fields__field-wrapper">
-			<?php foreach ( $checkout->get_checkout_fields( 'order' ) as $key => $field ) : ?>
-				<?php woocommerce_form_field( $key, $field, $checkout->get_value( $key ) ); ?>
+			<?php foreach ( $sppcfw_checkout->get_checkout_fields( 'order' ) as $sppcfw_key => $sppcfw_field ) : ?>
+				<?php woocommerce_form_field( $sppcfw_key, $sppcfw_field, $sppcfw_checkout->get_value( $sppcfw_key ) ); ?>
 			<?php endforeach; ?>
 		</div>
 
 	<?php endif; ?>
 
-	<?php do_action( 'woocommerce_after_order_notes', $checkout ); ?>
+	<?php do_action( 'woocommerce_after_order_notes', $sppcfw_checkout ); ?>
 </div>

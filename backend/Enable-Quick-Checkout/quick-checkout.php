@@ -7,7 +7,7 @@ if (!defined('ABSPATH')) {
 // Form submission is handled via AJAX (see ajax-handlers.php)
 
 // Define available templates
-$template_files = array(
+$sppcfw_template_files = array(
     'template-1' => __('Template 1 - Modern Horizontal', 'single-product-customizer'),
     'template-2' => __('Template 2 - Classic Vertical', 'single-product-customizer'),
 );
@@ -27,7 +27,7 @@ if (!sppcfw_is_pro_active()) {
 }
 
 // Template / extra rows when Quick Checkout is on.
-$show_template_selector = !empty($sppcfw_enable_quick_checkout);
+$sppcfw_show_template_selector = !empty($sppcfw_enable_quick_checkout);
 $sppcfw_qc_disabled_attr = '';
 ?>
 
@@ -56,16 +56,16 @@ $sppcfw_qc_disabled_attr = '';
                             </p>
                         </td>
                     </tr>
-                    <tr class="sppcfw_product_options_row" style="<?php echo !$show_template_selector ? 'display:none;' : ''; ?>">
+                    <tr class="sppcfw_product_options_row" style="<?php echo !$sppcfw_show_template_selector ? 'display:none;' : ''; ?>">
                         <th scope="row">
                             <div class="sppcfw_product_options">
-                                <label class="sppcfw_show_product_title" id="sppcfw_show_product_title" for="sppcfw_show_product_title">
+                                <label class="sppcfw_show_product_title" for="sppcfw_show_product_title_cb">
                                     <?php esc_html_e('Show Product Title', 'single-product-customizer'); ?>
                                 </label>
-                                <label class="sppcfw_show_review" id="sppcfw_show_review" for="sppcfw_show_review">
+                                <label class="sppcfw_show_review" for="sppcfw_show_review_cb">
                                     <?php esc_html_e('Show Review', 'single-product-customizer'); ?>
                                 </label>
-                                <label class="sppcfw_show_short_description" id="sppcfw_show_short_description" for="sppcfw_show_short_description">
+                                <label class="sppcfw_show_short_description" for="sppcfw_show_short_description_cb">
                                     <?php esc_html_e('Show Short Description', 'single-product-customizer'); ?>
                                 </label>
                             </div>
@@ -90,7 +90,7 @@ $sppcfw_qc_disabled_attr = '';
                             </div>
                         </td>
                     </tr>
-                    <tr class="sppcfw_quick_checkout_template_row" style="<?php echo !$show_template_selector ? 'display:none;' : ''; ?>">
+                    <tr class="sppcfw_quick_checkout_template_row" style="<?php echo !$sppcfw_show_template_selector ? 'display:none;' : ''; ?>">
                         <th scope="row">
                             <label for="sppcfw_enable_qc"><?php esc_html_e('Select Quick Checkout Template', 'single-product-customizer'); ?></label>
                         </th>
@@ -99,24 +99,24 @@ $sppcfw_qc_disabled_attr = '';
                                 <div class="sppcfw-template-left">
                                     <div class="sppcfw-fixed-template">
                                         <strong><?php esc_html_e('Selected template:', 'single-product-customizer'); ?></strong>
-                                        <span><?php echo esc_html(isset($template_files[$sppcfw_current_template]) ? $template_files[$sppcfw_current_template] : $template_files['template-1']); ?></span>
+                                        <span><?php echo esc_html(isset($sppcfw_template_files[$sppcfw_current_template]) ? $sppcfw_template_files[$sppcfw_current_template] : $sppcfw_template_files['template-1']); ?></span>
                                     </div>
 
                                     <input type="hidden" name="sppcfw_enable_qc" id="sppcfw_enable_qc" value="<?php echo esc_attr($sppcfw_current_template); ?>" />
 
                                     <div class="sppcfw-template-image-selector sppcfw-template-preview-picker">
-                                        <?php foreach ($template_files as $value => $label): 
-                                            $is_pro_active = sppcfw_is_pro_active();
-                                            $img_name = ($value === 'template-2') ? ($is_pro_active ? 'template-2-pro' : 'template-2-free') : $value;
+                                         <?php foreach ($sppcfw_template_files as $sppcfw_value => $sppcfw_label): 
+                                            $sppcfw_is_pro_active = sppcfw_is_pro_active();
+                                            $sppcfw_img_name = ($sppcfw_value === 'template-2') ? ($sppcfw_is_pro_active ? 'template-2-pro' : 'template-2-free') : $sppcfw_value;
                                         ?>
-                                            <div class="sppcfw-template-item <?php echo $value === $sppcfw_current_template ? 'is-active' : ''; ?>"
+                                            <div class="sppcfw-template-item <?php echo $sppcfw_value === $sppcfw_current_template ? 'is-active' : ''; ?>"
                                                 role="button"
                                                 tabindex="0"
-                                                data-template="<?php echo esc_attr($value); ?>">
+                                                data-template="<?php echo esc_attr($sppcfw_value); ?>">
                                                 <div class="sppcfw-template-thumb">
-                                                    <img src="<?php echo esc_url( plugin_dir_url(__FILE__) . 'assets/img/' . $img_name . '.png' ); ?>" alt="<?php echo esc_attr($label); ?>">
+                                                    <img src="<?php echo esc_url( plugin_dir_url(__FILE__) . 'assets/img/' . $sppcfw_img_name . '.png' ); ?>" alt="<?php echo esc_attr($sppcfw_label); ?>">
                                                 </div>
-                                                <span class="sppcfw-template-title"><?php echo esc_html($label); ?></span>
+                                                <span class="sppcfw-template-title"><?php echo esc_html($sppcfw_label); ?></span>
                                             </div>
                                         <?php endforeach; ?>
                                     </div>
@@ -125,11 +125,11 @@ $sppcfw_qc_disabled_attr = '';
                                 <div class="sppcfw-selected-template-preview">
                                     <div class="sppcfw-select-template-thumb">
                                         <?php 
-                                        $preview_img = ($sppcfw_current_template === 'template-2') ? (sppcfw_is_pro_active() ? 'template-2-pro' : 'template-2-free') : $sppcfw_current_template;
+                                        $sppcfw_preview_img = ($sppcfw_current_template === 'template-2') ? (sppcfw_is_pro_active() ? 'template-2-pro' : 'template-2-free') : $sppcfw_current_template;
                                         ?>
                                         <img id="sppcfw-selected-template-preview-img"
-                                            src="<?php echo esc_url( plugin_dir_url(__FILE__) . 'assets/img/' . $preview_img . '.png' ); ?>"
-                                            alt="<?php echo esc_attr(isset($template_files[$sppcfw_current_template]) ? $template_files[$sppcfw_current_template] : $template_files['template-1']); ?>">
+                                            src="<?php echo esc_url( plugin_dir_url(__FILE__) . 'assets/img/' . $sppcfw_preview_img . '.png' ); ?>"
+                                            alt="<?php echo esc_attr(isset($sppcfw_template_files[$sppcfw_current_template]) ? $sppcfw_template_files[$sppcfw_current_template] : $sppcfw_template_files['template-1']); ?>">
                                     </div>
                                 </div>
                             </div>

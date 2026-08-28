@@ -15,17 +15,15 @@ jQuery(document).ready(function() {
             form.block({ message: null, overlayCSS: { background: '#fff', opacity: 0.6 } });
         }
 
-        if ( item_input && typeof item_value !== 'undefined' ) {
-            // Remove any existing input for this submit key, then add a clean hidden field.
-            // Only do this when we can also read the submit's `value` attribute.
-            form.find('input[name="' + item_input + '"]').remove();
-
-            form.append(
-                jQuery("<input type='hidden'>").attr({
-                    name: item_input,
-                    value: item_value
-                })
-            );
+        if ( item_input && typeof item_value !== 'undefined' && item_value !== '' ) {
+            if ( form.find('input[name="' + item_input + '"]').length === 0 ) {
+                form.append(
+                    jQuery("<input type='hidden'>").attr({
+                        name: item_input,
+                        value: item_value
+                    })
+                );
+            }
         }
 
         form.find('input[name=action]').remove();
@@ -35,6 +33,16 @@ jQuery(document).ready(function() {
                 value: 'sppcfw_ajax_add_to_cart'
             })
         );
+
+        if ( sppcfw_ajax_add_to_cart.nonce ) {
+            form.find('input[name=nonce]').remove();
+            form.append(
+                jQuery("<input type='hidden'>").attr({
+                    name: 'nonce',
+                    value: sppcfw_ajax_add_to_cart.nonce
+                })
+            );
+        }
 
         let formData = form.serialize();
         let urlForm = sppcfw_ajax_add_to_cart.ajaxurl;

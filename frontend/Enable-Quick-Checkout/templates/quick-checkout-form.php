@@ -3,7 +3,7 @@
  * Quick Checkout Form Template
  * Uses WooCommerce's default checkout form
  *
- * @package WC_CPT
+ * @package Single_Product_Customizer
  */
 
 if ( ! defined( 'ABSPATH' ) ) {
@@ -13,7 +13,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 global $product;
 
 // Setup quick checkout cart (adds product if not in cart)
-do_action( 'wc_cpt_before_quick_checkout_form', $product );
+do_action( 'sppcfw_before_quick_checkout_form', $product );
 ?>
 
 <div class="sppcfw-quick-checkout">
@@ -24,9 +24,9 @@ do_action( 'wc_cpt_before_quick_checkout_form', $product );
 	<div class="sppcfw-checkout-wrapper">
 		<?php
 			// Always show checkout form
-			$checkout = WC()->checkout();
+			$sppcfw_checkout = WC()->checkout();
 			// Load checkout form template (it already includes before/after hooks)
-			wc_get_template( 'checkout/form-checkout.php', array( 'checkout' => $checkout ) );
+			wc_get_template( 'checkout/form-checkout.php', array( 'checkout' => $sppcfw_checkout ) );
 		?>
 	</div>
 	

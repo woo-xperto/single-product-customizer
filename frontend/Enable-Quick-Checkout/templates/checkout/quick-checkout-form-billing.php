@@ -17,26 +17,30 @@
 
 defined( 'ABSPATH' ) || exit;
 
-$fields = WC()->checkout()->get_checkout_fields( 'billing' );
+if ( ! isset( $sppcfw_checkout ) || ! is_a( $sppcfw_checkout, 'WC_Checkout' ) ) {
+	$sppcfw_checkout = WC()->checkout();
+}
+
+$sppcfw_fields = $sppcfw_checkout->get_checkout_fields( 'billing' );
 
 ?>
 <div class="woocommerce-billing-fields">
-	<?php do_action( 'woocommerce_before_checkout_billing_form', $checkout ); ?>
+	<?php do_action( 'woocommerce_before_checkout_billing_form', $sppcfw_checkout ); ?>
 
 	<div class="woocommerce-billing-fields__field-wrapper">
 		<?php
-		foreach ( $fields as $key => $field ) {
-			woocommerce_form_field( $key, $field, WC()->checkout()->get_value( $key ) );
+		foreach ( $sppcfw_fields as $sppcfw_key => $sppcfw_field ) {
+			woocommerce_form_field( $sppcfw_key, $sppcfw_field, WC()->checkout()->get_value( $sppcfw_key ) );
 		}
 		?>
 	</div>
 
-	<?php do_action( 'woocommerce_after_checkout_billing_form', $checkout ); ?>
+	<?php do_action( 'woocommerce_after_checkout_billing_form', $sppcfw_checkout ); ?>
 </div>
 
 <?php
-if ( ! is_user_logged_in() && $checkout->is_registration_enabled() ) {
-	do_action( 'woocommerce_before_checkout_registration_form', $checkout );
+if ( ! is_user_logged_in() && $sppcfw_checkout->is_registration_enabled() ) {
+	do_action( 'woocommerce_before_checkout_registration_form', $sppcfw_checkout );
 
 	if ( 'no' === get_option( 'woocommerce_registration_generate_username' ) ) {
 		?>
@@ -45,27 +49,27 @@ if ( ! is_user_logged_in() && $checkout->is_registration_enabled() ) {
 			<?php if ( ! get_option( 'woocommerce_registration_generate_password' ) ) { ?>
 				<p class="form-row form-row-wide create-account">
 					<label class="woocommerce-form__label woocommerce-form__label-for-checkbox checkbox">
-						<input class="woocommerce-form__input woocommerce-form__input-checkbox input-checkbox" id="createaccount" <?php checked( ( true === $checkout->get_value( 'createaccount' ) ), true ); ?> type="checkbox" name="createaccount" value="1" /> <span><?php esc_html_e( 'Create an account?', 'single-product-customizer' ); ?></span>
+						<input class="woocommerce-form__input woocommerce-form__input-checkbox input-checkbox" id="createaccount" <?php checked( ( true === $sppcfw_checkout->get_value( 'createaccount' ) ), true ); ?> type="checkbox" name="createaccount" value="1" /> <span><?php esc_html_e( 'Create an account?', 'single-product-customizer' ); ?></span>
 					</label>
 				</p>
 
 				<?php
-				$account_fields = $checkout->get_checkout_fields( 'account' );
+				$sppcfw_account_fields = $sppcfw_checkout->get_checkout_fields( 'account' );
 
-				foreach ( $account_fields as $key => $field ) {
-					$field['class'][] = 'form-row-wide';
-					$field['required'] = false;
-					woocommerce_form_field( $key, $field, WC()->checkout()->get_value( $key ) );
+				foreach ( $sppcfw_account_fields as $sppcfw_key => $sppcfw_field ) {
+					$sppcfw_field['class'][]  = 'form-row-wide';
+					$sppcfw_field['required'] = false;
+					woocommerce_form_field( $sppcfw_key, $sppcfw_field, WC()->checkout()->get_value( $sppcfw_key ) );
 				}
 				?>
 			<?php } else { ?>
 				<p><?php esc_html_e( 'Create an account by entering the information below. If you are a returning customer please login at the top of the page.', 'single-product-customizer' ); ?></p>
 				<?php
-				$account_fields = $checkout->get_checkout_fields( 'account' );
+				$sppcfw_account_fields = $sppcfw_checkout->get_checkout_fields( 'account' );
 
-				foreach ( $account_fields as $key => $field ) {
-					$field['class'][] = 'form-row-wide';
-					woocommerce_form_field( $key, $field, WC()->checkout()->get_value( $key ) );
+				foreach ( $sppcfw_account_fields as $sppcfw_key => $sppcfw_field ) {
+					$sppcfw_field['class'][] = 'form-row-wide';
+					woocommerce_form_field( $sppcfw_key, $sppcfw_field, WC()->checkout()->get_value( $sppcfw_key ) );
 				}
 				?>
 			<?php } ?>
@@ -74,6 +78,6 @@ if ( ! is_user_logged_in() && $checkout->is_registration_enabled() ) {
 		<?php
 	}
 
-	do_action( 'woocommerce_after_checkout_registration_form', $checkout );
+	do_action( 'woocommerce_after_checkout_registration_form', $sppcfw_checkout );
 }
 ?>

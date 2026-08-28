@@ -19,7 +19,7 @@ add_action( 'admin_menu', 'sppcfw_register_welcome_page', 99 );
 add_action( 'current_screen', 'sppcfw_set_welcome_page_title' );
 add_action( 'admin_head', 'sppcfw_set_welcome_page_title', 1 );
 function sppcfw_set_welcome_page_title() {
-	if ( isset( $_GET['page'] ) && 'sppcfw-welcome' === $_GET['page'] ) {
+	if ( isset( $_GET['page'] ) && 'sppcfw-welcome' === sanitize_key( wp_unslash( $_GET['page'] ) ) ) { // phpcs:ignore WordPress.Security.NonceVerification.Recommended
 		global $title;
 		if ( empty( $title ) ) {
 			$title = __( 'Single Product Customizer Welcome', 'single-product-customizer' );
@@ -32,7 +32,7 @@ function sppcfw_set_welcome_page_title() {
  */
 function sppcfw_disable_welcome_page_notices() {
 
-	if ( isset( $_GET['page'] ) && 'sppcfw-welcome' === sanitize_key( wp_unslash( $_GET['page'] ) ) ) {
+	if ( isset( $_GET['page'] ) && 'sppcfw-welcome' === sanitize_key( wp_unslash( $_GET['page'] ) ) ) { // phpcs:ignore WordPress.Security.NonceVerification.Recommended
 		remove_all_actions( 'admin_notices' );
 		remove_all_actions( 'all_admin_notices' );
 	}

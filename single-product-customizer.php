@@ -25,7 +25,7 @@ if( ! defined( 'ABSPATH' ) ){
  */
 add_action( 'init', 'sppcfw_load_textdomain' );
 function sppcfw_load_textdomain() {
-    load_plugin_textdomain( 'single-product-customizer', false, dirname( plugin_basename( __FILE__ ) ) . '/languages' );
+    load_plugin_textdomain( 'single-product-customizer', false, dirname( plugin_basename( __FILE__ ) ) . '/languages' ); // phpcs:ignore PluginCheck.CodeAnalysis.DiscouragedFunctions.load_plugin_textdomainFound, WordPress.WP.DeprecatedFunctions.load_plugin_textdomainFound
 }
 
 
@@ -367,7 +367,7 @@ function sppcfw_send_admin_notification_callback() {
  * Start Add YouTube help link Function
  *******************/
 
-function wodgc_help_youtube_link($link){
+function sppcfw_help_youtube_link( $link ) {
     ?>
     <span class="wwodgc_youtube-link">
         <a href="<?php echo esc_attr($link); ?>"
@@ -394,7 +394,7 @@ if ( ! class_exists( 'Appsero\Client' ) ) {
  *
  * @return void
  */
-function appsero_init_tracker_single_product_customizer() {
+function sppcfw_appsero_init_tracker_single_product_customizer() {
 
     if ( ! class_exists( 'Appsero\Client' ) ) {
       require_once __DIR__ . '/appsero/src/Client.php';
@@ -407,4 +407,4 @@ function appsero_init_tracker_single_product_customizer() {
 
 }
 
-appsero_init_tracker_single_product_customizer();
+sppcfw_appsero_init_tracker_single_product_customizer();

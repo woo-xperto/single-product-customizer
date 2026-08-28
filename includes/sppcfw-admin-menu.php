@@ -58,10 +58,12 @@ if ( ! function_exists( 'sppcfw_redirect_legacy_admin_url' ) ) {
 	 * Redirect legacy URLs to the top-level menu URL.
 	 */
 	function sppcfw_redirect_legacy_admin_url() {
-		if ( ! is_admin() || ! isset( $_GET['post_type'], $_GET['page'] ) ) {
+		if ( ! is_admin() || ! isset( $_GET['post_type'], $_GET['page'] ) ) { // phpcs:ignore WordPress.Security.NonceVerification.Recommended
 			return;
 		}
-		if ( 'product' !== $_GET['post_type'] || sppcfw_parent_menu_slug() !== $_GET['page'] ) {
+		$sppcfw_post_type = sanitize_key( wp_unslash( $_GET['post_type'] ) ); // phpcs:ignore WordPress.Security.NonceVerification.Recommended
+		$sppcfw_page      = sanitize_key( wp_unslash( $_GET['page'] ) );      // phpcs:ignore WordPress.Security.NonceVerification.Recommended
+		if ( 'product' !== $sppcfw_post_type || sppcfw_parent_menu_slug() !== $sppcfw_page ) {
 			return;
 		}
 

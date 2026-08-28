@@ -23,7 +23,8 @@ if( !class_exists( 'Sppcfw_Frontend_Ajax_Add_To_Cart' )){
                 );
                 wp_localize_script( 'sppcfw-ajax-add-to-cart-js', 'sppcfw_ajax_add_to_cart',
                     array( 
-                        'ajaxurl' => admin_url( 'admin-ajax.php' )
+                        'ajaxurl' => admin_url( 'admin-ajax.php' ),
+                        'nonce'   => wp_create_nonce( 'sppcfw_ajax_add_to_cart_nonce' ),
                     )
                 );
             }
@@ -79,45 +80,54 @@ if( !class_exists( 'Sppcfw_Frontend_Ajax_Add_To_Cart' )){
 
 
 
-function sppcfw_ajax_add_to_cart(){
-    // Ensure WooCommerce cart is available.
-    if ( ! function_exists( 'WC' ) ) {
-        wp_die();
-    }
-
-    WC()->initialize_cart();
-
-    // Support the default WooCommerce form field names as well as this plugin's JS modifications.
-    $product_id = 0;
-    if ( isset( $_POST['product_id'] ) ) {
-        $product_id = absint( $_POST['product_id'] );
-    } elseif ( isset( $_POST['add-to-cart'] ) ) {
-        // WooCommerce uses `add-to-cart` as the product id for single add-to-cart forms.
-        $product_id = absint( $_POST['add-to-cart'] );
-    }
-
-    $variation_id = 0;
-    if ( isset( $_POST['variation_id'] ) ) {
-        $variation_id = absint( $_POST['variation_id'] );
-    }
-
-    $quantity = 1;
-    if ( isset( $_POST['quantity'] ) ) {
-        $quantity = max( 1, absint( $_POST['quantity'] ) );
-    }
-
-    if ( empty( $product_id ) ) {
-        if ( function_exists( 'wc_add_notice' ) ) {
-            wc_add_notice( __( 'Please select product options and try again.', 'single-product-customizer' ), 'error' );
+if ( ! function_exists( 'sppcfw_ajax_add_to_cart' ) ) {
+    function sppcfw_ajax_add_to_cart(){
+        if ( isset( $_POST['nonce'] ) ) {
+            $sppcfw_nonce = sanitize_text_field( wp_unslash( $_POST['nonce'] ) );
+            if ( ! wp_verify_nonce( $sppcfw_nonce, 'sppcfw_ajax_add_to_cart_nonce' ) ) {
+                wp_die();
+            }
         }
+
+        // Ensure WooCommerce cart is available.
+        if ( ! function_exists( 'WC' ) ) {
+            wp_die();
+        }
+
+        WC()->initialize_cart();
+
+        // Support the default WooCommerce form field names as well as this plugin's JS modifications.
+        $product_id = 0;
+        if ( isset( $_POST['product_id'] ) ) {
+            $product_id = absint( wp_unslash( $_POST['product_id'] ) ); // phpcs:ignore WordPress.Security.NonceVerification.Missing
+        } elseif ( isset( $_POST['add-to-cart'] ) ) {
+            // WooCommerce uses `add-to-cart` as the product id for single add-to-cart forms.
+            $product_id = absint( wp_unslash( $_POST['add-to-cart'] ) ); // phpcs:ignore WordPress.Security.NonceVerification.Missing
+        }
+
+        $variation_id = 0;
+        if ( isset( $_POST['variation_id'] ) ) {
+            $variation_id = absint( wp_unslash( $_POST['variation_id'] ) ); // phpcs:ignore WordPress.Security.NonceVerification.Missing
+        }
+
+        $quantity = 1;
+        if ( isset( $_POST['quantity'] ) ) {
+            $quantity = max( 1, absint( wp_unslash( $_POST['quantity'] ) ) ); // phpcs:ignore WordPress.Security.NonceVerification.Missing
+        }
+
+        if ( empty( $product_id ) ) {
+            if ( function_exists( 'wc_add_notice' ) ) {
+                wc_add_notice( __( 'Please select product options and try again.', 'single-product-customizer' ), 'error' );
+            }
+            wc_print_notices();
+            wp_die();
+        }
+
+        WC()->cart->add_to_cart( $product_id, $quantity, $variation_id );
+
         wc_print_notices();
         wp_die();
     }
-
-    WC()->cart->add_to_cart( $product_id, $quantity, $variation_id );
-
-    wc_print_notices();
-    wp_die();
 }
 
 add_action( 'wp_ajax_sppcfw_ajax_add_to_cart', 'sppcfw_ajax_add_to_cart' );
@@ -125,8 +135,9 @@ add_action( 'wp_ajax_nopriv_sppcfw_ajax_add_to_cart','sppcfw_ajax_add_to_cart');
 
 
 add_filter('option_woocommerce_cart_redirect_after_add', function($option_value){
-    if(isset($_POST['action'])){
-        if($_POST['action']==='sppcfw_ajax_add_to_cart'){
+    if ( isset( $_POST['action'] ) ) { // phpcs:ignore WordPress.Security.NonceVerification.Missing
+        $sppcfw_action = sanitize_text_field( wp_unslash( $_POST['action'] ) ); // phpcs:ignore WordPress.Security.NonceVerification.Missing
+        if ( 'sppcfw_ajax_add_to_cart' === $sppcfw_action ) {
             return 'no';
         }
     }

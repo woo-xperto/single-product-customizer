@@ -54,7 +54,7 @@ if ( ! function_exists( 'sppcfw_sidebar_tab_url' ) ) {
     }
 }
 
-$active_tab_current = isset( $active_tab ) ? $active_tab : 'basic';
+$sppcfw_active_tab_current = isset( $active_tab ) ? $active_tab : 'basic';
 ?>
 <div class="sppcfw_panel_sidebar">
     <div class="sppcfw_sidebar_header">
@@ -67,7 +67,7 @@ $active_tab_current = isset( $active_tab ) ? $active_tab : 'basic';
         <ul class="sppcfw_sidebar_menu">
             <?php foreach ($sppcfw_sidebar_menus as $menu): ?>
                 <?php if ($menu['type'] === 'link'): ?>
-                    <li class="menu-item<?php echo ( $active_tab_current === $menu['tab'] ) ? ' active-item' : ''; ?>" data-tab="<?php echo esc_attr($menu['tab']); ?>">
+                    <li class="menu-item<?php echo ( $sppcfw_active_tab_current === $menu['tab'] ) ? ' active-item' : ''; ?>" data-tab="<?php echo esc_attr($menu['tab']); ?>">
                         <a href="<?php echo esc_url(sppcfw_sidebar_tab_url($menu['tab'])); ?>" class="item-link" onclick="opensppcfw(event, '<?php echo esc_js($menu['tab']); ?>')">
                             <span class="dashicons <?php echo esc_attr($menu['icon']); ?>"></span>
                             <span class="name"><?php echo esc_html($menu['label']); ?></span>

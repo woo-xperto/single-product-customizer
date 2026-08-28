@@ -67,7 +67,7 @@ if( !class_exists("Sppcfw_Frontend_Hide_Price")){
             global $product;
             
             if(!is_object($product) && function_exists('wc_get_product')){
-                $product = wc_get_product();
+                $sppcfw_product = wc_get_product();
             }
             
             $enabled = 0;
