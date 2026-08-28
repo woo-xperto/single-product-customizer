@@ -1,4 +1,8 @@
 <?php
+if (!defined('ABSPATH')) {
+    exit;
+}
+
 // check product based customization enabled or disabled
 function sppcfw_if_product_based_customization_enabled(){
     $return_val=0;

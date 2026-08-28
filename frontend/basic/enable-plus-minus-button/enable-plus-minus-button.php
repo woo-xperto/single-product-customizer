@@ -1,4 +1,7 @@
 <?php 
+if (!defined('ABSPATH')) {
+    exit;
+}
 
 if( !class_exists("Sppcfw_Frontend_Enable_Plus_Minus_Button")){
     

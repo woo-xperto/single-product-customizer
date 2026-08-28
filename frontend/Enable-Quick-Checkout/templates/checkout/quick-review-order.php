@@ -16,8 +16,8 @@ defined('ABSPATH') || exit;
 <table class="shop_table woocommerce-checkout-review-order-table">
     <thead>
         <tr>
-            <th class="product-name"><?php esc_html_e('Productxx', 'woocommerce'); ?></th>
-            <th class="product-total"><?php esc_html_e('Subtotalxx', 'woocommerce'); ?></th>
+            <th class="product-name"><?php esc_html_e('Product', 'single-product-customizer'); ?></th>
+            <th class="product-total"><?php esc_html_e('Subtotal', 'single-product-customizer'); ?></th>
         </tr>
     </thead>
     <tbody>
@@ -48,7 +48,7 @@ defined('ABSPATH') || exit;
                     if ($product && is_a($product, 'WC_Product')) {
 
                         if ($product->is_type('variable') || $product->is_type('grouped')) {
-                            include 'quick-variable-add-to-cart.php';
+                            include __DIR__ . '/quick-variable-add-to-cart.php';
                         } else {
                             $empty_cart_message = apply_filters(
                                 'sppcfw_quick_checkout_empty_cart_message',
@@ -79,7 +79,7 @@ defined('ABSPATH') || exit;
                                 <?php
                                 do_action('sppcfw_before_quick_checkout_cart');
                                 // Render quick add-to-cart controls only once, even with multiple cart items.
-                                include 'quick-variable-add-to-cart.php';
+                                include __DIR__ . '/quick-variable-add-to-cart.php';
 
                                 $sppcfw_has_rendered_quick_add_to_cart_form = true;
 
@@ -144,7 +144,7 @@ defined('ABSPATH') || exit;
     <tfoot>
 
         <tr class="cart-subtotal">
-            <th><?php esc_html_e('Subtotal', 'woocommerce'); ?></th>
+            <th><?php esc_html_e('Subtotal', 'single-product-customizer'); ?></th>
             <td><?php wc_cart_totals_subtotal_html(); ?></td>
         </tr>
 
@@ -192,7 +192,7 @@ defined('ABSPATH') || exit;
         <?php do_action('woocommerce_review_order_before_order_total'); ?>
 
         <tr class="order-total">
-            <th><?php esc_html_e('Total', 'woocommerce'); ?></th>
+            <th><?php esc_html_e('Total', 'single-product-customizer'); ?></th>
             <td><?php wc_cart_totals_order_total_html(); ?></td>
         </tr>
 

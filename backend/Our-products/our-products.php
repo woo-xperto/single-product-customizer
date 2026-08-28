@@ -532,7 +532,7 @@ $products = [
         <p><?php esc_html_e('Visit our WordPress.org profile to see all our plugins, read reviews, and get support.', 'single-product-customizer'); ?></p>
 
         <div class="wx-button-group">
-            <a href="<?php echo admin_url('plugin-install.php?s=Webcartisan&tab=search&type=term'); ?>"  class="wx-org-button">
+            <a href="<?php echo esc_url( admin_url( 'plugin-install.php?s=Webcartisan&tab=search&type=term' ) ); ?>" class="wx-org-button">
                 <span class="dashicons dashicons-wordpress"></span>
                 <?php esc_html_e('View All Plugins', 'single-product-customizer'); ?>
             </a>

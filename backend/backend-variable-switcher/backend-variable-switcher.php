@@ -1,4 +1,8 @@
 <?php 
+if (!defined('ABSPATH')) {
+    exit;
+}
+
 if( !class_exists("Sppcfw_Backend_Variation_Switcher")){
     class Sppcfw_Backend_Variation_Switcher{
 

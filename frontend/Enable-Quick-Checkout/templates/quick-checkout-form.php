@@ -17,7 +17,7 @@ do_action( 'wc_cpt_before_quick_checkout_form', $product );
 ?>
 
 <div class="sppcfw-quick-checkout">
-	<h3 class="sppcfw-checkout-title"><?php esc_html_e( 'Quick Checkout', 'wc-custom-product-templates' ); ?></h3>
+	<h3 class="sppcfw-checkout-title"><?php esc_html_e( 'Quick Checkout', 'single-product-customizer' ); ?></h3>
 	
 	<input type="hidden" id="sppcfw-product-id" value="<?php echo esc_attr( $product->get_id() ); ?>">
 	

@@ -81,6 +81,6 @@ if( !class_exists( 'Sppcfw_backend_master' )){
 
 new Sppcfw_backend_master();
 
-include('backend-settings-page.php');
-include('backend-variable-switcher/backend-variable-switcher.php');
-include('ajax-handlers.php');
+include __DIR__ . '/backend-settings-page.php';
+include __DIR__ . '/backend-variable-switcher/backend-variable-switcher.php';
+include __DIR__ . '/ajax-handlers.php';

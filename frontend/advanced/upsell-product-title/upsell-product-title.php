@@ -1,4 +1,7 @@
 <?php 
+if (!defined('ABSPATH')) {
+    exit;
+}
 
 if( !class_exists("Sppcfw_Frontend_Upsell_Product_Title")){
     class Sppcfw_Frontend_Upsell_Product_Title{

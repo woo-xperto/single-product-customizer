@@ -1,4 +1,7 @@
 <?php 
+if (!defined('ABSPATH')) {
+    exit;
+}
 
 if( !class_exists("Sppcfw_Frontend_Hide_Short_Description")){
     class Sppcfw_Frontend_Hide_Short_Description{

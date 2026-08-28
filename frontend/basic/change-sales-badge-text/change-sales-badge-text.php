@@ -1,4 +1,7 @@
 <?php 
+if (!defined('ABSPATH')) {
+    exit;
+}
 
 if( ! class_exists('Sppcfw_Frontend_Sales_Badge_Text')){
     class Sppcfw_Frontend_Sales_Badge_Text{

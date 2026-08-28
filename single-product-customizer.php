@@ -158,63 +158,6 @@ function sppcfw_missing_woocommerce_notice() {
 }
 add_action( 'admin_notices', 'sppcfw_missing_woocommerce_notice' );
 
-/**
- * Register admin menu shell when WooCommerce is not active.
- */
-function sppcfw_register_admin_menu_without_woocommerce() {
-    if ( sppcfw_is_woocommerce_active() ) {
-        return;
-    }
-
-    $parent_slug = 'sppcfw-single-product-customizer';
-    $menu_title  = __( 'Single Product Customizer', 'single-product-customizer' );
-
-    add_menu_page(
-        $menu_title,
-        $menu_title,
-        'manage_options',
-        $parent_slug,
-        'sppcfw_render_woocommerce_required_admin_page',
-        'dashicons-admin-customizer',
-        56
-    );
-}
-add_action( 'admin_menu', 'sppcfw_register_admin_menu_without_woocommerce' );
-
-/**
- * Admin page shown when WooCommerce is missing.
- */
-function sppcfw_render_woocommerce_required_admin_page() {
-    if ( ! current_user_can( 'manage_options' ) ) {
-        wp_die( esc_html__( 'You do not have permission to access this page.', 'single-product-customizer' ) );
-    }
-
-    $install_url = admin_url( 'plugin-install.php?s=woocommerce&tab=search&type=term' );
-    ?>
-    <div class="wrap">
-        <h1><?php echo esc_html( __( 'Single Product Customizer', 'single-product-customizer' ) ); ?></h1>
-        <div class="notice notice-warning">
-            <p>
-                <strong>
-                    <?php
-                    esc_html_e(
-                        'Single Product Customizer requires WooCommerce for full functionality. Please install and activate WooCommerce to customize single product pages.',
-                        'single-product-customizer'
-                    );
-                    ?>
-                </strong>
-            </p>
-            <?php if ( current_user_can( 'install_plugins' ) ) : ?>
-                <p>
-                    <a class="button button-primary" href="<?php echo esc_url( $install_url ); ?>">
-                        <?php esc_html_e( 'Install WooCommerce', 'single-product-customizer' ); ?>
-                    </a>
-                </p>
-            <?php endif; ?>
-        </div>
-    </div>
-    <?php
-}
 
 require_once plugin_dir_path( __FILE__ ) . 'backend/classes/class-sppcfw-pro-admin-placeholders.php';
 SPPCFW_Pro_Admin_Placeholders::init();

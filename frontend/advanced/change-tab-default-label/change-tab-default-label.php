@@ -1,4 +1,7 @@
 <?php 
+if (!defined('ABSPATH')) {
+    exit;
+}
 
 if( !class_exists("Sppcfw_Frontend_Change_Tab_Default_Label")){
     
@@ -15,14 +18,14 @@ if( !class_exists("Sppcfw_Frontend_Change_Tab_Default_Label")){
                 $sppcfw_tab_labels = $this->sppcfw_get_default_tab_titles();
                 if(count($sppcfw_tab_labels)>0){
                     // phpcs:ignore
-                    $tabs['description']['title'] = __( "{$sppcfw_tab_labels['discription']}","product-page-customizer");
+                    $tabs['description']['title'] = __( "{$sppcfw_tab_labels['discription']}","single-product-customizer");
                     // phpcs:ignore
-                    $tabs['additional_information']['title'] = __( "{$sppcfw_tab_labels['additional_information']}","product-page-customizer");
+                    $tabs['additional_information']['title'] = __( "{$sppcfw_tab_labels['additional_information']}","single-product-customizer");
                     // phpcs:ignore
                     // Only modify reviews tab if reviews are enabled
                     if ('yes' === get_option('woocommerce_enable_reviews')) {
                         // phpcs:ignore
-                        $tabs['reviews']['title'] = __("{$sppcfw_tab_labels['reviews']}", "product-page-customizer");
+                        $tabs['reviews']['title'] = __("{$sppcfw_tab_labels['reviews']}", "single-product-customizer");
                     }
                 }
             }

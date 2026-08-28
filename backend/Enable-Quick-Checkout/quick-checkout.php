@@ -32,7 +32,7 @@ $sppcfw_qc_disabled_attr = '';
 ?>
 
 <div>
-    <h1 class="sppcfw-heading-inline"><?php _e('Enable Quick Checkout', 'single-product-customizer'); ?></h1>
+    <h1 class="sppcfw-heading-inline"><?php esc_html_e('Enable Quick Checkout', 'single-product-customizer'); ?></h1>
     <hr class="sppcfw-header-devider">
     <div class="sppcfw-quick-checkout-settings">
         <form method="post" action="">
@@ -43,16 +43,16 @@ $sppcfw_qc_disabled_attr = '';
                     <tr>
                         <th scope="row">
                             <label for="sppcfw_enable_quick_checkout">
-                                <?php _e('Enable Quick Checkout', 'single-product-customizer'); ?>
+                                <?php esc_html_e('Enable Quick Checkout', 'single-product-customizer'); ?>
                                 <input type="checkbox" name="sppcfw_enable_quick_checkout" id="sppcfw_enable_quick_checkout" value="1" class="sppcfw-enable-quick-checkout-toggle" 
                                 <?php checked(!empty($sppcfw_enable_quick_checkout), 1); ?> />
                             </label>
                         </th>
                         <td>
-                            <p class="description"><?php _e('Enable Quick Checkout feature for streamlined product purchase experience.', 'single-product-customizer'); ?></p>
+                            <p class="description"><?php esc_html_e('Enable Quick Checkout feature for streamlined product purchase experience.', 'single-product-customizer'); ?></p>
                             <p class="description" style="color: #0073aa; font-weight: 500;">
-                                <strong>ℹ️ <?php _e('Note:', 'single-product-customizer'); ?></strong>
-                                <?php _e('Enabling this will automatically enable "AJAX add to cart buttons on archives" in WooCommerce settings. Disabling this will automatically disable that setting as well.', 'single-product-customizer'); ?>
+                                <strong>ℹ️ <?php esc_html_e('Note:', 'single-product-customizer'); ?></strong>
+                                <?php esc_html_e('Enabling this will automatically enable "AJAX add to cart buttons on archives" in WooCommerce settings. Disabling this will automatically disable that setting as well.', 'single-product-customizer'); ?>
                             </p>
                         </td>
                     </tr>
@@ -60,13 +60,13 @@ $sppcfw_qc_disabled_attr = '';
                         <th scope="row">
                             <div class="sppcfw_product_options">
                                 <label class="sppcfw_show_product_title" id="sppcfw_show_product_title" for="sppcfw_show_product_title">
-                                    <?php _e('Show Product Title', 'single-product-customizer'); ?>
+                                    <?php esc_html_e('Show Product Title', 'single-product-customizer'); ?>
                                 </label>
                                 <label class="sppcfw_show_review" id="sppcfw_show_review" for="sppcfw_show_review">
-                                    <?php _e('Show Review', 'single-product-customizer'); ?>
+                                    <?php esc_html_e('Show Review', 'single-product-customizer'); ?>
                                 </label>
                                 <label class="sppcfw_show_short_description" id="sppcfw_show_short_description" for="sppcfw_show_short_description">
-                                    <?php _e('Show Short Description', 'single-product-customizer'); ?>
+                                    <?php esc_html_e('Show Short Description', 'single-product-customizer'); ?>
                                 </label>
                             </div>
                         </th>
@@ -92,7 +92,7 @@ $sppcfw_qc_disabled_attr = '';
                     </tr>
                     <tr class="sppcfw_quick_checkout_template_row" style="<?php echo !$show_template_selector ? 'display:none;' : ''; ?>">
                         <th scope="row">
-                            <label for="sppcfw_enable_qc"><?php _e('Select Quick Checkout Template', 'single-product-customizer'); ?></label>
+                            <label for="sppcfw_enable_qc"><?php esc_html_e('Select Quick Checkout Template', 'single-product-customizer'); ?></label>
                         </th>
                         <td>
                             <div class="sppcfw-template-select-container">
@@ -114,7 +114,7 @@ $sppcfw_qc_disabled_attr = '';
                                                 tabindex="0"
                                                 data-template="<?php echo esc_attr($value); ?>">
                                                 <div class="sppcfw-template-thumb">
-                                                    <img src="<?php echo plugin_dir_url(__FILE__) . 'assets/img/' . $img_name . '.png'; ?>" alt="<?php echo esc_attr($label); ?>">
+                                                    <img src="<?php echo esc_url( plugin_dir_url(__FILE__) . 'assets/img/' . $img_name . '.png' ); ?>" alt="<?php echo esc_attr($label); ?>">
                                                 </div>
                                                 <span class="sppcfw-template-title"><?php echo esc_html($label); ?></span>
                                             </div>
@@ -128,12 +128,12 @@ $sppcfw_qc_disabled_attr = '';
                                         $preview_img = ($sppcfw_current_template === 'template-2') ? (sppcfw_is_pro_active() ? 'template-2-pro' : 'template-2-free') : $sppcfw_current_template;
                                         ?>
                                         <img id="sppcfw-selected-template-preview-img"
-                                            src="<?php echo plugin_dir_url(__FILE__) . 'assets/img/' . $preview_img . '.png'; ?>"
+                                            src="<?php echo esc_url( plugin_dir_url(__FILE__) . 'assets/img/' . $preview_img . '.png' ); ?>"
                                             alt="<?php echo esc_attr(isset($template_files[$sppcfw_current_template]) ? $template_files[$sppcfw_current_template] : $template_files['template-1']); ?>">
                                     </div>
                                 </div>
                             </div>
-                            <p class="description"><?php _e('Select a template to customize the Quick Checkout feature on product pages.', 'single-product-customizer'); ?></p>
+                            <p class="description"><?php esc_html_e('Select a template to customize the Quick Checkout feature on product pages.', 'single-product-customizer'); ?></p>
                         </td>
                     </tr>
 

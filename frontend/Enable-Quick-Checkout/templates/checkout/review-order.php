@@ -7,9 +7,12 @@
  * @package WooCommerce\Templates
  * @version 5.2.0
  */
+if (!defined('ABSPATH')) {
+	exit;
+}
 
 if (function_exists('sppcfw_is_valid_single_product_referer') && sppcfw_is_valid_single_product_referer()) {
-	include 'quick-review-order.php';
+	include __DIR__ . '/quick-review-order.php';
 } else {
-	include 'default-review-order.php';
+	include __DIR__ . '/default-review-order.php';
 }

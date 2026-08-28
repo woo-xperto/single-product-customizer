@@ -1,4 +1,8 @@
 <?php 
+if (!defined('ABSPATH')) {
+    exit;
+}
+
 if( ! class_exists('Sppcfw_Frontend_Variation_Table')){
     class Sppcfw_Frontend_Variation_Table{
         private $hook;

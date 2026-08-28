@@ -1,4 +1,7 @@
 <?php 
+if (!defined('ABSPATH')) {
+    exit;
+}
 
 if(!class_exists("Sppcfw_Frontend_Variation_Reset_Text")){
     class Sppcfw_Frontend_Variation_Reset_Text{

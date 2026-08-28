@@ -22,7 +22,7 @@ defined('ABSPATH') || exit;
 <?php
 
 if (WC()->cart->is_empty()) {
-	include 'quick-order-table.php';
+	include __DIR__ . '/quick-order-table.php';
 } else {
-	include 'quick-review-order.php';
+	include __DIR__ . '/quick-review-order.php';
 }

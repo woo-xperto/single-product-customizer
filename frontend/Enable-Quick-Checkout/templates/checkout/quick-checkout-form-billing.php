@@ -45,7 +45,7 @@ if ( ! is_user_logged_in() && $checkout->is_registration_enabled() ) {
 			<?php if ( ! get_option( 'woocommerce_registration_generate_password' ) ) { ?>
 				<p class="form-row form-row-wide create-account">
 					<label class="woocommerce-form__label woocommerce-form__label-for-checkbox checkbox">
-						<input class="woocommerce-form__input woocommerce-form__input-checkbox input-checkbox" id="createaccount" <?php checked( ( true === $checkout->get_value( 'createaccount' ) ), true ); ?> type="checkbox" name="createaccount" value="1" /> <span><?php esc_html_e( 'Create an account?', 'woocommerce' ); ?></span>
+						<input class="woocommerce-form__input woocommerce-form__input-checkbox input-checkbox" id="createaccount" <?php checked( ( true === $checkout->get_value( 'createaccount' ) ), true ); ?> type="checkbox" name="createaccount" value="1" /> <span><?php esc_html_e( 'Create an account?', 'single-product-customizer' ); ?></span>
 					</label>
 				</p>
 
@@ -59,7 +59,7 @@ if ( ! is_user_logged_in() && $checkout->is_registration_enabled() ) {
 				}
 				?>
 			<?php } else { ?>
-				<p><?php esc_html_e( 'Create an account by entering the information below. If you are a returning customer please login at the top of the page.', 'woocommerce' ); ?></p>
+				<p><?php esc_html_e( 'Create an account by entering the information below. If you are a returning customer please login at the top of the page.', 'single-product-customizer' ); ?></p>
 				<?php
 				$account_fields = $checkout->get_checkout_fields( 'account' );
 

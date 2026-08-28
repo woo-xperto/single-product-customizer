@@ -1,4 +1,8 @@
 <?php
+if (!defined('ABSPATH')) {
+    exit;
+}
+
 if(!class_exists('Sppcfw_Frontend_Remove_Product_Meta_Section')){
     class Sppcfw_Frontend_Remove_Product_Meta_Section{
         public function __construct(){

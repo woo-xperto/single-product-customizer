@@ -1,4 +1,7 @@
 <?php 
+if (!defined('ABSPATH')) {
+    exit;
+}
 
 if( !class_exists('Sppcfw_Frontend_Hide_Add_To_Cart_Button')){
     class Sppcfw_Frontend_Hide_Add_To_Cart_Button{

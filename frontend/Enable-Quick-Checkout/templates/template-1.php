@@ -17,7 +17,7 @@ if (! defined('ABSPATH')) {
 
         <?php do_action('woocommerce_checkout_before_customer_details'); ?>
 
-        <form name="checkout" method="post" class="checkout woocommerce-checkout sppcfw-checkout-form" action="<?php echo esc_url(wc_get_checkout_url()); ?>" enctype="multipart/form-data" aria-label="<?php echo esc_attr__('Checkout', 'woocommerce'); ?>">
+        <form name="checkout" method="post" class="checkout woocommerce-checkout sppcfw-checkout-form" action="<?php echo esc_url(wc_get_checkout_url()); ?>" enctype="multipart/form-data" aria-label="<?php echo esc_attr__('Checkout', 'single-product-customizer'); ?>">
 
             <div class="sppcfw-accordion" id="sppcfw-checkout-accordion">
                 <!-- Cart Section -->
@@ -26,7 +26,7 @@ if (! defined('ABSPATH')) {
                         <div class="sppcfw-accordion-header-left">
                             <span class="sppcfw-accordion-icon"><i class="fa-solid fa-cart-shopping"></i></span>
                             <span><?php esc_html_e(
-                                        apply_filters('sppcfw_quick_checkout_cart_label', __('Cart', 'woocommerce'))
+                                        apply_filters('sppcfw_quick_checkout_cart_label', __('Cart', 'single-product-customizer'))
                                     );  ?>
                             </span>
                         </div>
@@ -48,7 +48,7 @@ if (! defined('ABSPATH')) {
                         <div class="sppcfw-accordion-header-left">
                             <span class="sppcfw-accordion-icon"><i class="fa-solid fa-file-invoice"></i></span>
                             <span><?php esc_html_e(
-                                        apply_filters('sppcfw_quick_checkout_billing_details_label', __('Billing Details', 'woocommerce'))
+                                        apply_filters('sppcfw_quick_checkout_billing_details_label', __('Billing Details', 'single-product-customizer'))
                                     );  ?>
                             </span>
                         </div>
@@ -71,12 +71,12 @@ if (! defined('ABSPATH')) {
                                 <span class="sppcfw-accordion-icon"><i class="fa-solid fa-truck-fast"></i></span>
                                 <?php if (WC()->cart->needs_shipping()) : ?>
                                     <span><?php echo esc_html(
-                                                apply_filters('sppcfw_quick_checkout_shipping_details_label', __('Shipping Details', 'woocommerce'))
+                                                apply_filters('sppcfw_quick_checkout_shipping_details_label', __('Shipping Details', 'single-product-customizer'))
                                             );  ?>
                                     </span>
                                 <?php else : ?>
                                     <span><?php esc_html_e(
-                                                apply_filters('sppcfw_quick_checkout_shipping_details_label', __('Shipping Details', 'woocommerce'))
+                                                apply_filters('sppcfw_quick_checkout_shipping_details_label', __('Shipping Details', 'single-product-customizer'))
                                             );  ?>
                                     </span>
                                 <?php endif; ?>
@@ -99,7 +99,7 @@ if (! defined('ABSPATH')) {
                         <div class="sppcfw-accordion-header-left">
                             <span class="sppcfw-accordion-icon"><i class="fa-solid fa-credit-card"></i></span>
                             <span><?php esc_html_e(
-                                        apply_filters('sppcfw_quick_checkout_order_payment_label', __('Order & Payment', 'woocommerce'))
+                                        apply_filters('sppcfw_quick_checkout_order_payment_label', __('Order & Payment', 'single-product-customizer'))
                                     );  ?>
                             </span>
                         </div>

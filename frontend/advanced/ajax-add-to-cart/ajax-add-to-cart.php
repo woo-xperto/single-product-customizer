@@ -1,4 +1,8 @@
 <?php
+if (!defined('ABSPATH')) {
+    exit;
+}
+
 if( !class_exists( 'Sppcfw_Frontend_Ajax_Add_To_Cart' )){
     class Sppcfw_Frontend_Ajax_Add_To_Cart {
         public function __construct(){

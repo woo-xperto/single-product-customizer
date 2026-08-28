@@ -1,8 +1,13 @@
+<?php
+if (!defined('ABSPATH')) {
+	exit;
+}
+?>
 <table class="shop_table woocommerce-checkout-review-order-table">
 	<thead>
 		<tr>
-			<th class="product-name"><?php esc_html_e('Productxxx', 'woocommerce'); ?></th>
-			<th class="product-total"><?php esc_html_e('Subtotalxxx', 'woocommerce'); ?></th>
+			<th class="product-name"><?php esc_html_e('Product', 'single-product-customizer'); ?></th>
+			<th class="product-total"><?php esc_html_e('Subtotal', 'single-product-customizer'); ?></th>
 		</tr>
 	</thead>
 	<tbody>
@@ -17,7 +22,7 @@
 				global $product;
 				if ($product && is_a($product, 'WC_Product')) {
 
-					include 'quick-variable-add-to-cart.php';
+					include __DIR__ . '/quick-variable-add-to-cart.php';
 				}
 
 				?>
@@ -53,7 +58,7 @@
 	<tfoot>
 
 		<tr class="cart-subtotal">
-			<th><?php esc_html_e('Subtotal', 'woocommerce'); ?></th>
+			<th><?php esc_html_e('Subtotal', 'single-product-customizer'); ?></th>
 			<td><?php wc_cart_totals_subtotal_html(); ?></td>
 		</tr>
 
@@ -101,7 +106,7 @@
 		<?php do_action('woocommerce_review_order_before_order_total'); ?>
 
 		<tr class="order-total">
-			<th><?php esc_html_e('Total', 'woocommerce'); ?></th>
+			<th><?php esc_html_e('Total', 'single-product-customizer'); ?></th>
 			<td><?php wc_cart_totals_order_total_html(); ?></td>
 		</tr>
 
