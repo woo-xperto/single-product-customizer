@@ -69,7 +69,7 @@ if( !class_exists("Sppcfw_Frontend_Enable_Plus_Minus_Button")){
 
         public function is_enabled(){
             $enabled=0;
-            if(SPPCFW_PRO_ACTIVE){
+            if(sppcfw_is_pro_active()){
                 // check in product level
                 if(sppcfw_if_product_based_customization_enabled()===1){
                     global $SPPCFW_INDIVIDUAL;

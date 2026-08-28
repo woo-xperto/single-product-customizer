@@ -105,7 +105,7 @@ if( !class_exists('Sppcfw_Frontend_Hide_Add_To_Cart_Button')){
             
             $enabled = 0;
             
-            if(SPPCFW_PRO_ACTIVE){
+            if(sppcfw_is_pro_active()){
                 // check in product level
                 if(sppcfw_if_product_based_customization_enabled()===1){
                     global $SPPCFW_INDIVIDUAL;
@@ -148,7 +148,7 @@ if( !class_exists('Sppcfw_Frontend_Hide_Add_To_Cart_Button')){
             if($this->is_enabled() === 1){
                 $message = '';
                 
-                if(SPPCFW_PRO_ACTIVE){
+                if(sppcfw_is_pro_active()){
                     // Check for custom message in product level
                     if(sppcfw_if_product_based_customization_enabled() === 1){
                         global $SPPCFW_INDIVIDUAL;

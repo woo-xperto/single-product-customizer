@@ -27,7 +27,7 @@ if( ! class_exists('Sppcfw_Frontend_Variation_Table')){
 
         public function sppcfw_get_variation_table_show_hook(){
             $hook='';
-            if(SPPCFW_PRO_ACTIVE){
+            if(sppcfw_is_pro_active()){
                 // check in product level
                 if(sppcfw_if_product_based_customization_enabled()===1){
                     global $SPPCFW_INDIVIDUAL;
@@ -54,13 +54,14 @@ if( ! class_exists('Sppcfw_Frontend_Variation_Table')){
                     }
                     return $hook;
                 }
+            }
 
-                if(isset(SPPCFW_ADVANCED['variation_table_display_hook'])){
-                    if(!empty(SPPCFW_ADVANCED['enable_varition_table'])){
-                        $hook=SPPCFW_ADVANCED['variation_table_display_hook'];
-                    }
+            if(isset(SPPCFW_ADVANCED['variation_table_display_hook'])){
+                if(!empty(SPPCFW_ADVANCED['enable_varition_table'])){
+                    $hook=SPPCFW_ADVANCED['variation_table_display_hook'];
                 }
             }
+
             return $hook;
         }
 
@@ -134,44 +135,41 @@ if( ! class_exists('Sppcfw_Frontend_Variation_Table')){
 
         public function is_enabled(){
             $enabled=0;
-            if(SPPCFW_PRO_ACTIVE){
-                if(isset(SPPCFW_ADVANCED['enable_varition_table'])){
-                    if(SPPCFW_ADVANCED['enable_varition_table']==='on'){
-                        $enabled=1;
-                    }
-                }
-
+            if(sppcfw_is_pro_active()){
                 // check in product level
                 if(sppcfw_if_product_based_customization_enabled()===1){
                     global $SPPCFW_INDIVIDUAL;
                     if(isset($SPPCFW_INDIVIDUAL['enable_varition_table'])){
                         if($SPPCFW_INDIVIDUAL['enable_varition_table']==='on'){
-                        $enabled=1;
+                            return 1;
                         }else{
-                        $enabled=0;
+                            return 0;
                         }                       
                     }
-            
-                   return $enabled;
                 }
 
                 // check in category level
-                
                 if(sppcfw_if_category_based_customization_enabled()===1){
-
                     $product_cat=sppcfw_get_product_category_id();
                     if($product_cat>0){
                         $sppcfw_cat = get_term_meta($product_cat, 'sppcfw_category_based_settings', true);
                         
                         if(isset($sppcfw_cat['enable_varition_table'])){
                             if($sppcfw_cat['enable_varition_table']==='on'){
-                                $enabled=1;
+                                return 1;
                             }
                         }
                     }
                     return $enabled;
                 }
             }
+
+            if(isset(SPPCFW_ADVANCED['enable_varition_table'])){
+                if(SPPCFW_ADVANCED['enable_varition_table']==='on'){
+                    $enabled=1;
+                }
+            }
+
             return $enabled;
         }
     }

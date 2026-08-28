@@ -36,11 +36,9 @@ if( !class_exists("Sppcfw_Variation_Switcher")){
 
         public function is_enabled(){
             $enabled=0;
-            if(SPPCFW_PRO_ACTIVE){
-                if(isset(SPPCFW_ADVANCED['enable_variation_switcher'])){
-                    if(SPPCFW_ADVANCED['enable_variation_switcher']==='on'){
-                        $enabled=1;
-                    }
+            if(isset(SPPCFW_ADVANCED['enable_variation_switcher'])){
+                if(SPPCFW_ADVANCED['enable_variation_switcher']==='on'){
+                    $enabled=1;
                 }
             }
             return $enabled;

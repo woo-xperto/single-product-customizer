@@ -94,9 +94,38 @@ if( !class_exists("Sppcfw_Frontend_Change_Tab_Default_Label")){
 
         public function is_enabled(){
             $enabled=0;
-            if(SPPCFW_PRO_ACTIVE){
-                $enabled=1;
+            if(sppcfw_is_pro_active()){
+                if(sppcfw_if_product_based_customization_enabled()===1){
+                    global $SPPCFW_INDIVIDUAL;
+                    if(isset($SPPCFW_INDIVIDUAL['enable_change_tab_default_label'])){
+                        if($SPPCFW_INDIVIDUAL['enable_change_tab_default_label']==='on'){
+                            return 1;
+                        }else{
+                            return 0;
+                        }                       
+                    }
+                }
+
+                if(sppcfw_if_category_based_customization_enabled()===1){
+                    $product_cat=sppcfw_get_product_category_id();    
+                    if($product_cat>0){
+                        $sppcfw_cat = get_term_meta($product_cat, 'sppcfw_category_based_settings', true);
+                        if(isset($sppcfw_cat['enable_change_tab_default_label'])){
+                            if($sppcfw_cat['enable_change_tab_default_label']==='on'){
+                                return 1;
+                            }
+                        }
+                    }
+                    return $enabled;
+                }
             }
+
+            if(isset(SPPCFW_ADVANCED['enable_change_tab_default_label'])){
+                if(SPPCFW_ADVANCED['enable_change_tab_default_label']==='on'){
+                    $enabled=1;
+                }
+            }
+
             return $enabled;
         }
     }

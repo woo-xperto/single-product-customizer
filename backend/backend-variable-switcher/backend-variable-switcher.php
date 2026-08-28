@@ -10,7 +10,7 @@ if( !class_exists("Sppcfw_Backend_Variation_Switcher")){
 
             $sppcfw_variation_check = (isset(SPPCFW_ADVANCED["enable_variation_switcher"])?SPPCFW_ADVANCED["enable_variation_switcher"]:'');
 
-                if( $sppcfw_variation_check == "on" && SPPCFW_PRO_ACTIVE){
+                if( $sppcfw_variation_check == "on" && sppcfw_is_pro_active()){
 
                     add_filter("product_attributes_type_selector",[$this,"sppcfw_custom_attributes_form"], 100,1);
                     add_action("admin_footer",[$this,"sppcfw_attributes_all_hooks"]);

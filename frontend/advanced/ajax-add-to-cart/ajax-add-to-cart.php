@@ -32,46 +32,41 @@ if( !class_exists( 'Sppcfw_Frontend_Ajax_Add_To_Cart' )){
 
         public function is_enabled(){
             $enabled=0;
-            if(SPPCFW_PRO_ACTIVE){
+            if(sppcfw_is_pro_active()){
                 // check in product level
                 if(sppcfw_if_product_based_customization_enabled()===1){
                     global $SPPCFW_INDIVIDUAL;
                     if(isset($SPPCFW_INDIVIDUAL['enable_ajax_add_to_cart'])){
                         if($SPPCFW_INDIVIDUAL['enable_ajax_add_to_cart']==='on'){
-                           $enabled=1;
+                           return 1;
                         }else{
-                           $enabled=0;
+                           return 0;
                         }                       
                     }
-            
-                    return $enabled;
                 }
 
                 // check in category level
-                
                 if(sppcfw_if_category_based_customization_enabled()===1){
-
                     $product_cat=sppcfw_get_product_category_id();
                     if($product_cat>0){
                         $sppcfw_cat = get_term_meta($product_cat, 'sppcfw_category_based_settings', true);
                         
                         if(isset($sppcfw_cat['enable_ajax_add_to_cart'])){
                             if($sppcfw_cat['enable_ajax_add_to_cart']==='on'){
-                                $enabled=1;
+                                return 1;
                             }
                         }
                     }
-
                     return $enabled;
                 }
-
-                if(isset(SPPCFW_ADVANCED['enable_ajax_add_to_cart'])){
-                    if(SPPCFW_ADVANCED['enable_ajax_add_to_cart']==='on'){
-                        $enabled=1;
-                    }
-                }
-
             }
+
+            if(isset(SPPCFW_ADVANCED['enable_ajax_add_to_cart'])){
+                if(SPPCFW_ADVANCED['enable_ajax_add_to_cart']==='on'){
+                    $enabled=1;
+                }
+            }
+
             return $enabled;
         }
 

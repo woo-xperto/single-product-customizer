@@ -146,7 +146,7 @@ function sppcfw_get_product_category_id( $product_id = null ) {
 function sppcfw_min_max_is_enabled($product_id){
     
     $enabled=0;
-    if(SPPCFW_PRO_ACTIVE){
+    if(sppcfw_is_pro_active()){
         // check in product level
         if(sppcfw_if_product_based_customization_enabled()===1){
             $SPPCFW_INDIVIDUAL=get_post_meta($product_id,'sppcfw_product',true);

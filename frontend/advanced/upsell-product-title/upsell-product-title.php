@@ -20,15 +20,14 @@ if( !class_exists("Sppcfw_Frontend_Upsell_Product_Title")){
 
         public function sppcfw_get_upsell_product_title(){
             $upsell_products_title='';
-            
 
-            if(SPPCFW_PRO_ACTIVE){
-                if(isset(SPPCFW_ADVANCED['upsell_products_title'])){
-                    if(!empty(SPPCFW_ADVANCED['upsell_products_title'])){
-                        $upsell_products_title=SPPCFW_ADVANCED['upsell_products_title'];
-                    }
+            if(isset(SPPCFW_ADVANCED['upsell_products_title'])){
+                if(!empty(SPPCFW_ADVANCED['upsell_products_title'])){
+                    $upsell_products_title=SPPCFW_ADVANCED['upsell_products_title'];
                 }
+            }
 
+            if(sppcfw_is_pro_active()){
                 if(sppcfw_if_category_based_customization_enabled()===1){
                     $product_cat=sppcfw_get_product_category_id();    
                     if($product_cat>0){
@@ -56,7 +55,7 @@ if( !class_exists("Sppcfw_Frontend_Upsell_Product_Title")){
         }
         public function is_enabled(){
             $enabled=0;
-            if(SPPCFW_PRO_ACTIVE){
+            if(!empty($this->sppcfw_get_upsell_product_title())){
                 $enabled=1;
             }
             return $enabled;

@@ -88,17 +88,16 @@ if ( ! defined( 'SPPCFW_ADVANCED' ) ) {
 	define( 'SPPCFW_ADVANCED', $sppcfw_advanced ); // advanced settings
 }
 
-if ( ! defined( 'SPPCFW_PRO_ACTIVE' ) ) {
-	define( 'SPPCFW_PRO_ACTIVE', false );
-}
-
 /**
  * Helper function to check if Pro version is active.
  *
  * @return bool
  */
 function sppcfw_is_pro_active() {
-	return ( defined( 'SPPCFW_PRO_ACTIVE' ) && SPPCFW_PRO_ACTIVE ) || ( function_exists( 'sppcfw_pro_license_is_active' ) && sppcfw_pro_license_is_active() );
+	if ( function_exists( 'sppcfw_pro_license_is_active' ) ) {
+		return sppcfw_pro_license_is_active();
+	}
+	return defined( 'SPPCFW_PRO_ACTIVE' ) && SPPCFW_PRO_ACTIVE;
 }
 
 $SPPCFW_INDIVIDUAL=array();// global var

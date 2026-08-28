@@ -50,7 +50,7 @@ if(!class_exists('Sppcfw_Frontend_Remove_Product_Meta_Section')){
         public function is_enabled(){
             if(!is_product() && !is_shop() && !is_product_category()) return false;
             
-            if(SPPCFW_PRO_ACTIVE && sppcfw_if_product_based_customization_enabled() === 1){
+            if(sppcfw_is_pro_active() && sppcfw_if_product_based_customization_enabled() === 1){
                 global $SPPCFW_INDIVIDUAL;
                 return isset($SPPCFW_INDIVIDUAL['remove_product_meta']) && 
                        $SPPCFW_INDIVIDUAL['remove_product_meta'] === 'on';
