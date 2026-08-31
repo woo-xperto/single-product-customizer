@@ -30,7 +30,7 @@
 
 	// Static Visual Sample Data for Edit Canvas
 	const CANVAS_STATIC_DATA = {
-		title: 'Product Title Placeholder',
+		title: 'Feature image',
 		price: '$49.99',
 		sku: 'SAMPLE-SKU-123',
 		stock_text: 'In Stock',
@@ -629,6 +629,175 @@
 		return insertChildInTree(cleanedTree, targetParentId, elementToMove, targetIndex);
 	}
 
+	// Searchable Product Select Dropdown Component
+	function SearchableProductSelect({ products = [], selectedProductId, onChange, placeholder = 'Search products...' }) {
+		const [isOpen, setIsOpen] = useState(false);
+		const [searchTerm, setSearchTerm] = useState('');
+		const containerRef = useRef(null);
+
+		// Close dropdown on outside click
+		useEffect(() => {
+			function handleClickOutside(event) {
+				if (containerRef.current && !containerRef.current.contains(event.target)) {
+					setIsOpen(false);
+				}
+			}
+			if (isOpen) {
+				document.addEventListener('mousedown', handleClickOutside);
+			}
+			return () => {
+				document.removeEventListener('mousedown', handleClickOutside);
+			};
+		}, [isOpen]);
+
+		const selectedProduct = products.find(p => String(p.id) === String(selectedProductId));
+		const displayLabel = selectedProduct ? selectedProduct.title : 'Default (All Products)';
+
+		const filteredProducts = products.filter(p => {
+			if (!searchTerm.trim()) return true;
+			const term = searchTerm.toLowerCase();
+			const titleMatch = (p.title || '').toLowerCase().includes(term);
+			const idMatch = String(p.id).includes(term);
+			return titleMatch || idMatch;
+		});
+
+		function handleSelect(id) {
+			onChange({ target: { value: id } });
+			setIsOpen(false);
+			setSearchTerm('');
+		}
+
+		return h(
+			'div',
+			{ className: 'sppcfw-relative sppcfw-w-full', ref: containerRef },
+
+			// Trigger Button
+			h(
+				'button',
+				{
+					type: 'button',
+					className: `sppcfw-w-full sppcfw-flex sppcfw-items-center sppcfw-justify-between sppcfw-bg-[#111827] sppcfw-border sppcfw-rounded sppcfw-px-2.5 sppcfw-py-1.5 sppcfw-text-xs sppcfw-transition-all sppcfw-cursor-pointer ${
+						isOpen ? 'sppcfw-border-[#9333ea] sppcfw-ring-1 sppcfw-ring-[#9333ea]' : 'sppcfw-border-[#374151] hover:sppcfw-border-gray-500'
+					}`,
+					onClick: () => setIsOpen(!isOpen),
+				},
+				h(
+					'div',
+					{ className: 'sppcfw-flex sppcfw-items-center sppcfw-gap-2 sppcfw-overflow-hidden sppcfw-pr-2' },
+					h('span', { className: 'material-symbols-outlined sppcfw-text-sm sppcfw-text-[#9333ea]' }, selectedProductId ? 'shopping_bag' : 'auto_awesome'),
+					h('span', { className: 'sppcfw-truncate sppcfw-text-white sppcfw-font-medium' }, displayLabel)
+				),
+				h('span', { className: `sppcfw-text-[10px] sppcfw-text-gray-400 sppcfw-transition-transform ${isOpen ? 'sppcfw-rotate-180' : ''}` }, '▼')
+			),
+
+			// Dropdown Panel
+			isOpen &&
+				h(
+					'div',
+					{
+						className: 'sppcfw-absolute sppcfw-top-full sppcfw-left-0 sppcfw-w-full sppcfw-mt-1 sppcfw-bg-[#1f2937] sppcfw-border sppcfw-border-[#374151] sppcfw-rounded-lg sppcfw-shadow-2xl sppcfw-z-50 sppcfw-overflow-hidden sppcfw-flex sppcfw-flex-col sppcfw-max-h-72',
+					},
+
+					// Search Input Header
+					h(
+						'div',
+						{ className: 'sppcfw-p-2 sppcfw-border-b sppcfw-border-[#374151] sppcfw-bg-[#111827]' },
+						h(
+							'div',
+							{ className: 'sppcfw-relative' },
+							h('span', { className: 'material-symbols-outlined sppcfw-absolute sppcfw-right-2 sppcfw-top-1/2 sppcfw--translate-y-1/2 sppcfw-text-xs sppcfw-text-gray-400' }, 'search'),
+							h('input', {
+								type: 'text',
+								autoFocus: true,
+								value: searchTerm,
+								placeholder: placeholder,
+								onChange: e => setSearchTerm(e.target.value),
+								className: 'sppcfw-w-full sppcfw-bg-[#1f2937] sppcfw-border sppcfw-border-[#374151] sppcfw-rounded sppcfw-pl-7 sppcfw-pr-6 sppcfw-py-1 sppcfw-text-xs sppcfw-text-white sppcfw-placeholder-gray-400 focus:sppcfw-outline-none focus:sppcfw-border-[#9333ea]',
+							}),
+							searchTerm &&
+								h(
+									'button',
+									{
+										type: 'button',
+										className: 'sppcfw-absolute sppcfw-right-1.5 sppcfw-top-1/2 sppcfw--translate-y-1/2 sppcfw-text-gray-400 hover:sppcfw-text-white sppcfw-text-xs sppcfw-cursor-pointer',
+										onClick: () => setSearchTerm(''),
+									},
+									'✕'
+								)
+						)
+					),
+
+					// Options List
+					h(
+						'div',
+						{ className: 'sppcfw-overflow-y-auto custom-scrollbar sppcfw-flex-1 sppcfw-p-1 sppcfw-space-y-0.5' },
+
+						// "Default (All Products)" Option
+						h(
+							'button',
+							{
+								type: 'button',
+								className: `sppcfw-w-full sppcfw-flex sppcfw-items-center sppcfw-justify-between sppcfw-p-2 sppcfw-rounded sppcfw-text-left sppcfw-transition-colors sppcfw-cursor-pointer ${
+									!selectedProductId ? 'sppcfw-bg-[#9333ea] sppcfw-text-white' : 'hover:sppcfw-bg-[#111827] sppcfw-text-gray-200'
+								}`,
+								onClick: () => handleSelect(''),
+							},
+							h(
+								'div',
+								{ className: 'sppcfw-flex sppcfw-items-center sppcfw-gap-2.5' },
+								h('span', { className: 'material-symbols-outlined sppcfw-text-sm sppcfw-opacity-80' }, 'auto_awesome'),
+								h(
+									'div',
+									null,
+									h('div', { className: 'sppcfw-text-xs sppcfw-font-semibold' }, 'Default (All Products)'),
+									h('div', { className: 'sppcfw-text-[10px] sppcfw-opacity-70' }, 'Demo sample preview')
+								)
+							),
+							!selectedProductId && h('span', { className: 'material-symbols-outlined sppcfw-text-xs sppcfw-font-bold' }, 'check')
+						),
+
+						// Products List
+						filteredProducts.length > 0
+							? filteredProducts.map(prod => {
+									const isSelected = String(selectedProductId) === String(prod.id);
+									return h(
+										'button',
+										{
+											key: prod.id,
+											type: 'button',
+											className: `sppcfw-w-full sppcfw-flex sppcfw-items-center sppcfw-justify-between sppcfw-p-2 sppcfw-rounded sppcfw-text-left sppcfw-transition-colors sppcfw-cursor-pointer ${
+												isSelected ? 'sppcfw-bg-[#9333ea] sppcfw-text-white' : 'hover:sppcfw-bg-[#111827] sppcfw-text-gray-200'
+											}`,
+											onClick: () => handleSelect(prod.id),
+										},
+										h(
+											'div',
+											{ className: 'sppcfw-flex sppcfw-items-center sppcfw-gap-2.5 sppcfw-overflow-hidden' },
+											prod.image_url
+												? h('img', { src: prod.image_url, alt: '', className: 'sppcfw-w-6 sppcfw-h-6 sppcfw-rounded sppcfw-object-cover sppcfw-bg-[#111827]' })
+												: h('span', { className: 'material-symbols-outlined sppcfw-text-sm sppcfw-opacity-60' }, 'image'),
+											h(
+												'div',
+												{ className: 'sppcfw-overflow-hidden' },
+												h('div', { className: 'sppcfw-text-xs sppcfw-font-medium sppcfw-truncate' }, prod.title),
+												h('div', { className: 'sppcfw-text-[10px] sppcfw-opacity-70 font-mono' }, `ID: #${prod.id}`)
+											)
+										),
+										isSelected && h('span', { className: 'material-symbols-outlined sppcfw-text-xs sppcfw-font-bold' }, 'check')
+									);
+							  })
+							: h(
+									'div',
+									{ className: 'sppcfw-py-4 sppcfw-text-center sppcfw-text-gray-400 sppcfw-text-xs' },
+									'No products found matching "',
+									searchTerm,
+									'"'
+							  )
+					)
+				)
+		);
+	}
+
 	// Main App Component
 	function BuilderApp() {
 		const initialTplId = window.SPPCFWBuilderConfig ? window.SPPCFWBuilderConfig.template_id || 'template_default' : 'template_default';
@@ -739,9 +908,15 @@
 		}, []);
 
 		function fetchProductData(productId) {
-			apiPost('sppcfw_get_builder_product_data', { product_id: productId || 0 }).then(res => {
-				if (res && res.success) {
+			if (!productId) {
+				setProductData(null);
+				return;
+			}
+			apiPost('sppcfw_get_builder_product_data', { product_id: productId }).then(res => {
+				if (res && res.success && res.data && res.data.product) {
 					setProductData(res.data.product);
+				} else {
+					setProductData(null);
 				}
 			});
 		}
@@ -1014,6 +1189,10 @@
 			window.open(previewUrl, '_blank');
 		}
 
+		const effectiveSampleData = (selectedProductId && productData)
+			? { ...CANVAS_STATIC_DATA, ...productData }
+			: CANVAS_STATIC_DATA;
+
 		return h(
 			'div',
 			{ className: 'sppcfw-builder-layout sppcfw-flex sppcfw-flex-col sppcfw-h-screen sppcfw-w-screen sppcfw-overflow-hidden sppcfw-text-[#d9e3f6]' },
@@ -1067,6 +1246,7 @@
 					selectedProductId,
 					handleProductChange,
 					productData,
+					sampleData: effectiveSampleData,
 					addWidgetToTarget,
 					addContainerPreset,
 					addColumnToContainer,
@@ -1090,7 +1270,7 @@
 					setElements,
 					selectedElementId,
 					setSelectedElementId,
-					sampleData: CANVAS_STATIC_DATA,
+					sampleData: effectiveSampleData,
 					pageSettings,
 					removeElement,
 					addWidgetToTarget,
@@ -1452,6 +1632,7 @@
 		selectedProductId,
 		handleProductChange,
 		productData,
+		sampleData,
 		addWidgetToTarget,
 		addContainerPreset,
 		addColumnToContainer,
@@ -1476,6 +1657,7 @@
 				closeInspector: () => setSelectedElementId(null),
 				categories,
 				products,
+				sampleData,
 				addColumnToContainer,
 				duplicateColumn,
 				removeElement,
@@ -1490,6 +1672,9 @@
 				pageSettings,
 				setPageSettings,
 				closePanel: openElementsTab,
+				products,
+				selectedProductId,
+				handleProductChange,
 			});
 		}
 
@@ -1510,7 +1695,7 @@
 	}
 
 	// 3c. Page Settings (Post Settings) Panel Component
-	function PageSettingsPanel({ templateTitle, setTemplateTitle, pageSettings, setPageSettings, closePanel }) {
+	function PageSettingsPanel({ templateTitle, setTemplateTitle, pageSettings, setPageSettings, closePanel, products = [], selectedProductId, handleProductChange }) {
 		const [activeTab, setActiveTab] = useState('settings'); // 'settings' | 'style' | 'advanced'
 		const [isGeneralOpen, setIsGeneralOpen] = useState(true);
 
@@ -1639,11 +1824,22 @@
 										)
 									),
 
+									// Preview Product Data Field
+									h(
+										'div',
+										{ className: 'sppcfw-space-y-1.5' },
+										h('label', { className: 'sppcfw-font-semibold sppcfw-text-gray-200 sppcfw-block' }, 'Preview Product Data'),
+										h(SearchableProductSelect, {
+											products,
+											selectedProductId,
+											onChange: handleProductChange,
+										})
+									),
 
 									// Page Layout Field
 									h(
 										'div',
-										{ className: 'sppcfw-space-y-1.5 sppcfw-pt-2' },
+										{ className: 'sppcfw-space-y-1.5 sppcfw-pt-1' },
 										h('label', { className: 'sppcfw-font-semibold sppcfw-text-gray-200 sppcfw-block' }, 'Page Layout'),
 										h(
 											'select',
@@ -1746,16 +1942,11 @@
 				h('div', { className: 'sppcfw-flex sppcfw-justify-between sppcfw-items-center' }, h('h2', { className: 'sppcfw-text-sm sppcfw-font-extrabold sppcfw-text-[#d9e3f6] sppcfw-flex sppcfw-items-center sppcfw-gap-1.5' }, h('span', { className: 'material-symbols-outlined sppcfw-text-base sppcfw-text-[#9333ea]' }, 'widgets'), 'Elements'), h('span', { className: 'sppcfw-text-[10px] sppcfw-text-[#9ca3af] font-mono' }, `${elements.length} items on canvas`)),
 
 				h('label', { className: 'inspector-label sppcfw-text-[10px]' }, 'Preview Product Data'),
-				h(
-					'select',
-					{
-						className: 'inspector-input sppcfw-text-xs sppcfw-py-1',
-						value: selectedProductId,
-						onChange: handleProductChange,
-					},
-					h('option', { value: '' }, 'Default (All Products)'),
-					products.map(p => h('option', { key: p.id, value: p.id }, p.title))
-				)
+				h(SearchableProductSelect, {
+					products,
+					selectedProductId,
+					onChange: handleProductChange,
+				})
 			),
 
 			// Sub-tabs Bar: Widgets | Components | Globals
@@ -1946,7 +2137,7 @@
 	}
 
 	// 3b. Left Inspector Component ("Edit Container" / "Edit Element")
-	function LeftInspector({ deviceView = 'desktop', selectedElement, updateElementProperties, closeInspector, categories, products, addColumnToContainer, duplicateColumn, removeElement }) {
+	function LeftInspector({ deviceView = 'desktop', selectedElement, updateElementProperties, closeInspector, categories, products, sampleData, addColumnToContainer, duplicateColumn, removeElement }) {
 		const [activeTab, setActiveTab] = useState('layout'); // 'layout'/'content' | 'style' | 'advanced'
 		const [isContainerOpen, setIsContainerOpen] = useState(true);
 		const [isItemsOpen, setIsItemsOpen] = useState(true);
@@ -1968,6 +2159,8 @@
 		const [radiusUnit, setRadiusUnit] = useState('px');
 		const [marginUnit, setMarginUnit] = useState('px');
 		const [paddingUnit, setPaddingUnit] = useState('px');
+		const [gapsUnit, setGapsUnit] = useState('px');
+		const [isGapsLinked, setIsGapsLinked] = useState(true);
 		const [isRadiusLinked, setIsRadiusLinked] = useState(true);
 		const [isMarginLinked, setIsMarginLinked] = useState(true);
 		const [isPaddingLinked, setIsPaddingLinked] = useState(true);
@@ -2042,12 +2235,12 @@
 		const isImage = selectedElement.type === 'product_gallery' || selectedElement.type === 'image';
 		const panelTitle = isContainer ? 'Edit Container' : isColumn ? 'Edit Column' : isImage ? 'Edit Image' : (selectedElement.label || 'Edit Element');
 		const firstTabLabel = (isContainer || isColumn) ? 'Layout' : 'Content';
-		const firstTabIcon = (isContainer || isColumn) ? 'grid_view' : 'edit';
+		const firstTabIcon = (isContainer || isColumn) ? 'view_column' : 'edit';
 
 		function renderControlHeader(label, showDeviceIcon = true, unitValue = null, onUnitChange = null, units = null) {
 			return h(
 				'div',
-				{ className: 'sppcfw-flex sppcfw-items-center sppcfw-justify-between sppcfw-text-xs sppcfw-text-gray-200 sppcfw-font-medium sppcfw-mb-1.5' },
+				{ className: 'sppcfw-flex sppcfw-items-center sppcfw-justify-between sppcfw-text-xs sppcfw-text-[#e5e7eb] sppcfw-font-medium sppcfw-mb-1.5' },
 				h(
 					'div',
 					{ className: 'sppcfw-flex sppcfw-items-center sppcfw-gap-1.5' },
@@ -2055,19 +2248,24 @@
 					showDeviceIcon && h('span', { className: 'material-symbols-outlined sppcfw-text-[13px] sppcfw-text-gray-400', title: deviceView }, 'desktop_windows')
 				),
 				units && onUnitChange && h(
-					'select',
-					{
-						className: 'sppcfw-bg-[#111827] sppcfw-border sppcfw-border-[#374151] sppcfw-text-[10px] sppcfw-text-gray-300 sppcfw-rounded sppcfw-px-1 sppcfw-py-0.5 focus:sppcfw-outline-none sppcfw-cursor-pointer',
-						value: unitValue || units[0],
-						onChange: e => onUnitChange(e.target.value),
-					},
-					units.map(u => h('option', { key: u, value: u }, u))
+					'div',
+					{ className: 'sppcfw-relative sppcfw-inline-flex sppcfw-items-center' },
+					h(
+						'select',
+						{
+							className: 'sppcfw-select-measurement sppcfw-bg-[#111827] sppcfw-border sppcfw-border-[#374151] sppcfw-text-[10px] sppcfw-text-gray-300 sppcfw-rounded sppcfw-px-1.5 sppcfw-py-0.5 sppcfw-pr-4 sppcfw-appearance-none focus:sppcfw-outline-none sppcfw-cursor-pointer',
+							value: unitValue || units[0],
+							onChange: e => onUnitChange(e.target.value),
+						},
+						units.map(u => h('option', { key: u, value: u }, u))
+					),
 				)
 			);
 		}
 
-		function renderSliderInput(valStr, onChange, min = 0, max = 100, step = 1, unit = 'px') {
-			const numVal = parseFloat(valStr) || 0;
+		function renderSliderInput(valStr, onChange, min = 0, max = 100, step = 1, unit = 'px', placeholder = '') {
+			const rawNum = valStr !== '' && valStr !== undefined ? parseFloat(valStr) : '';
+			const numVal = typeof rawNum === 'number' && !isNaN(rawNum) ? rawNum : '';
 			return h(
 				'div',
 				{ className: 'sppcfw-flex sppcfw-items-center sppcfw-gap-2.5' },
@@ -2076,8 +2274,8 @@
 					min: min,
 					max: max,
 					step: step,
-					className: 'sppcfw-flex-1 sppcfw-accent-[#9333ea] sppcfw-bg-[#111827] sppcfw-h-1.5 sppcfw-rounded sppcfw-cursor-pointer',
-					value: numVal,
+					className: 'sppcfw-flex-1 sppcfw-accent-white sppcfw-bg-[#374151] sppcfw-h-1.5 sppcfw-rounded-full sppcfw-cursor-pointer',
+					value: numVal !== '' ? numVal : min,
 					onChange: e => onChange(e.target.value ? e.target.value + unit : ''),
 				}),
 				h('input', {
@@ -2085,9 +2283,10 @@
 					min: min,
 					max: max,
 					step: step,
+					placeholder: placeholder,
 					className: 'sppcfw-w-16 sppcfw-bg-[#111827] sppcfw-border sppcfw-border-[#374151] sppcfw-rounded sppcfw-px-2 sppcfw-py-1 sppcfw-text-xs sppcfw-text-center sppcfw-text-white focus:sppcfw-outline-none focus:sppcfw-border-[#9333ea]',
-					value: valStr !== '' && valStr !== undefined ? numVal : '',
-					onChange: e => onChange(e.target.value ? e.target.value + unit : ''),
+					value: numVal !== '' ? numVal : '',
+					onChange: e => onChange(e.target.value !== '' ? e.target.value + unit : ''),
 				})
 			);
 		}
@@ -2269,132 +2468,319 @@
 						'div',
 						{ className: 'sppcfw-space-y-4' },
 
-						// Accordion: Container
+						// Accordion: Container (Matching reference image)
 						isContainer &&
 							h(
 								'div',
-								{ className: 'sppcfw-border-b sppcfw-border-[#374151] sppcfw-pb-4 sppcfw-space-y-3' },
+								{ className: 'sppcfw-space-y-4' },
+
+								// Accordion Header
 								h(
 									'div',
 									{
-										className: 'sppcfw-flex sppcfw-items-center sppcfw-justify-between sppcfw-cursor-pointer sppcfw-select-none',
+										className: 'sppcfw-flex sppcfw-items-center sppcfw-justify-between sppcfw-cursor-pointer sppcfw-select-none sppcfw-pb-1',
 										onClick: () => setIsContainerOpen(!isContainerOpen),
 									},
-									h('h4', { className: 'sppcfw-text-xs sppcfw-font-bold sppcfw-text-white sppcfw-flex sppcfw-items-center sppcfw-gap-1.5' }, h('span', { className: 'sppcfw-text-[10px]' }, isContainerOpen ? '▼' : '▶'), 'Container')
+									h(
+										'h4',
+										{ className: 'sppcfw-text-xs sppcfw-font-bold sppcfw-text-white sppcfw-flex sppcfw-items-center sppcfw-gap-1.5' },
+										h('span', { className: 'sppcfw-text-[10px] sppcfw-text-gray-300' }, isContainerOpen ? '▾' : '▸'),
+										'Container'
+									)
 								),
 
 								isContainerOpen &&
 									h(
 										'div',
-										{ className: 'sppcfw-space-y-3.5 sppcfw-pt-1' },
+										{ className: 'sppcfw-space-y-4' },
 
-										// Container Layout Dropdown (Flexbox / Grid)
+										// 1. Container Layout (Flexbox / Grid)
 										h(
 											'div',
 											{ className: 'sppcfw-flex sppcfw-items-center sppcfw-justify-between' },
-											h('label', { className: 'sppcfw-text-xs sppcfw-text-gray-200 sppcfw-font-medium' }, 'Container Layout'),
-											h(
-												'select',
-												{
-													className: 'sppcfw-bg-[#111827] sppcfw-border sppcfw-border-[#374151] sppcfw-rounded sppcfw-px-2.5 sppcfw-py-1 sppcfw-text-xs sppcfw-text-white focus:sppcfw-outline-none focus:sppcfw-border-[#9333ea] sppcfw-w-36',
-													value: getSetting('flex_direction') === 'grid' ? 'Grid' : 'Flexbox',
-													onChange: e => {
-														const val = e.target.value;
-														handleSettingChange('flex_direction', val === 'Grid' ? 'grid' : 'row');
-													},
-												},
-												h('option', { value: 'Flexbox' }, 'Flexbox'),
-												h('option', { value: 'Grid' }, 'Grid')
-											)
-										),
-
-										// Content Width Dropdown (Boxed / Full Width)
-										h(
-											'div',
-											{ className: 'sppcfw-flex sppcfw-items-center sppcfw-justify-between' },
-											h('label', { className: 'sppcfw-text-xs sppcfw-text-gray-200 sppcfw-font-medium' }, 'Content Width'),
-											h(
-												'select',
-												{
-													className: 'sppcfw-bg-[#111827] sppcfw-border sppcfw-border-[#374151] sppcfw-rounded sppcfw-px-2.5 sppcfw-py-1 sppcfw-text-xs sppcfw-text-white focus:sppcfw-outline-none focus:sppcfw-border-[#9333ea] sppcfw-w-36',
-													value: getSetting('width_mode') === 'full' ? 'Full Width' : 'Boxed',
-													onChange: e => handleSettingChange('width_mode', e.target.value === 'Full Width' ? 'full' : 'boxed'),
-												},
-												h('option', { value: 'Boxed' }, 'Boxed'),
-												h('option', { value: 'Full Width' }, 'Full Width')
-											)
-										),
-
-										// Width Control
-										h(
-											'div',
-											{ className: 'sppcfw-space-y-1.5' },
-											renderControlHeader('Width', true, widthUnit, setWidthUnit, ['px', '%']),
-											renderSliderInput(getSetting('boxed_width') || '1425', v => handleSettingChange('boxed_width', v), 100, 2000, 1, widthUnit)
-										),
-
-										// Min Height Control
-										h(
-											'div',
-											{ className: 'sppcfw-space-y-1.5' },
-											renderControlHeader('Min Height', true, heightUnit, setHeightUnit, ['px', 'vh']),
-											renderSliderInput(getSetting('min_height') || '0', v => handleSettingChange('min_height', v), 0, 800, 1, heightUnit)
-										),
-
-										// Gaps
-										h(
-											'div',
-											{ className: 'sppcfw-space-y-1.5' },
+											h('label', { className: 'sppcfw-text-xs sppcfw-text-[#d1d5db] sppcfw-font-medium' }, 'Container Layout'),
 											h(
 												'div',
-												{ className: 'sppcfw-flex sppcfw-items-center sppcfw-justify-between' },
-												h('div', { className: 'sppcfw-flex sppcfw-items-center sppcfw-gap-1.5 sppcfw-text-gray-200 sppcfw-font-medium' }, 'Gaps'),
-												h('span', { className: 'sppcfw-text-[10px] sppcfw-text-gray-400' }, 'px ▾')
+												{ className: 'sppcfw-relative sppcfw-w-44' },
+												h(
+													'select',
+													{
+														className: 'sppcfw-w-full sppcfw-bg-[#111827] sppcfw-border sppcfw-border-[#374151] sppcfw-rounded sppcfw-px-2.5 sppcfw-py-1.5 sppcfw-pr-6 sppcfw-text-xs sppcfw-text-white sppcfw-appearance-none focus:sppcfw-outline-none focus:sppcfw-border-[#9333ea] sppcfw-cursor-pointer',
+														value: getSetting('flex_direction') === 'grid' ? 'Grid' : 'Flexbox',
+														onChange: e => handleSettingChange('flex_direction', e.target.value === 'Grid' ? 'grid' : 'row'),
+													},
+													h('option', { value: 'Flexbox' }, 'Flexbox'),
+													h('option', { value: 'Grid' }, 'Grid')
+												),
+											)
+										),
+
+										// Separator Divider
+										h('hr', { className: 'sppcfw-border-[#374151]/60' }),
+
+										// 2. Content Width (Boxed / Full Width)
+										h(
+											'div',
+											{ className: 'sppcfw-flex sppcfw-items-center sppcfw-justify-between' },
+											h('label', { className: 'sppcfw-text-xs sppcfw-text-[#d1d5db] sppcfw-font-medium' }, 'Content Width'),
+											h(
+												'div',
+												{ className: 'sppcfw-relative sppcfw-w-44' },
+												h(
+													'select',
+													{
+														className: 'sppcfw-w-full sppcfw-bg-[#111827] sppcfw-border sppcfw-border-[#374151] sppcfw-rounded sppcfw-px-2.5 sppcfw-py-1.5 sppcfw-pr-6 sppcfw-text-xs sppcfw-text-white sppcfw-appearance-none focus:sppcfw-outline-none focus:sppcfw-border-[#9333ea] sppcfw-cursor-pointer',
+														value: getSetting('width_mode') === 'full' ? 'Full Width' : 'Boxed',
+														onChange: e => handleSettingChange('width_mode', e.target.value === 'Full Width' ? 'full' : 'boxed'),
+													},
+													h('option', { value: 'Boxed' }, 'Boxed'),
+													h('option', { value: 'Full Width' }, 'Full Width')
+												),
+											)
+										),
+
+										// 3. Width Control
+										h(
+											'div',
+											{ className: 'sppcfw-space-y-1.5' },
+											renderControlHeader('Width', true, widthUnit, setWidthUnit, ['px', '%', 'vw']),
+											renderSliderInput(getSetting('boxed_width') || '1140px', v => handleSettingChange('boxed_width', v), 100, 2000, 1, widthUnit, '1140')
+										),
+
+										// 4. Min Height Control
+										h(
+											'div',
+											{ className: 'sppcfw-space-y-1.5' },
+											renderControlHeader('Min Height', true, heightUnit, setHeightUnit, ['px', 'vh', 'em']),
+											renderSliderInput(getSetting('min_height') || '', v => handleSettingChange('min_height', v), 0, 1000, 1, heightUnit, ''),
+											h('p', { className: 'sppcfw-text-[11px] sppcfw-text-gray-400 sppcfw-italic sppcfw-pt-0.5' }, 'To achieve full height Container use 100vh.')
+										),
+
+										// Separator Divider
+										h('hr', { className: 'sppcfw-border-[#374151]/60' }),
+
+										// 5. Items Section Subtitle
+										h('h4', { className: 'sppcfw-text-xs sppcfw-font-bold sppcfw-text-white sppcfw-pt-1' }, 'Items'),
+
+										// 6. Direction (Row, Col, Row-Reverse, Col-Reverse)
+										h(
+											'div',
+											{ className: 'sppcfw-flex sppcfw-items-center sppcfw-justify-between' },
+											h(
+												'div',
+												{ className: 'sppcfw-flex sppcfw-items-center sppcfw-gap-1.5 sppcfw-text-xs sppcfw-text-[#e5e7eb] sppcfw-font-medium' },
+												'Direction',
+												h('span', { className: 'material-symbols-outlined sppcfw-text-[13px] sppcfw-text-gray-400', title: deviceView }, 'desktop_windows')
 											),
 											h(
 												'div',
-												{ className: 'sppcfw-flex sppcfw-items-center sppcfw-gap-2' },
+												{ className: 'sppcfw-flex sppcfw-border sppcfw-border-[#374151] sppcfw-rounded sppcfw-bg-[#111827] sppcfw-overflow-hidden' },
+												[
+													{ val: 'row', title: 'Row - Horizontal', icon: h('svg', { width: 14, height: 14, viewBox: '0 0 16 16', fill: 'none', stroke: 'currentColor', strokeWidth: 2, strokeLinecap: 'round', strokeLinejoin: 'round' }, h('path', { d: 'M3 8h10M9 4l4 4-4 4' })) },
+													{ val: 'column', title: 'Column - Vertical', icon: h('svg', { width: 14, height: 14, viewBox: '0 0 16 16', fill: 'none', stroke: 'currentColor', strokeWidth: 2, strokeLinecap: 'round', strokeLinejoin: 'round' }, h('path', { d: 'M8 3v10M4 9l4 4 4-4' })) },
+													{ val: 'row-reverse', title: 'Row Reverse', icon: h('svg', { width: 14, height: 14, viewBox: '0 0 16 16', fill: 'none', stroke: 'currentColor', strokeWidth: 2, strokeLinecap: 'round', strokeLinejoin: 'round' }, h('path', { d: 'M13 8H3M7 4L3 8l4 4' })) },
+													{ val: 'column-reverse', title: 'Column Reverse', icon: h('svg', { width: 14, height: 14, viewBox: '0 0 16 16', fill: 'none', stroke: 'currentColor', strokeWidth: 2, strokeLinecap: 'round', strokeLinejoin: 'round' }, h('path', { d: 'M8 13V3M4 7l4-4 4 4' })) },
+												].map(dirOpt => {
+													const isAct = (getSetting('flex_direction') || 'row') === dirOpt.val;
+													return h(
+														'button',
+														{
+															key: dirOpt.val,
+															type: 'button',
+															className: `sppcfw-p-2 sppcfw-flex sppcfw-items-center sppcfw-justify-center sppcfw-transition-colors sppcfw-cursor-pointer ${
+																isAct ? 'sppcfw-bg-[#374151] sppcfw-text-white' : 'sppcfw-text-gray-400 hover:sppcfw-text-white hover:sppcfw-bg-[#1f2937]'
+															}`,
+															onClick: () => handleSettingChange('flex_direction', dirOpt.val),
+															title: dirOpt.title,
+														},
+														dirOpt.icon
+													);
+												})
+											)
+										),
+
+										// 7. Justify Content (Full Width 6 Icons)
+										h(
+											'div',
+											{ className: 'sppcfw-space-y-1.5' },
+											h(
+												'div',
+												{ className: 'sppcfw-flex sppcfw-items-center sppcfw-gap-1.5 sppcfw-text-xs sppcfw-text-[#e5e7eb] sppcfw-font-medium' },
+												'Justify Content',
+												h('span', { className: 'material-symbols-outlined sppcfw-text-[13px] sppcfw-text-gray-400', title: deviceView }, 'desktop_windows')
+											),
+											h(
+												'div',
+												{ className: 'sppcfw-flex sppcfw-border sppcfw-border-[#374151] sppcfw-rounded sppcfw-bg-[#111827] sppcfw-overflow-hidden' },
+												[
+													{ val: 'flex-start', title: 'Start', icon: h('svg', { width: 14, height: 14, viewBox: '0 0 16 16', fill: 'currentColor' }, h('rect', { x: 1.5, y: 1.5, width: 1.5, height: 13, rx: 0.5 }), h('rect', { x: 4.5, y: 4, width: 3, height: 8, rx: 0.5 }), h('rect', { x: 9, y: 4, width: 3, height: 8, rx: 0.5 })) },
+													{ val: 'center', title: 'Center', icon: h('svg', { width: 14, height: 14, viewBox: '0 0 16 16', fill: 'currentColor' }, h('rect', { x: 4, y: 4, width: 3.5, height: 8, rx: 0.5 }), h('rect', { x: 8.5, y: 4, width: 3.5, height: 8, rx: 0.5 })) },
+													{ val: 'flex-end', title: 'End', icon: h('svg', { width: 14, height: 14, viewBox: '0 0 16 16', fill: 'currentColor' }, h('rect', { x: 13, y: 1.5, width: 1.5, height: 13, rx: 0.5 }), h('rect', { x: 4, y: 4, width: 3, height: 8, rx: 0.5 }), h('rect', { x: 8.5, y: 4, width: 3, height: 8, rx: 0.5 })) },
+													{ val: 'space-between', title: 'Space Between', icon: h('svg', { width: 14, height: 14, viewBox: '0 0 16 16', fill: 'currentColor' }, h('rect', { x: 1.5, y: 1.5, width: 1.5, height: 13, rx: 0.5 }), h('rect', { x: 13, y: 1.5, width: 1.5, height: 13, rx: 0.5 }), h('rect', { x: 4.5, y: 4, width: 2.5, height: 8, rx: 0.5 }), h('rect', { x: 9, y: 4, width: 2.5, height: 8, rx: 0.5 })) },
+													{ val: 'space-around', title: 'Space Around', icon: h('svg', { width: 14, height: 14, viewBox: '0 0 16 16', fill: 'currentColor' }, h('rect', { x: 2.5, y: 4, width: 3, height: 8, rx: 0.5 }), h('rect', { x: 7, y: 2, width: 1.5, height: 12, rx: 0.5, opacity: 0.35 }), h('rect', { x: 10.5, y: 4, width: 3, height: 8, rx: 0.5 })) },
+													{ val: 'space-evenly', title: 'Space Evenly', icon: h('svg', { width: 14, height: 14, viewBox: '0 0 16 16', fill: 'currentColor' }, h('rect', { x: 2, y: 4, width: 2.5, height: 8, rx: 0.5 }), h('rect', { x: 6.75, y: 4, width: 2.5, height: 8, rx: 0.5 }), h('rect', { x: 11.5, y: 4, width: 2.5, height: 8, rx: 0.5 })) },
+												].map(jcOpt => {
+													const isAct = (getSetting('justify_content') || 'flex-start') === jcOpt.val;
+													return h(
+														'button',
+														{
+															key: jcOpt.val,
+															type: 'button',
+															className: `sppcfw-flex-1 sppcfw-py-2 sppcfw-flex sppcfw-items-center sppcfw-justify-center sppcfw-transition-colors sppcfw-cursor-pointer ${
+																isAct ? 'sppcfw-bg-[#374151] sppcfw-text-white' : 'sppcfw-text-gray-400 hover:sppcfw-text-white hover:sppcfw-bg-[#1f2937]'
+															}`,
+															onClick: () => handleSettingChange('justify_content', jcOpt.val),
+															title: jcOpt.title,
+														},
+														jcOpt.icon
+													);
+												})
+											)
+										),
+
+										// 8. Align Items (4 Icons)
+										h(
+											'div',
+											{ className: 'sppcfw-flex sppcfw-items-center sppcfw-justify-between' },
+											h(
+												'div',
+												{ className: 'sppcfw-flex sppcfw-items-center sppcfw-gap-1.5 sppcfw-text-xs sppcfw-text-[#e5e7eb] sppcfw-font-medium' },
+												'Align Items',
+												h('span', { className: 'material-symbols-outlined sppcfw-text-[13px] sppcfw-text-gray-400', title: deviceView }, 'desktop_windows')
+											),
+											h(
+												'div',
+												{ className: 'sppcfw-flex sppcfw-border sppcfw-border-[#374151] sppcfw-rounded sppcfw-bg-[#111827] sppcfw-overflow-hidden' },
+												[
+													{ val: 'flex-start', title: 'Start', icon: h('svg', { width: 14, height: 14, viewBox: '0 0 16 16', fill: 'currentColor' }, h('rect', { x: 1.5, y: 1.5, width: 13, height: 1.5, rx: 0.5 }), h('rect', { x: 6, y: 4.5, width: 4, height: 9, rx: 0.5 })) },
+													{ val: 'center', title: 'Center', icon: h('svg', { width: 14, height: 14, viewBox: '0 0 16 16', fill: 'currentColor' }, h('rect', { x: 1.5, y: 7.25, width: 13, height: 1.5, rx: 0.5 }), h('rect', { x: 6, y: 2.5, width: 4, height: 11, rx: 0.5 })) },
+													{ val: 'flex-end', title: 'End', icon: h('svg', { width: 14, height: 14, viewBox: '0 0 16 16', fill: 'currentColor' }, h('rect', { x: 1.5, y: 13, width: 13, height: 1.5, rx: 0.5 }), h('rect', { x: 6, y: 2.5, width: 4, height: 9, rx: 0.5 })) },
+													{ val: 'stretch', title: 'Stretch', icon: h('svg', { width: 14, height: 14, viewBox: '0 0 16 16', fill: 'currentColor' }, h('rect', { x: 1.5, y: 1.5, width: 13, height: 1.5, rx: 0.5 }), h('rect', { x: 1.5, y: 13, width: 13, height: 1.5, rx: 0.5 }), h('rect', { x: 6, y: 4, width: 4, height: 8, rx: 0.5 })) },
+												].map(aiOpt => {
+													const isAct = (getSetting('align_items') || 'stretch') === aiOpt.val;
+													return h(
+														'button',
+														{
+															key: aiOpt.val,
+															type: 'button',
+															className: `sppcfw-p-2 sppcfw-flex sppcfw-items-center sppcfw-justify-center sppcfw-transition-colors sppcfw-cursor-pointer ${
+																isAct ? 'sppcfw-bg-[#374151] sppcfw-text-white' : 'sppcfw-text-gray-400 hover:sppcfw-text-white hover:sppcfw-bg-[#1f2937]'
+															}`,
+															onClick: () => handleSettingChange('align_items', aiOpt.val),
+															title: aiOpt.title,
+														},
+														aiOpt.icon
+													);
+												})
+											)
+										),
+
+										// 9. Gaps (Dual Column & Row inputs with Link button)
+										h(
+											'div',
+											{ className: 'sppcfw-space-y-1.5' },
+											renderControlHeader('Gaps', true, gapsUnit, setGapsUnit, ['px', 'em', '%']),
+											h(
+												'div',
+												{ className: 'sppcfw-flex sppcfw-items-start sppcfw-gap-1.5' },
 												h(
 													'div',
-													{ className: 'sppcfw-flex-1 sppcfw-text-center' },
-													h('input', {
-														type: 'number',
-														className: 'sppcfw-w-full sppcfw-bg-[#111827] sppcfw-border sppcfw-border-[#374151] sppcfw-rounded sppcfw-px-2 sppcfw-py-1 sppcfw-text-xs sppcfw-text-center sppcfw-text-white focus:sppcfw-outline-none focus:sppcfw-border-[#9333ea]',
-														value: parseInt(getSetting('gap') || '20', 10) || 20,
-														onChange: e => handleSettingChange('gap', e.target.value + 'px'),
-													}),
-													h('span', { className: 'sppcfw-text-[10px] sppcfw-text-gray-400 sppcfw-mt-0.5 sppcfw-block' }, 'Column')
+													{ className: 'sppcfw-flex-1 sppcfw-grid sppcfw-grid-cols-2 sppcfw-border sppcfw-border-[#374151] sppcfw-rounded sppcfw-bg-[#111827] sppcfw-overflow-hidden' },
+													h(
+														'div',
+														{ className: 'sppcfw-border-r sppcfw-border-[#374151]' },
+														h('input', {
+															type: 'number',
+															className: 'sppcfw-w-full sppcfw-bg-transparent sppcfw-px-2 sppcfw-py-1.5 sppcfw-text-xs sppcfw-text-center sppcfw-text-white focus:sppcfw-outline-none',
+															value: parseInt(getSetting('column_gap') || getSetting('gap') || '20', 10),
+															onChange: e => {
+																const v = e.target.value ? e.target.value + gapsUnit : '0px';
+																if (isGapsLinked) {
+																	handleSettingChange('gap', v);
+																	handleSettingChange('column_gap', v);
+																	handleSettingChange('row_gap', v);
+																} else {
+																	handleSettingChange('column_gap', v);
+																}
+															},
+														})
+													),
+													h(
+														'div',
+														null,
+														h('input', {
+															type: 'number',
+															className: 'sppcfw-w-full sppcfw-bg-transparent sppcfw-px-2 sppcfw-py-1.5 sppcfw-text-xs sppcfw-text-center sppcfw-text-white focus:sppcfw-outline-none',
+															value: parseInt(getSetting('row_gap') || getSetting('gap') || '20', 10),
+															onChange: e => {
+																const v = e.target.value ? e.target.value + gapsUnit : '0px';
+																if (isGapsLinked) {
+																	handleSettingChange('gap', v);
+																	handleSettingChange('column_gap', v);
+																	handleSettingChange('row_gap', v);
+																} else {
+																	handleSettingChange('row_gap', v);
+																}
+															},
+														})
+													)
 												),
 												h(
-													'div',
-													{ className: 'sppcfw-flex-1 sppcfw-text-center' },
-													h('input', {
-														type: 'number',
-														className: 'sppcfw-w-full sppcfw-bg-[#111827] sppcfw-border sppcfw-border-[#374151] sppcfw-rounded sppcfw-px-2 sppcfw-py-1 sppcfw-text-xs sppcfw-text-center sppcfw-text-white focus:sppcfw-outline-none focus:sppcfw-border-[#9333ea]',
-														value: parseInt(getSetting('row_gap') || getSetting('gap') || '20', 10) || 20,
-														onChange: e => handleSettingChange('row_gap', e.target.value + 'px'),
-													}),
-													h('span', { className: 'sppcfw-text-[10px] sppcfw-text-gray-400 sppcfw-mt-0.5 sppcfw-block' }, 'Row')
+													'button',
+													{
+														type: 'button',
+														className: `sppcfw-p-2 sppcfw-rounded sppcfw-border sppcfw-transition-colors sppcfw-cursor-pointer ${
+															isGapsLinked
+																? 'sppcfw-bg-[#374151] sppcfw-border-[#4b5563] sppcfw-text-white'
+																: 'sppcfw-bg-[#111827] sppcfw-border-[#374151] sppcfw-text-gray-400 hover:sppcfw-text-white'
+														}`,
+														onClick: () => setIsGapsLinked(!isGapsLinked),
+														title: isGapsLinked ? 'Unlink values' : 'Link values',
+													},
+													h('span', { className: 'material-symbols-outlined sppcfw-text-xs' }, isGapsLinked ? 'link' : 'link_off')
 												)
+											),
+											h(
+												'div',
+												{ className: 'sppcfw-flex sppcfw-text-[10px] sppcfw-text-gray-400 sppcfw-pr-9' },
+												h('span', { className: 'sppcfw-flex-1 sppcfw-text-center' }, 'Column'),
+												h('span', { className: 'sppcfw-flex-1 sppcfw-text-center' }, 'Row')
 											)
 										),
 
-										// Wrap
+										// 10. Wrap (No Wrap / Wrap)
 										h(
 											'div',
-											{ className: 'sppcfw-space-y-1.5' },
+											{ className: 'sppcfw-flex sppcfw-items-center sppcfw-justify-between' },
 											h(
 												'div',
-												{ className: 'sppcfw-flex sppcfw-items-center sppcfw-justify-between' },
-												h('div', { className: 'sppcfw-flex sppcfw-items-center sppcfw-gap-1.5 sppcfw-text-gray-200 sppcfw-font-medium' }, 'Wrap'),
-												h(
-													'div',
-													{ className: 'sppcfw-flex sppcfw-border sppcfw-border-[#374151] sppcfw-rounded sppcfw-bg-[#111827] sppcfw-overflow-hidden' },
-													h('button', { className: `sppcfw-p-1.5 sppcfw-text-xs sppcfw-text-white hover:sppcfw-bg-[#1f2937] ${getSetting('flex_wrap') === 'nowrap' || !getSetting('flex_wrap') ? 'sppcfw-bg-[#374151]' : ''}`, onClick: () => handleSettingChange('flex_wrap', 'nowrap'), title: 'No Wrap' }, '├─'),
-													h('button', { className: `sppcfw-p-1.5 sppcfw-text-xs sppcfw-text-white hover:sppcfw-bg-[#1f2937] ${getSetting('flex_wrap') === 'wrap' ? 'sppcfw-bg-[#374151]' : ''}`, onClick: () => handleSettingChange('flex_wrap', 'wrap'), title: 'Wrap' }, '↲')
-												)
+												{ className: 'sppcfw-flex sppcfw-items-center sppcfw-gap-1.5 sppcfw-text-xs sppcfw-text-[#e5e7eb] sppcfw-font-medium' },
+												'Wrap',
+												h('span', { className: 'material-symbols-outlined sppcfw-text-[13px] sppcfw-text-gray-400', title: deviceView }, 'desktop_windows')
 											),
-											h('p', { className: 'sppcfw-text-[11px] sppcfw-text-gray-400 sppcfw-italic' }, 'Items within the container can stay in a single line (No wrap), or break into multiple lines (Wrap).')
+											h(
+												'div',
+												{ className: 'sppcfw-flex sppcfw-border sppcfw-border-[#374151] sppcfw-rounded sppcfw-bg-[#111827] sppcfw-overflow-hidden' },
+												[
+													{ val: 'nowrap', title: 'No Wrap', icon: h('svg', { width: 14, height: 14, viewBox: '0 0 16 16', fill: 'none', stroke: 'currentColor', strokeWidth: 1.75, strokeLinecap: 'round', strokeLinejoin: 'round' }, h('path', { d: 'M2 3v10M5 8h8M9.5 4.5L13 8l-3.5 3.5' })) },
+													{ val: 'wrap', title: 'Wrap', icon: h('svg', { width: 14, height: 14, viewBox: '0 0 16 16', fill: 'none', stroke: 'currentColor', strokeWidth: 1.75, strokeLinecap: 'round', strokeLinejoin: 'round' }, h('path', { d: 'M3 5.5h7a3 3 0 0 1 3 3v0a3 3 0 0 1-3 3H4M7 8.5L4 11.5l3 3' })) },
+												].map(wrapOpt => {
+													const isAct = (getSetting('flex_wrap') || 'nowrap') === wrapOpt.val;
+													return h(
+														'button',
+														{
+															key: wrapOpt.val,
+															type: 'button',
+															className: `sppcfw-p-2 sppcfw-flex sppcfw-items-center sppcfw-justify-center sppcfw-transition-colors sppcfw-cursor-pointer ${
+																isAct ? 'sppcfw-bg-[#374151] sppcfw-text-white' : 'sppcfw-text-gray-400 hover:sppcfw-text-white hover:sppcfw-bg-[#1f2937]'
+															}`,
+															onClick: () => handleSettingChange('flex_wrap', wrapOpt.val),
+															title: wrapOpt.title,
+														},
+														wrapOpt.icon
+													);
+												})
+											)
 										)
 									)
 							),
@@ -2637,6 +3023,442 @@
 											)
 										)
 									)
+							),
+
+						// IMAGE & PRODUCT GALLERY CONTENT CONTROLS (WHEN IMAGE WIDGET IS SELECTED)
+						isImage &&
+							h(
+								'div',
+								{ className: 'sppcfw-space-y-4' },
+
+								// Accordion: Image
+								h(
+									'div',
+									{ className: 'sppcfw-border-b sppcfw-border-[#374151] sppcfw-pb-4 sppcfw-space-y-3.5' },
+									h(
+										'div',
+										{
+											className: 'sppcfw-flex sppcfw-items-center sppcfw-justify-between sppcfw-cursor-pointer sppcfw-select-none',
+											onClick: () => setIsImageOpen(!isImageOpen),
+										},
+										h(
+											'h4',
+											{ className: 'sppcfw-text-xs sppcfw-font-bold sppcfw-text-white sppcfw-flex sppcfw-items-center sppcfw-gap-1.5' },
+											h('span', { className: 'sppcfw-text-[10px] sppcfw-text-gray-300' }, isImageOpen ? '▾' : '▸'),
+											'Image'
+										)
+									),
+
+									isImageOpen &&
+										h(
+											'div',
+											{ className: 'sppcfw-space-y-4 sppcfw-pt-1' },
+
+											// Choose Image Box / Preview
+											h(
+												'div',
+												{ className: 'sppcfw-space-y-2' },
+												h('label', { className: 'sppcfw-text-xs sppcfw-text-[#d1d5db] sppcfw-font-medium sppcfw-block' }, 'Choose Image'),
+												h(
+													'div',
+													{
+														className: 'sppcfw-border-2 sppcfw-border-dashed sppcfw-border-[#374151] hover:sppcfw-border-[#9333ea] sppcfw-rounded-lg sppcfw-p-3 sppcfw-bg-[#111827] sppcfw-text-center sppcfw-cursor-pointer sppcfw-transition-colors sppcfw-relative group',
+														onClick: () => {
+															if (typeof wp !== 'undefined' && wp.media) {
+																const frame = wp.media({
+																	title: 'Select Image',
+																	button: { text: 'Insert Image' },
+																	multiple: false,
+																});
+																frame.on('select', () => {
+																	const attachment = frame.state().get('selection').first().toJSON();
+																	if (attachment && attachment.url) {
+																		handleSettingChange('custom_image_url', attachment.url);
+																	}
+																});
+																frame.open();
+															} else {
+																const url = prompt('Enter Image URL:', getSetting('custom_image_url') || '');
+																if (url !== null && url.trim() !== '') {
+																	handleSettingChange('custom_image_url', url.trim());
+																}
+															}
+														},
+													},
+													getSetting('custom_image_url')
+														? h(
+																'div',
+																{ className: 'sppcfw-space-y-2' },
+																h('img', {
+																	src: getSetting('custom_image_url'),
+																	alt: 'Selected Custom Preview',
+																	className: 'sppcfw-h-28 sppcfw-w-full sppcfw-object-contain sppcfw-rounded',
+																}),
+																h('div', { className: 'sppcfw-text-[11px] sppcfw-text-[#9333ea] sppcfw-font-semibold' }, 'Click to Change Custom Image')
+														  )
+														: h(
+																'div',
+																{ className: 'sppcfw-space-y-2' },
+																(sampleData && sampleData.image_url)
+																	? h('img', {
+																			src: sampleData.image_url,
+																			alt: sampleData.title || 'Product Image',
+																			className: 'sppcfw-h-28 sppcfw-w-full sppcfw-object-contain sppcfw-rounded sppcfw-bg-[#1f2937]/50 sppcfw-p-1',
+																	  })
+																	: h(
+																			'div',
+																			{ className: 'sppcfw-py-4 sppcfw-space-y-1.5' },
+																			h('span', { className: 'material-symbols-outlined sppcfw-text-3xl sppcfw-text-gray-400 group-hover:sppcfw-text-[#9333ea]' }, 'add_photo_alternate'),
+																			h('div', { className: 'sppcfw-text-xs sppcfw-font-semibold sppcfw-text-gray-200' }, 'Choose Image')
+																	  ),
+																h(
+																	'div',
+																	{ className: 'sppcfw-text-[10px] sppcfw-text-gray-400 sppcfw-px-1' },
+																	sampleData && sampleData.id
+																		? `Previewing Featured Image: ${sampleData.title}`
+																		: 'Previewing Demo Image (Click to upload custom)'
+																)
+														  )
+												),
+												getSetting('custom_image_url') &&
+													h(
+														'button',
+														{
+															type: 'button',
+															className: 'sppcfw-text-[11px] sppcfw-text-red-400 hover:sppcfw-text-red-300 sppcfw-underline sppcfw-block sppcfw-cursor-pointer',
+															onClick: () => handleSettingChange('custom_image_url', ''),
+														},
+														'Reset to Product Featured Image'
+													)
+											),
+
+											// Image Resolution (Size)
+											h(
+												'div',
+												{ className: 'sppcfw-flex sppcfw-items-center sppcfw-justify-between' },
+												h('label', { className: 'sppcfw-text-xs sppcfw-text-[#d1d5db] sppcfw-font-medium' }, 'Image Resolution'),
+												h(
+													'div',
+													{ className: 'sppcfw-relative sppcfw-w-44' },
+													h(
+														'select',
+														{
+															className: 'sppcfw-w-full sppcfw-bg-[#111827] sppcfw-border sppcfw-border-[#374151] sppcfw-rounded sppcfw-px-2.5 sppcfw-py-1.5 sppcfw-pr-6 sppcfw-text-xs sppcfw-text-white sppcfw-appearance-none focus:sppcfw-outline-none focus:sppcfw-border-[#9333ea] sppcfw-cursor-pointer',
+															value: getSetting('image_size') || 'large',
+															onChange: e => handleSettingChange('image_size', e.target.value),
+														},
+														h('option', { value: 'thumbnail' }, 'Thumbnail (150x150)'),
+														h('option', { value: 'medium' }, 'Medium (300x300)'),
+														h('option', { value: 'large' }, 'Large (1024x1024)'),
+														h('option', { value: 'full' }, 'Full')
+													),
+												)
+											),
+
+											// Alignment
+											h(
+												'div',
+												{ className: 'sppcfw-space-y-1.5' },
+												renderControlHeader('Alignment', true),
+												renderButtonGroup(
+													[
+														{ value: 'left', icon: 'format_align_left', title: 'Left' },
+														{ value: 'center', icon: 'format_align_center', title: 'Center' },
+														{ value: 'right', icon: 'format_align_right', title: 'Right' },
+													],
+													getStyle('alignment') || 'center',
+													v => handleStyleChange('alignment', v)
+												)
+											),
+
+											// Caption
+											h(
+												'div',
+												{ className: 'sppcfw-flex sppcfw-items-center sppcfw-justify-between' },
+												h('label', { className: 'sppcfw-text-xs sppcfw-text-[#d1d5db] sppcfw-font-medium' }, 'Caption'),
+												h(
+													'div',
+													{ className: 'sppcfw-relative sppcfw-w-44' },
+													h(
+														'select',
+														{
+															className: 'sppcfw-w-full sppcfw-bg-[#111827] sppcfw-border sppcfw-border-[#374151] sppcfw-rounded sppcfw-px-2.5 sppcfw-py-1.5 sppcfw-pr-6 sppcfw-text-xs sppcfw-text-white sppcfw-appearance-none focus:sppcfw-outline-none focus:sppcfw-border-[#9333ea] sppcfw-cursor-pointer',
+															value: getSetting('caption_type') || 'none',
+															onChange: e => handleSettingChange('caption_type', e.target.value),
+														},
+														h('option', { value: 'none' }, 'None'),
+														h('option', { value: 'attachment' }, 'Attachment Caption'),
+														h('option', { value: 'custom' }, 'Custom Caption')
+													),
+												)
+											),
+											getSetting('caption_type') === 'custom' &&
+												h(
+													'div',
+													{ className: 'sppcfw-space-y-1' },
+													h('label', { className: 'sppcfw-text-xs sppcfw-text-[#d1d5db] sppcfw-font-medium' }, 'Custom Caption Text'),
+													h('input', {
+														type: 'text',
+														className: 'sppcfw-w-full sppcfw-bg-[#111827] sppcfw-border sppcfw-border-[#374151] sppcfw-rounded sppcfw-px-2.5 sppcfw-py-1.5 sppcfw-text-xs sppcfw-text-white focus:sppcfw-outline-none focus:sppcfw-border-[#9333ea]',
+														value: getSetting('custom_caption') || '',
+														placeholder: 'Enter image caption...',
+														onChange: e => handleSettingChange('custom_caption', e.target.value),
+													})
+												),
+
+											// Link
+											h(
+												'div',
+												{ className: 'sppcfw-flex sppcfw-items-center sppcfw-justify-between' },
+												h('label', { className: 'sppcfw-text-xs sppcfw-text-[#d1d5db] sppcfw-font-medium' }, 'Link'),
+												h(
+													'div',
+													{ className: 'sppcfw-relative sppcfw-w-44' },
+													h(
+														'select',
+														{
+															className: 'sppcfw-w-full sppcfw-bg-[#111827] sppcfw-border sppcfw-border-[#374151] sppcfw-rounded sppcfw-px-2.5 sppcfw-py-1.5 sppcfw-pr-6 sppcfw-text-xs sppcfw-text-white sppcfw-appearance-none focus:sppcfw-outline-none focus:sppcfw-border-[#9333ea] sppcfw-cursor-pointer',
+															value: getSetting('link_to') || 'none',
+															onChange: e => handleSettingChange('link_to', e.target.value),
+														},
+														h('option', { value: 'none' }, 'None'),
+														h('option', { value: 'file' }, 'Media File'),
+														h('option', { value: 'custom' }, 'Custom URL')
+													)
+												)
+											),
+											getSetting('link_to') === 'custom' &&
+												h(
+													'div',
+													{ className: 'sppcfw-space-y-1' },
+													h('label', { className: 'sppcfw-text-xs sppcfw-text-[#d1d5db] sppcfw-font-medium' }, 'Custom Link URL'),
+													h('input', {
+														type: 'text',
+														className: 'sppcfw-w-full sppcfw-bg-[#111827] sppcfw-border sppcfw-border-[#374151] sppcfw-rounded sppcfw-px-2.5 sppcfw-py-1.5 sppcfw-text-xs sppcfw-text-white focus:sppcfw-outline-none focus:sppcfw-border-[#9333ea]',
+														value: getSetting('custom_link') || '',
+														placeholder: 'https://...',
+														onChange: e => handleSettingChange('custom_link', e.target.value),
+													})
+												),
+
+											// Additional Gallery Settings (if product_gallery)
+											selectedElement.type === 'product_gallery' &&
+												h(
+													'div',
+													{ className: 'sppcfw-border-t sppcfw-border-[#374151] sppcfw-pt-3.5 sppcfw-space-y-3' },
+													h('h4', { className: 'sppcfw-text-xs sppcfw-font-bold sppcfw-text-white' }, 'Gallery Features'),
+													h(
+														'div',
+														{ className: 'sppcfw-flex sppcfw-items-center sppcfw-justify-between' },
+														h('label', { className: 'sppcfw-text-xs sppcfw-text-[#d1d5db]' }, 'Show Thumbnail Row'),
+														h('input', {
+															type: 'checkbox',
+															className: 'sppcfw-accent-[#9333ea] sppcfw-cursor-pointer sppcfw-w-4 sppcfw-h-4',
+															checked: getSetting('show_thumbnails') !== false,
+															onChange: e => handleSettingChange('show_thumbnails', e.target.checked),
+														})
+													),
+													h(
+														'div',
+														{ className: 'sppcfw-flex sppcfw-items-center sppcfw-justify-between' },
+														h('label', { className: 'sppcfw-text-xs sppcfw-text-[#d1d5db]' }, 'Lightbox Popup'),
+														h('input', {
+															type: 'checkbox',
+															className: 'sppcfw-accent-[#9333ea] sppcfw-cursor-pointer sppcfw-w-4 sppcfw-h-4',
+															checked: getSetting('enable_lightbox') !== false,
+															onChange: e => handleSettingChange('enable_lightbox', e.target.checked),
+														})
+													),
+													h(
+														'div',
+														{ className: 'sppcfw-flex sppcfw-items-center sppcfw-justify-between' },
+														h('label', { className: 'sppcfw-text-xs sppcfw-text-[#d1d5db]' }, 'Image Zoom'),
+														h('input', {
+															type: 'checkbox',
+															className: 'sppcfw-accent-[#9333ea] sppcfw-cursor-pointer sppcfw-w-4 sppcfw-h-4',
+															checked: getSetting('enable_zoom') !== false,
+															onChange: e => handleSettingChange('enable_zoom', e.target.checked),
+														})
+													)
+												)
+										)
+								)
+							),
+
+						// OTHER PRODUCT WIDGET CONTENT PANELS (WHEN TITLE, PRICE, BUTTON, ETC IS SELECTED)
+						!isContainer && !isColumn && !isImage &&
+							h(
+								'div',
+								{ className: 'sppcfw-space-y-4' },
+
+								// General Widget Content Accordion
+								h(
+									'div',
+									{ className: 'sppcfw-border-b sppcfw-border-[#374151] sppcfw-pb-4 sppcfw-space-y-3.5' },
+									h(
+										'div',
+										{
+											className: 'sppcfw-flex sppcfw-items-center sppcfw-justify-between sppcfw-cursor-pointer sppcfw-select-none',
+											onClick: () => setIsImageOpen(!isImageOpen),
+										},
+										h(
+											'h4',
+											{ className: 'sppcfw-text-xs sppcfw-font-bold sppcfw-text-white sppcfw-flex sppcfw-items-center sppcfw-gap-1.5' },
+											h('span', { className: 'sppcfw-text-[10px] sppcfw-text-gray-300' }, isImageOpen ? '▾' : '▸'),
+											selectedElement.label || 'Widget Content'
+										)
+									),
+
+									isImageOpen &&
+										h(
+											'div',
+											{ className: 'sppcfw-space-y-3.5 sppcfw-pt-1' },
+
+											// Product Title Settings
+											selectedElement.type === 'product_title' &&
+												h(
+													'div',
+													{ className: 'sppcfw-space-y-3' },
+													h(
+														'div',
+														{ className: 'sppcfw-space-y-1' },
+														h('label', { className: 'sppcfw-text-xs sppcfw-text-[#d1d5db] sppcfw-font-medium' }, 'Title Text Override (optional)'),
+														h('input', {
+															type: 'text',
+															className: 'sppcfw-w-full sppcfw-bg-[#111827] sppcfw-border sppcfw-border-[#374151] sppcfw-rounded sppcfw-px-2.5 sppcfw-py-1.5 sppcfw-text-xs sppcfw-text-white focus:sppcfw-outline-none focus:sppcfw-border-[#9333ea]',
+															value: getSetting('title_override') || '',
+															placeholder: 'Dynamic Product Title',
+															onChange: e => handleSettingChange('title_override', e.target.value),
+														})
+													),
+													h(
+														'div',
+														{ className: 'sppcfw-flex sppcfw-items-center sppcfw-justify-between' },
+														h('label', { className: 'sppcfw-text-xs sppcfw-text-[#d1d5db] sppcfw-font-medium' }, 'HTML Tag'),
+														h(
+															'select',
+															{
+																className: 'sppcfw-bg-[#111827] sppcfw-border sppcfw-border-[#374151] sppcfw-rounded sppcfw-px-2 sppcfw-py-1 sppcfw-text-xs sppcfw-text-white focus:sppcfw-outline-none',
+																value: getSetting('html_tag') || 'h1',
+																onChange: e => handleSettingChange('html_tag', e.target.value),
+															},
+															['h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'div', 'span', 'p'].map(tag => h('option', { key: tag, value: tag }, tag.toUpperCase()))
+														)
+													),
+													h(
+														'div',
+														{ className: 'sppcfw-space-y-1.5' },
+														renderControlHeader('Alignment', true),
+														renderButtonGroup(
+															[
+																{ value: 'left', icon: 'format_align_left', title: 'Left' },
+																{ value: 'center', icon: 'format_align_center', title: 'Center' },
+																{ value: 'right', icon: 'format_align_right', title: 'Right' },
+															],
+															getStyle('alignment') || 'left',
+															v => handleStyleChange('alignment', v)
+														)
+													)
+												),
+
+											// Product Price Settings
+											selectedElement.type === 'product_price' &&
+												h(
+													'div',
+													{ className: 'sppcfw-space-y-3' },
+													h(
+														'div',
+														{ className: 'sppcfw-space-y-1.5' },
+														renderControlHeader('Alignment', true),
+														renderButtonGroup(
+															[
+																{ value: 'left', icon: 'format_align_left', title: 'Left' },
+																{ value: 'center', icon: 'format_align_center', title: 'Center' },
+																{ value: 'right', icon: 'format_align_right', title: 'Right' },
+															],
+															getStyle('alignment') || 'left',
+															v => handleStyleChange('alignment', v)
+														)
+													)
+												),
+
+											// Product Add to Cart Settings
+											selectedElement.type === 'product_add_to_cart' &&
+												h(
+													'div',
+													{ className: 'sppcfw-space-y-3' },
+													h(
+														'div',
+														{ className: 'sppcfw-space-y-1' },
+														h('label', { className: 'sppcfw-text-xs sppcfw-text-[#d1d5db] sppcfw-font-medium' }, 'Button Text'),
+														h('input', {
+															type: 'text',
+															className: 'sppcfw-w-full sppcfw-bg-[#111827] sppcfw-border sppcfw-border-[#374151] sppcfw-rounded sppcfw-px-2.5 sppcfw-py-1.5 sppcfw-text-xs sppcfw-text-white focus:sppcfw-outline-none focus:sppcfw-border-[#9333ea]',
+															value: getSetting('button_text') || 'Add to cart',
+															onChange: e => handleSettingChange('button_text', e.target.value),
+														})
+													),
+													h(
+														'div',
+														{ className: 'sppcfw-space-y-1.5' },
+														renderControlHeader('Alignment', true),
+														renderButtonGroup(
+															[
+																{ value: 'left', icon: 'format_align_left', title: 'Left' },
+																{ value: 'center', icon: 'format_align_center', title: 'Center' },
+																{ value: 'right', icon: 'format_align_right', title: 'Right' },
+															],
+															getStyle('alignment') || 'left',
+															v => handleStyleChange('alignment', v)
+														)
+													)
+												),
+
+											// Product Short / Full Description Settings
+											(selectedElement.type === 'product_short_desc' || selectedElement.type === 'product_description') &&
+												h(
+													'div',
+													{ className: 'sppcfw-space-y-3' },
+													h(
+														'div',
+														{ className: 'sppcfw-space-y-1' },
+														h('label', { className: 'sppcfw-text-xs sppcfw-text-[#d1d5db] sppcfw-font-medium' }, 'Custom Description Override'),
+														h('textarea', {
+															rows: 4,
+															className: 'sppcfw-w-full sppcfw-bg-[#111827] sppcfw-border sppcfw-border-[#374151] sppcfw-rounded sppcfw-p-2 sppcfw-text-xs sppcfw-text-white focus:sppcfw-outline-none focus:sppcfw-border-[#9333ea]',
+															value: getSetting('custom_desc') || '',
+															placeholder: 'Leave blank to use WooCommerce product description...',
+															onChange: e => handleSettingChange('custom_desc', e.target.value),
+														})
+													)
+												),
+
+											// Generic Widget Settings
+											selectedElement.type !== 'product_title' &&
+												selectedElement.type !== 'product_price' &&
+												selectedElement.type !== 'product_add_to_cart' &&
+												selectedElement.type !== 'product_short_desc' &&
+												selectedElement.type !== 'product_description' &&
+												h(
+													'div',
+													{ className: 'sppcfw-space-y-3' },
+													h(
+														'div',
+														{ className: 'sppcfw-space-y-1.5' },
+														renderControlHeader('Alignment', true),
+														renderButtonGroup(
+															[
+																{ value: 'left', icon: 'format_align_left', title: 'Left' },
+																{ value: 'center', icon: 'format_align_center', title: 'Center' },
+																{ value: 'right', icon: 'format_align_right', title: 'Right' },
+															],
+															getStyle('alignment') || 'left',
+															v => handleStyleChange('alignment', v)
+														)
+													)
+												)
+										)
+								)
 							)
 					),
 
@@ -3463,7 +4285,8 @@
 		const flexWrap = getResponsiveProp(container.settings, 'flex_wrap', deviceView) || 'nowrap';
 		const minHeight = getResponsiveProp(container.settings, 'min_height', deviceView) || '0px';
 		const gridCols = getResponsiveProp(container.settings, 'grid_columns', deviceView) || '2';
-		const gap = getResponsiveProp(container.settings, 'gap', deviceView) || '16px';
+		const colGap = getResponsiveProp(container.settings, 'column_gap', deviceView) || getResponsiveProp(container.settings, 'gap', deviceView) || '20px';
+		const rowGap = getResponsiveProp(container.settings, 'row_gap', deviceView) || getResponsiveProp(container.settings, 'gap', deviceView) || '20px';
 
 		function handleContainerDragStart(e) {
 			e.stopPropagation();
@@ -3591,13 +4414,15 @@
 			h(
 				'div',
 				{
-					className: isGrid ? `grid grid-cols-${gridCols} gap-4` : 'flex gap-4',
+					className: isGrid ? `grid grid-cols-${gridCols}` : 'flex',
 					style: {
+						display: isGrid ? 'grid' : 'flex',
 						flexDirection: !isGrid ? flexDir : undefined,
 						justifyContent: !isGrid ? justifyContent : undefined,
 						alignItems: !isGrid ? alignItems : undefined,
 						flexWrap: !isGrid ? flexWrap : undefined,
-						gap: gap,
+						columnGap: colGap,
+						rowGap: rowGap,
 					},
 				},
 				container.children &&
@@ -3842,18 +4667,27 @@
 
 	// Live Content Rendering for Canvas
 	function renderLiveWidgetContent(el, sample, pageSettings) {
+		const staticFallback = typeof CANVAS_STATIC_DATA !== 'undefined' ? CANVAS_STATIC_DATA : {};
+		const safeSample = sample || staticFallback;
+
 		switch (el.type) {
 			case 'product_title':
-				return h('h1', { className: 'sppcfw-text-2xl sppcfw-font-bold sppcfw-text-[#111827]' }, sample.title || 'Product Title Placeholder');
+				const titleTag = (el.settings && el.settings.html_tag) || 'h1';
+				const titleText = (el.settings && el.settings.title_override) || safeSample.title || staticFallback.title || 'Product Title';
+				return h(titleTag, { className: 'sppcfw-text-2xl sppcfw-font-bold sppcfw-text-[#111827]' }, titleText);
 			case 'product_price':
+				const displayPrice = safeSample.price || staticFallback.price || '$49.99';
+				const isOnSale = safeSample.on_sale || (safeSample.sale_price && safeSample.regular_price && safeSample.sale_price !== safeSample.regular_price);
 				return h(
 					'div',
 					{ className: 'sppcfw-flex sppcfw-items-center sppcfw-gap-3' },
-					h('span', { className: 'sppcfw-text-2xl sppcfw-font-extrabold sppcfw-text-[#9333ea]', dangerouslySetInnerHTML: { __html: sample.price || '$49.99' } }),
-					h('span', { className: 'sppcfw-bg-[#ef4444] sppcfw-text-white sppcfw-text-xs sppcfw-px-2 sppcfw-py-1 sppcfw-rounded sppcfw-font-bold sppcfw-uppercase' }, 'Sale')
+					h('span', { className: 'sppcfw-text-2xl sppcfw-font-extrabold sppcfw-text-[#9333ea]', dangerouslySetInnerHTML: { __html: displayPrice } }),
+					isOnSale && h('span', { className: 'sppcfw-bg-[#ef4444] sppcfw-text-white sppcfw-text-xs sppcfw-px-2 sppcfw-py-1 sppcfw-rounded sppcfw-font-bold sppcfw-uppercase' }, 'Sale')
 				);
+			case 'image':
 			case 'product_gallery':
 				const imgStyles = el.styles || {};
+				const imgSettings = el.settings || {};
 				const imgWidth = imgStyles.width || '100%';
 				const imgMaxWidth = imgStyles.max_width || '100%';
 				const imgHeight = imgStyles.height || 'auto';
@@ -3877,45 +4711,50 @@
 					objectFit: 'contain',
 				};
 
+				const activeImgSrc = imgSettings.custom_image_url || safeSample.image_url || staticFallback.image_url || '';
+
 				return h(
 					'div',
 					{ className: `sppcfw-w-full sppcfw-rounded sppcfw-overflow-hidden sppcfw-text-center sppcfw-flex ${flexAlign}` },
 					h('img', {
-						src: sample.image_url,
-						alt: sample.title,
+						src: activeImgSrc,
+						alt: safeSample.title || 'Product Image',
 						style: customImgStyle,
 						className: 'sppcfw-max-h-[450px] sppcfw-object-contain sppcfw-transition-all sppcfw-shadow-sm'
 					})
 				);
 			case 'product_add_to_cart':
+				const btnLabel = (el.settings && el.settings.button_text) || 'Add to cart';
 				return h(
 					'div',
 					{ className: 'sppcfw-flex sppcfw-items-center sppcfw-gap-3' },
 					h('input', { type: 'number', defaultValue: 1, min: 1, className: 'sppcfw-w-16 sppcfw-p-2 sppcfw-border sppcfw-border-[#d1d5db] sppcfw-rounded sppcfw-text-center sppcfw-font-bold sppcfw-text-[#111827]' }),
-					h('button', { className: 'sppcfw-px-6 sppcfw-py-2.5 sppcfw-bg-[#9333ea] sppcfw-text-white sppcfw-rounded sppcfw-font-bold sppcfw-shadow' }, 'Add to cart')
+					h('button', { className: 'sppcfw-px-6 sppcfw-py-2.5 sppcfw-bg-[#9333ea] sppcfw-text-white sppcfw-rounded sppcfw-font-bold sppcfw-shadow' }, btnLabel)
 				);
 			case 'product_rating':
+				const rCount = safeSample.rating_count !== undefined ? safeSample.rating_count : 5;
 				return h(
 					'div',
 					{ className: 'sppcfw-flex sppcfw-items-center sppcfw-gap-2 sppcfw-text-[#f59e0b]' },
 					h('span', { className: 'sppcfw-text-lg' }, '★★★★★'),
-					h('span', { className: 'sppcfw-text-xs sppcfw-text-[#6b7280]' }, '(5 reviews)')
+					h('span', { className: 'sppcfw-text-xs sppcfw-text-[#6b7280]' }, `(${rCount} reviews)`)
 				);
 			case 'product_short_desc':
-				return h('p', { className: 'sppcfw-text-sm sppcfw-text-[#4b5563]' }, sample.short_description);
+				return h('p', { className: 'sppcfw-text-sm sppcfw-text-[#4b5563]' }, (el.settings && el.settings.custom_desc) || safeSample.short_description || staticFallback.short_description);
 			case 'product_description':
 				return h(
 					'div',
 					{ className: 'sppcfw-border sppcfw-border-[#e5e7eb] sppcfw-rounded sppcfw-p-4 sppcfw-bg-[#f9fafb]' },
 					h('h3', { className: 'sppcfw-font-bold sppcfw-border-b sppcfw-pb-2 sppcfw-mb-2 sppcfw-text-[#111827]' }, 'Description'),
-					h('p', { className: 'sppcfw-text-sm sppcfw-text-[#4b5563]' }, sample.description)
+					h('p', { className: 'sppcfw-text-sm sppcfw-text-[#4b5563]' }, (el.settings && el.settings.custom_desc) || safeSample.description || staticFallback.description)
 				);
 			case 'product_meta':
 				return h(
 					'div',
 					{ className: 'sppcfw-text-xs sppcfw-text-[#6b7280] sppcfw-space-y-1' },
-					h('div', null, h('strong', null, 'SKU: '), sample.sku || 'SAMPLE-SKU-123'),
-					h('div', null, h('strong', null, 'Category: '), sample.categories || 'Clothing')
+					h('div', null, h('strong', null, 'SKU: '), safeSample.sku || staticFallback.sku || 'SAMPLE-SKU-123'),
+					h('div', null, h('strong', null, 'Category: '), safeSample.categories || staticFallback.categories || 'Clothing'),
+					safeSample.tags && h('div', null, h('strong', null, 'Tags: '), safeSample.tags || staticFallback.tags)
 				);
 			case 'product_meta_item':
 				return h(
@@ -3927,9 +4766,8 @@
 			case 'custom_message':
 				return h(
 					'div',
-					{ className: 'sppcfw-p-3 sppcfw-bg-[#e0e7ff] sppcfw-text-[#4338ca] sppcfw-border sppcfw-border-[#c7d2fe] sppcfw-rounded sppcfw-font-semibold sppcfw-text-sm sppcfw-flex sppcfw-items-center sppcfw-gap-2' },
-					h('span', { className: 'material-symbols-outlined' }, 'campaign'),
-					'Special Offer: Free Shipping on all orders!'
+					{ className: 'sppcfw-p-3 sppcfw-bg-[#faf5ff] sppcfw-border-l-4 sppcfw-border-[#9333ea] sppcfw-rounded-r sppcfw-text-xs sppcfw-text-[#7e22ce] sppcfw-font-medium' },
+					el.settings && el.settings.custom_message ? el.settings.custom_message : '✨ Limited Offer: Free Shipping on orders over $50!'
 				);
 			case 'plus_minus_buttons':
 				return h(
