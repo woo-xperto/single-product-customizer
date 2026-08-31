@@ -177,12 +177,13 @@
 }
 
 /* Floating Structure Panel */
-.floating-structure-panel {
+.floating-structure-panel,
+.sppcfw-floating-structure-panel {
   position: absolute;
   top: 16px;
   right: 16px;
-  width: 280px;
-  max-height: calc(100vh - 120px);
+  width: 288px;
+  max-height: calc(100vh - 80px);
   background-color: #16202e;
   border: 1px solid #4d4354;
   border-radius: 8px;
@@ -195,9 +196,11 @@
   user-select: none;
 }
 
-.floating-structure-panel.dragging {
+.floating-structure-panel.dragging,
+.sppcfw-floating-structure-panel.dragging {
   opacity: 0.95;
   box-shadow: 0 20px 35px rgba(0, 0, 0, 0.6);
+  cursor: grabbing !important;
 }
 
 .sppcfw-templates-wrap {

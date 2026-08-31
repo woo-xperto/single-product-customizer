@@ -302,7 +302,7 @@
 					h(
 						'div',
 						{
-							className: 'sppcfw-flex sppcfw-flex-col sppcfw-items-center sppcfw-gap-3 sppcfw-cursor-pointer sppcfw-group',
+							className: 'sppcfw-flex sppcfw-flex-col sppcfw-items-center sppcfw-gap-3 sppcfw-cursor-pointer sppcfw-tab-group',
 							onClick: () => handleTypeSelect('flexbox'),
 						},
 						h(
@@ -323,7 +323,7 @@
 					h(
 						'div',
 						{
-							className: 'sppcfw-flex sppcfw-flex-col sppcfw-items-center sppcfw-gap-3 sppcfw-cursor-pointer sppcfw-group',
+							className: 'sppcfw-flex sppcfw-flex-col sppcfw-items-center sppcfw-gap-3 sppcfw-cursor-pointer sppcfw-tab-group',
 							onClick: () => handleTypeSelect('grid'),
 						},
 						h(
@@ -371,7 +371,7 @@
 							h(
 								'div',
 								{
-									className: 'sppcfw-w-full sppcfw-h-16 sppcfw-bg-[#cbd5e1]/60 hover:sppcfw-bg-[#9333ea] sppcfw-rounded-md sppcfw-p-1.5 sppcfw-flex sppcfw-gap-1 sppcfw-cursor-pointer sppcfw-transition-all sppcfw-shadow-sm sppcfw-group',
+									className: 'sppcfw-w-full sppcfw-h-16 sppcfw-bg-[#cbd5e1]/60 hover:sppcfw-bg-[#9333ea] sppcfw-rounded-md sppcfw-p-1.5 sppcfw-flex sppcfw-gap-1 sppcfw-cursor-pointer sppcfw-transition-all sppcfw-shadow-sm sppcfw-tab-group',
 									onClick: () => handlePresetSelect('2_col_50_50'),
 									title: '50% / 50%',
 								},
@@ -383,7 +383,7 @@
 							h(
 								'div',
 								{
-									className: 'sppcfw-w-full sppcfw-h-16 sppcfw-bg-[#cbd5e1]/60 hover:sppcfw-bg-[#9333ea] sppcfw-rounded-md sppcfw-p-1.5 sppcfw-flex sppcfw-gap-1 sppcfw-cursor-pointer sppcfw-transition-all sppcfw-shadow-sm sppcfw-group',
+									className: 'sppcfw-w-full sppcfw-h-16 sppcfw-bg-[#cbd5e1]/60 hover:sppcfw-bg-[#9333ea] sppcfw-rounded-md sppcfw-p-1.5 sppcfw-flex sppcfw-gap-1 sppcfw-cursor-pointer sppcfw-transition-all sppcfw-shadow-sm sppcfw-tab-group',
 									onClick: () => handlePresetSelect('2_col_33_66'),
 									title: '33% / 67%',
 								},
@@ -395,7 +395,7 @@
 							h(
 								'div',
 								{
-									className: 'sppcfw-w-full sppcfw-h-16 sppcfw-bg-[#cbd5e1]/60 hover:sppcfw-bg-[#9333ea] sppcfw-rounded-md sppcfw-p-1.5 sppcfw-flex sppcfw-gap-1 sppcfw-cursor-pointer sppcfw-transition-all sppcfw-shadow-sm sppcfw-group',
+									className: 'sppcfw-w-full sppcfw-h-16 sppcfw-bg-[#cbd5e1]/60 hover:sppcfw-bg-[#9333ea] sppcfw-rounded-md sppcfw-p-1.5 sppcfw-flex sppcfw-gap-1 sppcfw-cursor-pointer sppcfw-transition-all sppcfw-shadow-sm sppcfw-tab-group',
 									onClick: () => handlePresetSelect('4_col_25_25_25_25'),
 									title: '25% / 25% / 25% / 25%',
 								},
@@ -409,7 +409,7 @@
 							h(
 								'div',
 								{
-									className: 'sppcfw-w-full sppcfw-h-16 sppcfw-bg-[#cbd5e1]/60 hover:sppcfw-bg-[#9333ea] sppcfw-rounded-md sppcfw-p-1.5 sppcfw-flex sppcfw-gap-1 sppcfw-cursor-pointer sppcfw-transition-all sppcfw-shadow-sm sppcfw-group',
+									className: 'sppcfw-w-full sppcfw-h-16 sppcfw-bg-[#cbd5e1]/60 hover:sppcfw-bg-[#9333ea] sppcfw-rounded-md sppcfw-p-1.5 sppcfw-flex sppcfw-gap-1 sppcfw-cursor-pointer sppcfw-transition-all sppcfw-shadow-sm sppcfw-tab-group',
 									onClick: () => handlePresetSelect('3_col_33_33_33'),
 									title: '33% / 33% / 33%',
 								},
@@ -422,7 +422,7 @@
 							h(
 								'div',
 								{
-									className: 'sppcfw-w-full sppcfw-h-16 sppcfw-bg-[#cbd5e1]/60 hover:sppcfw-bg-[#9333ea] sppcfw-rounded-md sppcfw-p-1.5 sppcfw-flex sppcfw-gap-1 sppcfw-cursor-pointer sppcfw-transition-all sppcfw-shadow-sm sppcfw-group',
+									className: 'sppcfw-w-full sppcfw-h-16 sppcfw-bg-[#cbd5e1]/60 hover:sppcfw-bg-[#9333ea] sppcfw-rounded-md sppcfw-p-1.5 sppcfw-flex sppcfw-gap-1 sppcfw-cursor-pointer sppcfw-transition-all sppcfw-shadow-sm sppcfw-tab-group',
 									onClick: () => handlePresetSelect('3_col_25_50_25'),
 									title: '25% / 50% / 25%',
 								},
@@ -435,7 +435,7 @@
 							h(
 								'div',
 								{
-									className: 'sppcfw-w-full sppcfw-h-16 sppcfw-bg-[#cbd5e1]/60 hover:sppcfw-bg-[#9333ea] sppcfw-rounded-md sppcfw-p-1.5 sppcfw-flex sppcfw-gap-1 sppcfw-cursor-pointer sppcfw-transition-all sppcfw-shadow-sm sppcfw-group',
+									className: 'sppcfw-w-full sppcfw-h-16 sppcfw-bg-[#cbd5e1]/60 hover:sppcfw-bg-[#9333ea] sppcfw-rounded-md sppcfw-p-1.5 sppcfw-flex sppcfw-gap-1 sppcfw-cursor-pointer sppcfw-transition-all sppcfw-shadow-sm sppcfw-tab-group',
 									onClick: () => handlePresetSelect('2_col_66_33'),
 									title: '67% / 33%',
 								},
@@ -451,7 +451,7 @@
 							h(
 								'div',
 								{
-									className: 'sppcfw-w-full sppcfw-h-16 sppcfw-bg-[#cbd5e1]/60 hover:sppcfw-bg-[#9333ea] sppcfw-rounded-md sppcfw-p-1.5 sppcfw-grid sppcfw-grid-cols-2 sppcfw-gap-1 sppcfw-cursor-pointer sppcfw-transition-all sppcfw-shadow-sm sppcfw-group',
+									className: 'sppcfw-w-full sppcfw-h-16 sppcfw-bg-[#cbd5e1]/60 hover:sppcfw-bg-[#9333ea] sppcfw-rounded-md sppcfw-p-1.5 sppcfw-grid sppcfw-grid-cols-2 sppcfw-gap-1 sppcfw-cursor-pointer sppcfw-transition-all sppcfw-shadow-sm sppcfw-tab-group',
 									onClick: () => handlePresetSelect('grid_2x2'),
 									title: 'Grid 2x2',
 								},
@@ -465,7 +465,7 @@
 							h(
 								'div',
 								{
-									className: 'sppcfw-w-full sppcfw-h-16 sppcfw-bg-[#cbd5e1]/60 hover:sppcfw-bg-[#9333ea] sppcfw-rounded-md sppcfw-p-1 sppcfw-grid sppcfw-grid-cols-3 sppcfw-gap-0.5 sppcfw-cursor-pointer sppcfw-transition-all sppcfw-shadow-sm sppcfw-group',
+									className: 'sppcfw-w-full sppcfw-h-16 sppcfw-bg-[#cbd5e1]/60 hover:sppcfw-bg-[#9333ea] sppcfw-rounded-md sppcfw-p-1 sppcfw-grid sppcfw-grid-cols-3 sppcfw-gap-0.5 sppcfw-cursor-pointer sppcfw-transition-all sppcfw-shadow-sm sppcfw-tab-group',
 									onClick: () => handlePresetSelect('grid_3x3'),
 									title: 'Grid 3x3',
 								},
@@ -484,7 +484,7 @@
 							h(
 								'div',
 								{
-									className: 'sppcfw-w-full sppcfw-h-16 sppcfw-bg-[#cbd5e1]/60 hover:sppcfw-bg-[#9333ea] sppcfw-rounded-md sppcfw-p-1.5 sppcfw-flex sppcfw-flex-col sppcfw-gap-1 sppcfw-cursor-pointer sppcfw-transition-all sppcfw-shadow-sm sppcfw-group',
+									className: 'sppcfw-w-full sppcfw-h-16 sppcfw-bg-[#cbd5e1]/60 hover:sppcfw-bg-[#9333ea] sppcfw-rounded-md sppcfw-p-1.5 sppcfw-flex sppcfw-flex-col sppcfw-gap-1 sppcfw-cursor-pointer sppcfw-transition-all sppcfw-shadow-sm sppcfw-tab-group',
 									onClick: () => handlePresetSelect('grid_1_2'),
 									title: 'Grid 1 Top, 2 Bottom',
 								},
@@ -501,7 +501,7 @@
 							h(
 								'div',
 								{
-									className: 'sppcfw-w-full sppcfw-h-16 sppcfw-bg-[#cbd5e1]/60 hover:sppcfw-bg-[#9333ea] sppcfw-rounded-md sppcfw-p-1.5 sppcfw-flex sppcfw-flex-col sppcfw-gap-1 sppcfw-cursor-pointer sppcfw-transition-all sppcfw-shadow-sm sppcfw-group',
+									className: 'sppcfw-w-full sppcfw-h-16 sppcfw-bg-[#cbd5e1]/60 hover:sppcfw-bg-[#9333ea] sppcfw-rounded-md sppcfw-p-1.5 sppcfw-flex sppcfw-flex-col sppcfw-gap-1 sppcfw-cursor-pointer sppcfw-transition-all sppcfw-shadow-sm sppcfw-tab-group',
 									onClick: () => handlePresetSelect('grid_2_1'),
 									title: 'Grid 2 Top, 1 Bottom',
 								},
@@ -1851,7 +1851,7 @@
 									draggable: true,
 									onDragStart: e => handleDragStart(e, 'flex_col', 'Container'),
 									onClick: () => addContainerPreset('flex_col'),
-									className: 'sppcfw-bg-[#181d24] sppcfw-border sppcfw-border-[#2d3748] hover:sppcfw-border-[#9333ea] hover:sppcfw-bg-[#202732] sppcfw-rounded-md sppcfw-p-4 sppcfw-flex sppcfw-flex-col sppcfw-items-center sppcfw-justify-center sppcfw-gap-2 sppcfw-cursor-pointer sppcfw-transition-all sppcfw-group sppcfw-select-none sppcfw-relative sppcfw-shadow-sm',
+									className: 'sppcfw-bg-[#181d24] sppcfw-border sppcfw-border-[#2d3748] hover:sppcfw-border-[#9333ea] hover:sppcfw-bg-[#202732] sppcfw-rounded-md sppcfw-p-4 sppcfw-flex sppcfw-flex-col sppcfw-items-center sppcfw-justify-center sppcfw-gap-2 sppcfw-cursor-pointer sppcfw-transition-all sppcfw-tab-group sppcfw-select-none sppcfw-relative sppcfw-shadow-sm',
 								},
 								h(
 									'div',
@@ -1868,7 +1868,7 @@
 									draggable: true,
 									onDragStart: e => handleDragStart(e, 'grid_2x2', 'Grid'),
 									onClick: () => addContainerPreset('grid_2x2'),
-									className: 'sppcfw-bg-[#181d24] sppcfw-border sppcfw-border-[#2d3748] hover:sppcfw-border-[#9333ea] hover:sppcfw-bg-[#202732] sppcfw-rounded-md sppcfw-p-4 sppcfw-flex sppcfw-flex-col sppcfw-items-center sppcfw-justify-center sppcfw-gap-2 sppcfw-cursor-pointer sppcfw-transition-all sppcfw-group sppcfw-select-none sppcfw-relative sppcfw-shadow-sm',
+									className: 'sppcfw-bg-[#181d24] sppcfw-border sppcfw-border-[#2d3748] hover:sppcfw-border-[#9333ea] hover:sppcfw-bg-[#202732] sppcfw-rounded-md sppcfw-p-4 sppcfw-flex sppcfw-flex-col sppcfw-items-center sppcfw-justify-center sppcfw-gap-2 sppcfw-cursor-pointer sppcfw-transition-all sppcfw-tab-group sppcfw-select-none sppcfw-relative sppcfw-shadow-sm',
 								},
 								h(
 									'div',
@@ -1900,7 +1900,7 @@
 										draggable: true,
 										onDragStart: e => handleDragStart(e, w.type, w.name),
 										onClick: () => addWidgetToTarget(w.type, w.name),
-										className: 'sppcfw-bg-[#111827] sppcfw-border sppcfw-border-[#374151] sppcfw-rounded sppcfw-p-2.5 sppcfw-flex sppcfw-flex-col sppcfw-items-center sppcfw-gap-1.5 sppcfw-cursor-grab active:sppcfw-cursor-grabbing hover:sppcfw-border-[#9333ea] hover:sppcfw-bg-[#16202e] sppcfw-transition-colors sppcfw-group sppcfw-select-none',
+										className: 'sppcfw-bg-[#111827] sppcfw-border sppcfw-border-[#374151] sppcfw-rounded sppcfw-p-2.5 sppcfw-flex sppcfw-flex-col sppcfw-items-center sppcfw-gap-1.5 sppcfw-cursor-grab active:sppcfw-cursor-grabbing hover:sppcfw-border-[#9333ea] hover:sppcfw-bg-[#16202e] sppcfw-transition-colors sppcfw-tab-group sppcfw-select-none',
 									},
 									h('span', { className: 'material-symbols-outlined sppcfw-text-[#ddb8ff] group-hover:sppcfw-scale-110 sppcfw-transition-transform sppcfw-text-lg' }, w.icon),
 									h('span', { className: 'sppcfw-text-[11px] sppcfw-font-semibold sppcfw-text-center' }, w.name)
@@ -1927,7 +1927,7 @@
 											draggable: true,
 											onDragStart: e => handleDragStart(e, 'product_meta_item', m.label, m.key),
 											onClick: () => addWidgetToTarget('product_meta_item', m.label, m.key),
-											className: 'sppcfw-bg-[#111827] sppcfw-border sppcfw-border-[#374151] sppcfw-rounded sppcfw-p-2.5 sppcfw-flex sppcfw-items-center sppcfw-justify-between sppcfw-cursor-grab active:sppcfw-cursor-grabbing hover:sppcfw-border-[#9333ea] sppcfw-transition-colors sppcfw-group',
+											className: 'sppcfw-bg-[#111827] sppcfw-border sppcfw-border-[#374151] sppcfw-rounded sppcfw-p-2.5 sppcfw-flex sppcfw-items-center sppcfw-justify-between sppcfw-cursor-grab active:sppcfw-cursor-grabbing hover:sppcfw-border-[#9333ea] sppcfw-transition-colors sppcfw-tab-group',
 										},
 										h(
 											'div',
@@ -3069,7 +3069,7 @@
 						: h(
 								'div',
 								{
-									className: 'sppcfw-flex sppcfw-flex-col sppcfw-items-center sppcfw-justify-center sppcfw-min-h-[450px] sppcfw-border-2 sppcfw-border-dashed sppcfw-border-[#9333ea]/40 sppcfw-rounded-xl sppcfw-p-12 sppcfw-text-center sppcfw-bg-[#faf5ff] sppcfw-cursor-pointer hover:sppcfw-border-[#9333ea] sppcfw-transition-all sppcfw-group',
+									className: 'sppcfw-flex sppcfw-flex-col sppcfw-items-center sppcfw-justify-center sppcfw-min-h-[450px] sppcfw-border-2 sppcfw-border-dashed sppcfw-border-[#9333ea]/40 sppcfw-rounded-xl sppcfw-p-12 sppcfw-text-center sppcfw-bg-[#faf5ff] sppcfw-cursor-pointer hover:sppcfw-border-[#9333ea] sppcfw-transition-all sppcfw-tab-group',
 									onClick: () => setIsAddingContainer(true),
 								},
 								h('div', { className: 'sppcfw-w-16 sppcfw-h-16 sppcfw-rounded-full sppcfw-bg-[#9333ea]/10 sppcfw-flex sppcfw-items-center sppcfw-justify-center sppcfw-mb-4 group-hover:sppcfw-scale-110 sppcfw-transition-transform' }, h('span', { className: 'material-symbols-outlined sppcfw-text-4xl sppcfw-text-[#9333ea]' }, 'add_circle')),
@@ -3121,7 +3121,7 @@
 								: h(
 										'div',
 										{
-											className: 'sppcfw-py-4 sppcfw-border-2 sppcfw-border-dashed sppcfw-border-[#d1d5db] hover:sppcfw-border-[#9333ea] sppcfw-rounded-lg sppcfw-text-center sppcfw-cursor-pointer sppcfw-bg-[#f9fafb] hover:sppcfw-bg-[#faf5ff] sppcfw-transition-all sppcfw-flex sppcfw-justify-center sppcfw-items-center sppcfw-gap-2 sppcfw-group sppcfw-mx-auto sppcfw-max-w-[45rem]',
+											className: 'sppcfw-py-4 sppcfw-border-2 sppcfw-border-dashed sppcfw-border-[#d1d5db] hover:sppcfw-border-[#9333ea] sppcfw-rounded-lg sppcfw-text-center sppcfw-cursor-pointer sppcfw-bg-[#f9fafb] hover:sppcfw-bg-[#faf5ff] sppcfw-transition-all sppcfw-flex sppcfw-justify-center sppcfw-items-center sppcfw-gap-2 sppcfw-tab-group sppcfw-mx-auto sppcfw-max-w-[45rem]',
 											onClick: () => setIsAddingContainer(true),
 										},
 										h('span', { className: 'material-symbols-outlined sppcfw-text-xl sppcfw-text-[#9333ea] group-hover:sppcfw-scale-125 sppcfw-transition-transform' }, 'add_circle'),
@@ -3139,52 +3139,71 @@
 		);
 	}
 
-	// 5. Right Floating Structure Panel (Dockable Window - Draggable bounded to workspace)
+	// 5. Right Floating Structure Panel (Dockable Window - Draggable bounded to workspace & Vertically Resizable)
 	function FloatingStructurePanel({ elements, setElements, selectedElementId, setSelectedElementId, removeElement, openElementsTab, closeStructure }) {
 		const [isCollapsed, setIsCollapsed] = useState(false);
 		const [position, setPosition] = useState({ top: 16, left: null, right: 16 });
 		const [isDragging, setIsDragging] = useState(false);
-		const dragRef = useRef({ startX: 0, startY: 0, initialTopRel: 16, initialLeftRel: null });
+		const [contentHeight, setContentHeight] = useState(280);
+		const [isResizing, setIsResizing] = useState(false);
 
+		const panelRef = useRef(null);
+		const contentRef = useRef(null);
+		const dragRef = useRef({ startX: 0, startY: 0, initialTop: 16, initialLeft: null });
+		const resizeRef = useRef({ startY: 0, startHeight: 280 });
+
+		// Drag handler for moving the panel anywhere
 		const handleMouseDown = (e) => {
 			if (e.target.closest('button')) return;
+			if (!panelRef.current) return;
 
-			const panelEl = e.currentTarget.closest('.floating-structure-panel');
-			if (!panelEl) return;
-
-			const workspaceEl = panelEl.closest('.sppcfw-builder-workspace') || document.querySelector('.sppcfw-builder-workspace');
-			const wsRect = workspaceEl ? workspaceEl.getBoundingClientRect() : { left: 0, top: 0 };
+			const panelEl = panelRef.current;
+			const workspaceEl = panelEl.closest('.sppcfw-builder-workspace') || document.body;
+			const wsRect = workspaceEl.getBoundingClientRect();
 			const panelRect = panelEl.getBoundingClientRect();
 
 			setIsDragging(true);
 			dragRef.current = {
 				startX: e.clientX,
 				startY: e.clientY,
-				initialTopRel: panelRect.top - wsRect.top,
-				initialLeftRel: panelRect.left - wsRect.left,
+				initialTop: panelRect.top - wsRect.top,
+				initialLeft: panelRect.left - wsRect.left,
 			};
 		};
 
+		// Resize handler for vertical dragging
+		const handleResizeMouseDown = (e) => {
+			e.preventDefault();
+			e.stopPropagation();
+			setIsResizing(true);
+			const currentH = contentRef.current ? contentRef.current.offsetHeight : contentHeight;
+			resizeRef.current = {
+				startY: e.clientY,
+				startHeight: currentH,
+			};
+		};
+
+		// Mouse move & mouse up listeners for moving panel
 		useEffect(() => {
 			if (!isDragging) return;
 
 			const handleMouseMove = (e) => {
+				if (!panelRef.current) return;
+
 				const dx = e.clientX - dragRef.current.startX;
 				const dy = e.clientY - dragRef.current.startY;
 
-				let newTop = dragRef.current.initialTopRel + dy;
-				let newLeft = dragRef.current.initialLeftRel + dx;
+				let newTop = dragRef.current.initialTop + dy;
+				let newLeft = dragRef.current.initialLeft + dx;
 
-				const workspaceEl = document.querySelector('.sppcfw-builder-workspace');
-				const panelEl = document.querySelector('.floating-structure-panel');
-
-				const wsWidth = workspaceEl ? workspaceEl.clientWidth : window.innerWidth;
-				const wsHeight = workspaceEl ? workspaceEl.clientHeight : window.innerHeight;
-				const panelWidth = panelEl ? panelEl.offsetWidth : 280;
-				const panelHeight = panelEl ? panelEl.offsetHeight : 300;
+				const workspaceEl = panelRef.current.closest('.sppcfw-builder-workspace') || document.body;
+				const wsWidth = workspaceEl.clientWidth || window.innerWidth;
+				const wsHeight = workspaceEl.clientHeight || window.innerHeight;
+				const panelWidth = panelRef.current.offsetWidth || 288;
+				const panelHeight = panelRef.current.offsetHeight || 300;
 
 				const minTop = 8;
-				const maxTop = Math.max(minTop, wsHeight - panelHeight - 8);
+				const maxTop = Math.max(minTop, wsHeight - 40); // Keep header reachable
 				const minLeft = 8;
 				const maxLeft = Math.max(minLeft, wsWidth - panelWidth - 8);
 
@@ -3207,6 +3226,32 @@
 			};
 		}, [isDragging]);
 
+		// Mouse move & mouse up listeners for resizing panel vertically
+		useEffect(() => {
+			if (!isResizing) return;
+
+			const handleMouseMove = (e) => {
+				const dy = e.clientY - resizeRef.current.startY;
+				let newHeight = resizeRef.current.startHeight + dy;
+
+				// Strictly limited to max-h-400 (between 100px and 400px)
+				newHeight = Math.max(100, Math.min(400, newHeight));
+				setContentHeight(newHeight);
+			};
+
+			const handleMouseUp = () => {
+				setIsResizing(false);
+			};
+
+			window.addEventListener('mousemove', handleMouseMove);
+			window.addEventListener('mouseup', handleMouseUp);
+
+			return () => {
+				window.removeEventListener('mousemove', handleMouseMove);
+				window.removeEventListener('mouseup', handleMouseUp);
+			};
+		}, [isResizing]);
+
 		const panelStyle = position.left !== undefined && position.left !== null
 			? { top: `${position.top}px`, left: `${position.left}px`, right: 'auto', position: 'absolute' }
 			: { top: '16px', right: '16px', position: 'absolute' };
@@ -3214,49 +3259,68 @@
 		return h(
 			'aside',
 			{
-				className: 'sppcfw-floating-structure-panel sppcfw-fixed sppcfw-z-40 sppcfw-w-72 sppcfw-bg-[#16202e] sppcfw-border sppcfw-border-[#4d4354] sppcfw-rounded-lg sppcfw-shadow-2xl sppcfw-overflow-hidden sppcfw-flex sppcfw-flex-col sppcfw-text-[#d9e3f6] sppcfw-select-none',
+				ref: panelRef,
+				className: `sppcfw-floating-structure-panel floating-structure-panel sppcfw-absolute sppcfw-z-40 sppcfw-w-72 sppcfw-bg-[#16202e] sppcfw-border sppcfw-border-[#4d4354] sppcfw-rounded-lg sppcfw-shadow-2xl sppcfw-overflow-hidden sppcfw-flex sppcfw-flex-col sppcfw-text-[#d9e3f6] sppcfw-select-none ${
+					isDragging ? 'dragging sppcfw-opacity-95 sppcfw-shadow-[0_20px_35px_rgba(0,0,0,0.6)]' : ''
+				}`,
 				style: panelStyle,
 			},
+			// Header Drag Handle
 			h(
 				'div',
 				{
-					className: 'sppcfw-p-3 sppcfw-bg-[#121c2a] sppcfw-border-b sppcfw-border-[#374151] sppcfw-flex sppcfw-justify-between sppcfw-items-center sppcfw-cursor-move',
+					className: 'sppcfw-p-3 sppcfw-bg-[#121c2a] sppcfw-border-b sppcfw-border-[#374151] sppcfw-flex sppcfw-justify-between sppcfw-items-center sppcfw-cursor-move sppcfw-select-none',
 					onMouseDown: handleMouseDown,
+					title: 'Drag to move panel',
 				},
-				h('h3', { className: 'sppcfw-text-xs sppcfw-font-bold sppcfw-flex sppcfw-items-center sppcfw-gap-1.5' }, h('span', { className: 'material-symbols-outlined sppcfw-text-sm sppcfw-text-[#9333ea]' }, 'account_tree'), 'Structure'),
+				h(
+					'h3',
+					{ className: 'sppcfw-text-xs sppcfw-font-bold sppcfw-flex sppcfw-items-center sppcfw-gap-1.5 sppcfw-pointer-events-none' },
+					h('span', { className: 'material-symbols-outlined sppcfw-text-sm sppcfw-text-[#9333ea]' }, 'account_tree'),
+					'Structure'
+				),
 				h(
 					'div',
 					{ className: 'sppcfw-flex sppcfw-items-center sppcfw-gap-1' },
 					h(
 						'button',
 						{
+							type: 'button',
 							className: 'sppcfw-text-xs sppcfw-text-[#cfc2d7] hover:sppcfw-text-white sppcfw-font-bold sppcfw-p-1 sppcfw-rounded hover:sppcfw-bg-[#212b39]',
 							onClick: () => setIsCollapsed(!isCollapsed),
+							title: isCollapsed ? 'Expand' : 'Collapse',
 						},
 						isCollapsed ? '□' : '–'
 					),
 					h(
 						'button',
 						{
+							type: 'button',
 							className: 'sppcfw-text-xs sppcfw-text-[#cfc2d7] hover:sppcfw-text-white sppcfw-font-bold sppcfw-p-1 sppcfw-rounded hover:sppcfw-bg-[#212b39]',
 							onClick: closeStructure,
+							title: 'Close',
 						},
 						'✕'
 					)
 				)
 			),
 
+			// Scrollable Tree Content (Dynamically resized, max-h-400)
 			!isCollapsed &&
 				h(
 					'div',
-					{ className: 'sppcfw-p-2 sppcfw-max-h-[400px] sppcfw-overflow-y-auto custom-scrollbar sppcfw-space-y-1' },
+					{
+						ref: contentRef,
+						className: 'sppcfw-p-2 sppcfw-overflow-y-auto custom-scrollbar sppcfw-space-y-1',
+						style: { height: `${contentHeight}px`, maxHeight: '400px', minHeight: '100px' },
+					},
 					elements.length === 0
 						? h('div', { className: 'sppcfw-text-xs sppcfw-text-[#9ca3af] sppcfw-text-center sppcfw-py-4' }, 'No elements on canvas')
 						: elements.map((item, idx) =>
 								h(StructureTreeNode, {
 									key: item.id,
-									item,
 									index: idx,
+									item,
 									parentId: null,
 									elements,
 									setElements,
@@ -3264,6 +3328,18 @@
 									setSelectedElementId,
 								})
 						  )
+				),
+
+			// Bottom Vertical Resize Handle
+			!isCollapsed &&
+				h(
+					'div',
+					{
+						className: 'sppcfw-h-2 sppcfw-w-full sppcfw-cursor-ns-resize sppcfw-flex sppcfw-items-center sppcfw-justify-center sppcfw-bg-[#121c2a] hover:sppcfw-bg-[#9333ea]/30 sppcfw-border-t sppcfw-border-[#374151]/50 sppcfw-transition-colors group',
+						onMouseDown: handleResizeMouseDown,
+						title: 'Drag to resize vertically (max 400px)',
+					},
+					h('div', { className: 'sppcfw-w-8 sppcfw-h-0.5 sppcfw-bg-gray-500/60 group-hover:sppcfw-bg-[#9333ea] sppcfw-rounded-full sppcfw-pointer-events-none' })
 				)
 		);
 	}
@@ -3452,7 +3528,7 @@
 					e.stopPropagation();
 					setSelectedElementId(container.id);
 				},
-				className: `sppcfw-builder-container-item sppcfw-relative sppcfw-group sppcfw-transition-all sppcfw-rounded-lg sppcfw-p-4 sppcfw-mb-4 ${
+				className: `sppcfw-builder-container-item sppcfw-relative sppcfw-tab-group sppcfw-transition-all sppcfw-rounded-lg sppcfw-p-4 sppcfw-mb-4 ${
 					isContainerDragOver ? 'sppcfw-border-2 sppcfw-border-dashed sppcfw-border-[#9333ea] sppcfw-bg-[#faf5ff] ' : isSelected ? 'sppcfw-border-2 sppcfw-border-[#9333ea] sppcfw-ring-[#9333ea]/30' : 'sppcfw-border-[#e5e7eb] hover:sppcfw-border-[#9333ea]/50'
 				}`,
 				style: {
@@ -3675,7 +3751,7 @@
 				: h(
 						'div',
 						{
-							className: 'sppcfw-flex sppcfw-flex-col sppcfw-items-center sppcfw-justify-center sppcfw-min-h-[140px] sppcfw-text-center sppcfw-border-2 sppcfw-border-dashed sppcfw-border-[#cbd5e1] sppcfw-rounded-lg sppcfw-p-6 sppcfw-bg-white sppcfw-select-none sppcfw-cursor-pointer sppcfw-group hover:sppcfw-border-[#9333ea] sppcfw-transition-all',
+							className: 'sppcfw-flex sppcfw-flex-col sppcfw-items-center sppcfw-justify-center sppcfw-min-h-[140px] sppcfw-text-center sppcfw-border-2 sppcfw-border-dashed sppcfw-border-[#cbd5e1] sppcfw-rounded-lg sppcfw-p-6 sppcfw-bg-white sppcfw-select-none sppcfw-cursor-pointer sppcfw-tab-group hover:sppcfw-border-[#9333ea] sppcfw-transition-all',
 							onClick: e => {
 								e.stopPropagation();
 								if (typeof openElementsTab === 'function') openElementsTab();
@@ -3717,7 +3793,7 @@
 					e.stopPropagation();
 					setSelectedElementId(widget.id);
 				},
-				className: `widget-canvas-item sppcfw-p-3 sppcfw-rounded sppcfw-cursor-grab active:sppcfw-cursor-grabbing sppcfw-relative sppcfw-group ${
+				className: `widget-canvas-item sppcfw-p-3 sppcfw-rounded sppcfw-cursor-grab active:sppcfw-cursor-grabbing sppcfw-relative sppcfw-tab-group ${
 					isSelected ? 'is-selected sppcfw-ring-2 sppcfw-ring-[#9333ea]' : ''
 				} ${widget.advanced && widget.advanced.custom_class ? widget.advanced.custom_class : ''}`,
 				style: {
