@@ -940,7 +940,69 @@ if (!class_exists('SPPCFW_backend_ui')):
 				$parent_slug,
 				array($this, 'plugin_page')
 			);
+
+			// Submenu: Single Page Builder
+            add_submenu_page(
+                $parent_slug,
+                __( 'Single Page Builder', 'single-product-customizer' ),
+                __( 'Single Page Builder', 'single-product-customizer' ),
+                $capability,
+                'sppcfw-single-page-builder',
+                array( $this, 'builder_page' )
+            );
 		}
+
+		public function templates_list_page() {
+            require_once SPPCFW_DIR_PATH . 'backend/builder/templates-list-view.php';
+        }
+
+        public function builder_page() {
+            $action = isset( $_GET['action'] ) ? sanitize_text_field( $_GET['action'] ) : '';
+            if ( isset( $_GET['template_id'] ) && ( empty( $action ) || 'edit' === $action ) ) {
+                require_once SPPCFW_DIR_PATH . 'backend/builder/builder-view.php';
+            } else {
+                require_once SPPCFW_DIR_PATH . 'backend/builder/templates-list-view.php';
+            }
+        }
+
+		        /**
+         * Format admin sidebar menu to display Dashboard Settings title.
+         */
+        public function sppcfw_format_admin_sidebar_menu() {
+            global $submenu;
+            $parent = 'sppcfw-single-product-customizer';
+
+            if ( empty( $submenu[ $parent ] ) || ! is_array( $submenu[ $parent ] ) ) {
+                return;
+            }
+
+            if ( isset( $submenu[ $parent ][0] ) && is_array( $submenu[ $parent ][0] ) ) {
+                $submenu[ $parent ][0][0] = __( 'Dashboard Settings', 'single-product-customizer' );
+            }
+        }
+
+        /**
+         * Custom CSS to style admin sidebar menu to match design.
+         */
+        public function sppcfw_admin_menu_sidebar_styles() {
+            ?>
+            <style id="sppcfw-admin-sidebar-menu-css">
+                #adminmenu .toplevel_page_sppcfw-single-product-customizer .wp-submenu li.sppcfw-menu-header-item a {
+                    font-weight: 700 !important;
+                    color: #ffffff !important;
+                    font-size: 13px !important;
+                    border-top: 1px solid rgba(255, 255, 255, 0.08);
+                    margin-top: 4px;
+                    padding-top: 8px !important;
+                    padding-left: 12px !important;
+                    opacity: 1 !important;
+                }
+                #adminmenu .toplevel_page_sppcfw-single-product-customizer .wp-submenu li.sppcfw-menu-header-item {
+                    margin-top: 4px;
+                }
+            </style>
+            <?php
+        }
 
 		public function plugin_page()
 		{
