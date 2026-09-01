@@ -258,14 +258,37 @@ foreach ( $templates as $id => $tpl ) {
 	$filtered_templates[ $id ] = $tpl;
 }
 
-$new_template_url = admin_url( 'admin.php?page=sppcfw-single-page-builder&template_id=new' );
+$new_template_url             = admin_url( 'admin.php?page=sppcfw-single-page-builder&template_id=new' );
+$sppcfw_enable_quick_checkout = (int) get_option( 'sppcfw_enable_quick_checkout', 0 );
+$sppcfw_enable_builder        = (int) get_option( 'sppcfw_enable_single_product_builder', 0 );
+$is_qc_active                 = ! empty( $sppcfw_enable_quick_checkout );
+$is_builder_active            = ! empty( $sppcfw_enable_builder ) && ! $is_qc_active;
+$builder_nonce                = wp_create_nonce( 'sppcfw_builder_nonce' );
 ?>
 
 <div class="sppcfw_card sppcfw_overview_card" id="sppcfw_dashboard">
 	<div class="sppcfw_card_header">
 		<div class="wrap">
 			<div class="header_wrapper">
-				<span class="sppcfw_page_title"><?php esc_html_e( 'All Single Product Templates', 'single-product-customizer' ); ?></span>
+				<div class="sppcfw_header_title_row">
+					<span class="sppcfw_page_title"><?php esc_html_e( 'All Single Product Templates', 'single-product-customizer' ); ?></span>
+					<div class="sppcfw_header_builder_toggle">
+						<label class="sppcfw-toggle-switch <?php echo $is_qc_active ? 'is-disabled' : ''; ?>" for="sppcfw_enable_single_product_builder" title="<?php echo $is_qc_active ? esc_attr__( 'Quick Checkout is active', 'single-product-customizer' ) : ''; ?>">
+							<input type="checkbox" 
+								id="sppcfw_enable_single_product_builder" 
+								name="sppcfw_enable_single_product_builder" 
+								value="1" 
+								<?php checked( $is_builder_active, true ); ?> 
+								<?php disabled( $is_qc_active, true ); ?> 
+							/>
+							<span class="sppcfw-toggle-slider"></span>
+						</label>
+						<label for="sppcfw_enable_single_product_builder" class="sppcfw_toggle_label <?php echo $is_qc_active ? 'is-disabled' : ''; ?>">
+							<?php esc_html_e( 'Enable Single Product Builder', 'single-product-customizer' ); ?>
+						</label>
+						<span class="sppcfw_toggle_spinner dashicons dashicons-update spin" style="display: none;"></span>
+					</div>
+				</div>
 				<div class="button_groups">
 					<a href="<?php echo esc_url( $new_template_url ); ?>" class="sppcfw-btn-primary" id="sppcfw_new_template">
 						<span class="dashicons dashicons-plus-alt2"></span>
@@ -274,11 +297,27 @@ $new_template_url = admin_url( 'admin.php?page=sppcfw-single-page-builder&templa
 				</div>
 			</div>
 			<p><?php esc_html_e( 'View and manage all single product page layout templates and display conditions from your store in one centralized table. Quickly create, edit, duplicate, or organize layout templates with ease.', 'single-product-customizer' ); ?></p>
+
+			<?php if ( $is_qc_active ) : ?>
+				<div class="sppcfw_qc_notice_badge">
+					<span class="dashicons dashicons-info"></span>
+					<span>
+						<?php
+						$qc_settings_url = admin_url( 'admin.php?page=sppcfw-single-product-customizer&tab=quick_checkout' );
+						printf(
+							/* translators: %s: Link to Quick Checkout Options */
+							esc_html__( 'Please checkout in %s', 'single-product-customizer' ),
+							'<a href="' . esc_url( $qc_settings_url ) . '"><strong>' . esc_html__( 'Quick Checkout Options', 'single-product-customizer' ) . '</strong></a>'
+						);
+						?>
+					</span>
+				</div>
+			<?php endif; ?>
 		</div>
 	</div>
 
 	<?php if ( ! empty( $templates ) ) : ?>
-		<form action="<?php echo esc_url( admin_url( 'admin.php?page=sppcfw-single-page-builder' ) ); ?>" method="post" id="sppcfw_template_filter_form" class="sppcfw_card_body posts-filter">
+		<form action="<?php echo esc_url( admin_url( 'admin.php?page=sppcfw-single-page-builder' ) ); ?>" method="post" id="sppcfw_template_filter_form" class="sppcfw_card_body posts-filter" style="<?php echo ! $is_builder_active ? 'display: none;' : ''; ?>">
 			<input type="hidden" name="page" value="sppcfw-single-page-builder" />
 			<input type="hidden" name="status" value="<?php echo esc_attr( $current_status ); ?>" />
 			<?php wp_nonce_field( 'sppcfw_bulk_delete_action', 'sppcfw_bulk_delete_nonce' ); ?>
@@ -452,7 +491,7 @@ $new_template_url = admin_url( 'admin.php?page=sppcfw-single-page-builder&templa
 			</table>
 		</form>
 	<?php else : ?>
-		<div class="sppcfw-templates-empty-box">
+		<div class="sppcfw-templates-empty-box sppcfw_card_body" style="<?php echo ! $is_builder_active ? 'display: none;' : ''; ?>">
 			<span class="dashicons dashicons-layout sppcfw-templates-empty-icon"></span>
 			<h3 class="sppcfw-templates-empty-title"><?php esc_html_e( 'No Templates Found', 'single-product-customizer' ); ?></h3>
 			<p class="sppcfw-templates-empty-desc"><?php esc_html_e( 'You don’t have any single product page templates yet. Click below to create your first template.', 'single-product-customizer' ); ?></p>
@@ -484,6 +523,62 @@ document.addEventListener('DOMContentLoaded', function() {
 				if (selectAllCb) {
 					selectAllCb.checked = allChecked;
 				}
+			});
+		});
+	}
+
+	// Live Toggle Single Product Builder
+	var toggleCb   = document.getElementById('sppcfw_enable_single_product_builder');
+	var cardBodies = document.querySelectorAll('.sppcfw_card_body');
+	var spinner    = document.querySelector('.sppcfw_toggle_spinner');
+
+	if (toggleCb) {
+		toggleCb.addEventListener('change', function() {
+			var isChecked = this.checked;
+
+			// Instantly toggle card body visibility
+			cardBodies.forEach(function(el) {
+				el.style.display = isChecked ? '' : 'none';
+			});
+
+			if (spinner) {
+				spinner.style.display = 'inline-block';
+			}
+			toggleCb.disabled = true;
+
+			var formData = new FormData();
+			formData.append('action', 'sppcfw_toggle_builder_status');
+			formData.append('nonce', '<?php echo esc_js( $builder_nonce ); ?>');
+			formData.append('enabled', isChecked ? '1' : '0');
+
+			fetch('<?php echo esc_url( admin_url( 'admin-ajax.php' ) ); ?>', {
+				method: 'POST',
+				body: formData
+			})
+			.then(function(res) { return res.json(); })
+			.then(function(data) {
+				if (spinner) {
+					spinner.style.display = 'none';
+				}
+				toggleCb.disabled = false;
+				if (!data.success) {
+					alert(data.data && data.data.message ? data.data.message : '<?php echo esc_js( __( 'Error updating builder status.', 'single-product-customizer' ) ); ?>');
+					toggleCb.checked = !isChecked;
+					cardBodies.forEach(function(el) {
+						el.style.display = !isChecked ? '' : 'none';
+					});
+				}
+			})
+			.catch(function(err) {
+				if (spinner) {
+					spinner.style.display = 'none';
+				}
+				toggleCb.disabled = false;
+				alert('<?php echo esc_js( __( 'Network error while updating builder status.', 'single-product-customizer' ) ); ?>');
+				toggleCb.checked = !isChecked;
+				cardBodies.forEach(function(el) {
+					el.style.display = !isChecked ? '' : 'none';
+				});
 			});
 		});
 	}

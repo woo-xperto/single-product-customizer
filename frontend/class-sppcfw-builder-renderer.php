@@ -38,6 +38,22 @@ if (!class_exists('SPPCFW_Builder_Renderer')) {
 				return;
 			}
 
+			$is_preview = isset($_GET['sppcfw_preview']) && isset($_GET['template_id']) && current_user_can('manage_options');
+
+			if (!$is_preview) {
+				// Suppress builder designs if Quick Checkout is enabled
+				$sppcfw_enable_quick_checkout = (int) get_option('sppcfw_enable_quick_checkout', 0);
+				if (!empty($sppcfw_enable_quick_checkout)) {
+					return;
+				}
+
+				// Suppress builder designs if Single Product Builder toggle is disabled
+				$sppcfw_enable_builder = (int) get_option('sppcfw_enable_single_product_builder', 0);
+				if (empty($sppcfw_enable_builder)) {
+					return;
+				}
+			}
+
 			$matched = $this->sppcfw_get_matching_template(get_the_ID());
 
 			if (empty($matched) || empty($matched['layout'])) {

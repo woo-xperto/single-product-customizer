@@ -26,6 +26,7 @@ if (!class_exists('SPPCFW_Builder')) {
 			add_action('wp_ajax_sppcfw_save_builder_template', array($this, 'sppcfw_ajax_save_builder_template'));
 			add_action('wp_ajax_sppcfw_load_builder_template', array($this, 'sppcfw_ajax_load_builder_template'));
 			add_action('wp_ajax_sppcfw_get_builder_templates', array($this, 'sppcfw_ajax_get_builder_templates'));
+			add_action('wp_ajax_sppcfw_toggle_builder_status', array($this, 'sppcfw_ajax_toggle_builder_status'));
 		}
 
 		/**
@@ -560,6 +561,40 @@ if (!class_exists('SPPCFW_Builder')) {
 			}
 
 			wp_send_json_success(array('templates' => $list));
+		}
+
+		/**
+		 * AJAX: Toggle Single Product Builder active status.
+		 *
+		 * @return void
+		 */
+		public function sppcfw_ajax_toggle_builder_status()
+		{
+			check_ajax_referer('sppcfw_builder_nonce', 'nonce');
+
+			$cap = function_exists('sppcfw_admin_capability') ? sppcfw_admin_capability() : 'manage_options';
+			if (!current_user_can($cap)) {
+				wp_send_json_error(array('message' => esc_html__('Permission denied.', 'single-product-customizer')));
+			}
+
+			// If Quick Checkout is active, builder cannot be enabled
+			$is_qc_enabled = (int) get_option('sppcfw_enable_quick_checkout', 0);
+			if ($is_qc_enabled) {
+				wp_send_json_error(array(
+					'message'   => esc_html__('Cannot enable Builder while Quick Checkout is active. Please checkout in Quick Checkout Options.', 'single-product-customizer'),
+					'qc_active' => true,
+				));
+			}
+
+			$enabled = isset($_POST['enabled']) && ('1' === $_POST['enabled'] || 'true' === $_POST['enabled'] || 1 === $_POST['enabled'] || true === $_POST['enabled']) ? 1 : 0;
+			update_option('sppcfw_enable_single_product_builder', $enabled);
+
+			wp_send_json_success(array(
+				'enabled' => $enabled,
+				'message' => $enabled
+					? esc_html__('Single Product Builder enabled successfully.', 'single-product-customizer')
+					: esc_html__('Single Product Builder disabled successfully.', 'single-product-customizer'),
+			));
 		}
 	}
 
