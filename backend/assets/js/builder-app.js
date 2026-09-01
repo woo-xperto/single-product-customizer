@@ -54,8 +54,11 @@
 	// Core Single Product Widget Definitions
 	const CORE_WIDGETS = [
 		{ type: 'product_title', name: 'Product Title', icon: 'title' },
+		{ type: 'heading', name: 'Heading', icon: 'format_size' },
+		{ type: 'text_editor', name: 'Text Editor', icon: 'edit_note' },
 		{ type: 'product_price', name: 'Product Price', icon: 'payments' },
-		{ type: 'product_gallery', name: 'Image Gallery', icon: 'image' },
+		{ type: 'product_gallery', name: 'Product Gallery', icon: 'collections' },
+		{ type: 'image', name: 'Image', icon: 'image' },
 		{ type: 'product_add_to_cart', name: 'Add to Cart', icon: 'shopping_cart' },
 		{ type: 'product_rating', name: 'Rating Stars', icon: 'star' },
 		{ type: 'product_short_desc', name: 'Short Description', icon: 'description' },
@@ -2232,10 +2235,38 @@
 
 		const isContainer = selectedElement.type === 'container';
 		const isColumn = selectedElement.type === 'column';
-		const isImage = selectedElement.type === 'product_gallery' || selectedElement.type === 'image';
-		const panelTitle = isContainer ? 'Edit Container' : isColumn ? 'Edit Column' : isImage ? 'Edit Image' : (selectedElement.label || 'Edit Element');
+		const isProductGallery = selectedElement.type === 'product_gallery';
+		const isCustomImage = selectedElement.type === 'image';
+		const isHeading = selectedElement.type === 'heading';
+		const isTextEditor = selectedElement.type === 'text_editor';
+		const isImage = isProductGallery || isCustomImage;
+		const panelTitle = isContainer
+			? 'Edit Container'
+			: isColumn
+			? 'Edit Column'
+			: isProductGallery
+			? 'Edit Product Gallery'
+			: isCustomImage
+			? 'Edit Image'
+			: isHeading
+			? 'Edit Heading'
+			: isTextEditor
+			? 'Edit Text Editor'
+			: selectedElement.type === 'product_title'
+			? 'Edit Product Title'
+			: (selectedElement.label || 'Edit Element');
 		const firstTabLabel = (isContainer || isColumn) ? 'Layout' : 'Content';
-		const firstTabIcon = (isContainer || isColumn) ? 'view_column' : 'edit';
+		const firstTabIcon = (isContainer || isColumn)
+			? 'view_column'
+			: isProductGallery
+			? 'collections'
+			: isCustomImage
+			? 'image'
+			: isHeading
+			? 'format_size'
+			: isTextEditor
+			? 'edit_note'
+			: 'edit';
 
 		function renderControlHeader(label, showDeviceIcon = true, unitValue = null, onUnitChange = null, units = null) {
 			return h(
@@ -3025,13 +3056,30 @@
 									)
 							),
 
-						// IMAGE & PRODUCT GALLERY CONTENT CONTROLS (WHEN IMAGE WIDGET IS SELECTED)
-						isImage &&
+						// 1. PRODUCT GALLERY CONTENT CONTROLS (Dedicated WooCommerce Product Gallery)
+						isProductGallery &&
 							h(
 								'div',
 								{ className: 'sppcfw-space-y-4' },
 
-								// Accordion: Image
+								// Info Banner
+								h(
+									'div',
+									{ className: 'sppcfw-bg-[#16202e] sppcfw-border sppcfw-border-[#3b4b62] sppcfw-rounded-lg sppcfw-p-3.5 sppcfw-space-y-1.5' },
+									h(
+										'div',
+										{ className: 'sppcfw-flex sppcfw-items-center sppcfw-gap-1.5 sppcfw-text-xs sppcfw-font-bold sppcfw-text-[#92ccff]' },
+										h('span', { className: 'material-symbols-outlined sppcfw-text-base' }, 'collections'),
+										'WooCommerce Product Images'
+									),
+									h(
+										'p',
+										{ className: 'sppcfw-text-[11px] sppcfw-text-[#9ca3af] sppcfw-leading-relaxed' },
+										'This widget dynamically displays the WooCommerce featured image and gallery thumbnails. For variable products, the main image automatically switches when a variation is selected.'
+									)
+								),
+
+								// Gallery Features Accordion
 								h(
 									'div',
 									{ className: 'sppcfw-border-b sppcfw-border-[#374151] sppcfw-pb-4 sppcfw-space-y-3.5' },
@@ -3045,7 +3093,114 @@
 											'h4',
 											{ className: 'sppcfw-text-xs sppcfw-font-bold sppcfw-text-white sppcfw-flex sppcfw-items-center sppcfw-gap-1.5' },
 											h('span', { className: 'sppcfw-text-[10px] sppcfw-text-gray-300' }, isImageOpen ? '▾' : '▸'),
-											'Image'
+											'Gallery Display Options'
+										)
+									),
+
+									isImageOpen &&
+										h(
+											'div',
+											{ className: 'sppcfw-space-y-3.5 sppcfw-pt-1' },
+
+											// Show Thumbnails Toggle
+											h(
+												'div',
+												{ className: 'sppcfw-flex sppcfw-items-center sppcfw-justify-between' },
+												h('label', { className: 'sppcfw-text-xs sppcfw-text-[#d1d5db] sppcfw-font-medium' }, 'Show Gallery Thumbnails'),
+												h('input', {
+													type: 'checkbox',
+													className: 'sppcfw-accent-[#9333ea] sppcfw-cursor-pointer sppcfw-w-4 sppcfw-h-4',
+													checked: getSetting('show_thumbnails') !== false,
+													onChange: e => handleSettingChange('show_thumbnails', e.target.checked),
+												})
+											),
+
+											// Thumbnails Columns
+											getSetting('show_thumbnails') !== false &&
+												h(
+													'div',
+													{ className: 'sppcfw-flex sppcfw-items-center sppcfw-justify-between' },
+													h('label', { className: 'sppcfw-text-xs sppcfw-text-[#d1d5db] sppcfw-font-medium' }, 'Thumbnail Columns'),
+													h(
+														'select',
+														{
+															className: 'sppcfw-bg-[#111827] sppcfw-border sppcfw-border-[#374151] sppcfw-rounded sppcfw-px-2.5 sppcfw-py-1.5 sppcfw-text-xs sppcfw-text-white focus:sppcfw-outline-none focus:sppcfw-border-[#9333ea] sppcfw-w-36',
+															value: getSetting('gallery_columns') || '4',
+															onChange: e => handleSettingChange('gallery_columns', e.target.value),
+														},
+														h('option', { value: '3' }, '3 Columns'),
+														h('option', { value: '4' }, '4 Columns'),
+														h('option', { value: '5' }, '5 Columns'),
+														h('option', { value: '6' }, '6 Columns')
+													)
+												),
+
+											// Lightbox Popup
+											h(
+												'div',
+												{ className: 'sppcfw-flex sppcfw-items-center sppcfw-justify-between' },
+												h('label', { className: 'sppcfw-text-xs sppcfw-text-[#d1d5db] sppcfw-font-medium' }, 'Lightbox Popup'),
+												h('input', {
+													type: 'checkbox',
+													className: 'sppcfw-accent-[#9333ea] sppcfw-cursor-pointer sppcfw-w-4 sppcfw-h-4',
+													checked: getSetting('enable_lightbox') !== false,
+													onChange: e => handleSettingChange('enable_lightbox', e.target.checked),
+												})
+											),
+
+											// Image Zoom
+											h(
+												'div',
+												{ className: 'sppcfw-flex sppcfw-items-center sppcfw-justify-between' },
+												h('label', { className: 'sppcfw-text-xs sppcfw-text-[#d1d5db] sppcfw-font-medium' }, 'Image Zoom On Hover'),
+												h('input', {
+													type: 'checkbox',
+													className: 'sppcfw-accent-[#9333ea] sppcfw-cursor-pointer sppcfw-w-4 sppcfw-h-4',
+													checked: getSetting('enable_zoom') !== false,
+													onChange: e => handleSettingChange('enable_zoom', e.target.checked),
+												})
+											),
+
+											// Gallery Alignment
+											h(
+												'div',
+												{ className: 'sppcfw-space-y-1.5 sppcfw-pt-1' },
+												renderControlHeader('Gallery Alignment', true),
+												renderButtonGroup(
+													[
+														{ value: 'left', icon: 'format_align_left', title: 'Left' },
+														{ value: 'center', icon: 'format_align_center', title: 'Center' },
+														{ value: 'right', icon: 'format_align_right', title: 'Right' },
+													],
+													getStyle('alignment') || 'center',
+													v => handleStyleChange('alignment', v)
+												)
+											)
+										)
+								)
+							),
+
+						// 2. CUSTOM IMAGE CONTENT CONTROLS (Manual Image Insertion Outside/Inside Product)
+						isCustomImage &&
+							h(
+								'div',
+								{ className: 'sppcfw-space-y-4' },
+
+								// Accordion: Custom Image
+								h(
+									'div',
+									{ className: 'sppcfw-border-b sppcfw-border-[#374151] sppcfw-pb-4 sppcfw-space-y-3.5' },
+									h(
+										'div',
+										{
+											className: 'sppcfw-flex sppcfw-items-center sppcfw-justify-between sppcfw-cursor-pointer sppcfw-select-none',
+											onClick: () => setIsImageOpen(!isImageOpen),
+										},
+										h(
+											'h4',
+											{ className: 'sppcfw-text-xs sppcfw-font-bold sppcfw-text-white sppcfw-flex sppcfw-items-center sppcfw-gap-1.5' },
+											h('span', { className: 'sppcfw-text-[10px] sppcfw-text-gray-300' }, isImageOpen ? '▾' : '▸'),
+											'Custom Image'
 										)
 									),
 
@@ -3074,6 +3229,9 @@
 																	const attachment = frame.state().get('selection').first().toJSON();
 																	if (attachment && attachment.url) {
 																		handleSettingChange('custom_image_url', attachment.url);
+																		if (attachment.alt && !getSetting('alt_text')) {
+																			handleSettingChange('alt_text', attachment.alt);
+																		}
 																	}
 																});
 																frame.open();
@@ -3091,45 +3249,66 @@
 																{ className: 'sppcfw-space-y-2' },
 																h('img', {
 																	src: getSetting('custom_image_url'),
-																	alt: 'Selected Custom Preview',
-																	className: 'sppcfw-h-28 sppcfw-w-full sppcfw-object-contain sppcfw-rounded',
+																	alt: getSetting('alt_text') || 'Selected Custom Preview',
+																	className: 'sppcfw-h-32 sppcfw-w-full sppcfw-object-contain sppcfw-rounded sppcfw-bg-[#091421]/60 sppcfw-p-1',
 																}),
-																h('div', { className: 'sppcfw-text-[11px] sppcfw-text-[#9333ea] sppcfw-font-semibold' }, 'Click to Change Custom Image')
+																h('div', { className: 'sppcfw-text-[11px] sppcfw-text-[#ddb8ff] sppcfw-font-semibold' }, 'Click to Change Image')
 														  )
 														: h(
 																'div',
-																{ className: 'sppcfw-space-y-2' },
-																(sampleData && sampleData.image_url)
-																	? h('img', {
-																			src: sampleData.image_url,
-																			alt: sampleData.title || 'Product Image',
-																			className: 'sppcfw-h-28 sppcfw-w-full sppcfw-object-contain sppcfw-rounded sppcfw-bg-[#1f2937]/50 sppcfw-p-1',
-																	  })
-																	: h(
-																			'div',
-																			{ className: 'sppcfw-py-4 sppcfw-space-y-1.5' },
-																			h('span', { className: 'material-symbols-outlined sppcfw-text-3xl sppcfw-text-gray-400 group-hover:sppcfw-text-[#9333ea]' }, 'add_photo_alternate'),
-																			h('div', { className: 'sppcfw-text-xs sppcfw-font-semibold sppcfw-text-gray-200' }, 'Choose Image')
-																	  ),
-																h(
-																	'div',
-																	{ className: 'sppcfw-text-[10px] sppcfw-text-gray-400 sppcfw-px-1' },
-																	sampleData && sampleData.id
-																		? `Previewing Featured Image: ${sampleData.title}`
-																		: 'Previewing Demo Image (Click to upload custom)'
-																)
+																{ className: 'sppcfw-py-6 sppcfw-space-y-2' },
+																h('span', { className: 'material-symbols-outlined sppcfw-text-3xl sppcfw-text-gray-400 group-hover:sppcfw-text-[#ddb8ff] sppcfw-transition-colors' }, 'add_photo_alternate'),
+																h('div', { className: 'sppcfw-text-xs sppcfw-font-semibold sppcfw-text-gray-200' }, 'Choose Image from Media Library'),
+																h('div', { className: 'sppcfw-text-[10px] sppcfw-text-gray-400' }, 'Insert any custom image outside of this product')
 														  )
 												),
 												getSetting('custom_image_url') &&
 													h(
-														'button',
-														{
-															type: 'button',
-															className: 'sppcfw-text-[11px] sppcfw-text-red-400 hover:sppcfw-text-red-300 sppcfw-underline sppcfw-block sppcfw-cursor-pointer',
-															onClick: () => handleSettingChange('custom_image_url', ''),
-														},
-														'Reset to Product Featured Image'
+														'div',
+														{ className: 'sppcfw-flex sppcfw-items-center sppcfw-justify-between sppcfw-pt-1' },
+														h(
+															'button',
+															{
+																type: 'button',
+																className: 'sppcfw-text-[11px] sppcfw-text-red-400 hover:sppcfw-text-red-300 sppcfw-underline sppcfw-cursor-pointer',
+																onClick: () => handleSettingChange('custom_image_url', ''),
+															},
+															'Remove Image'
+														),
+														h(
+															'span',
+															{ className: 'sppcfw-text-[10px] sppcfw-text-gray-400' },
+															'Custom Image Set'
+														)
 													)
+											),
+
+											// Direct Image URL Field
+											h(
+												'div',
+												{ className: 'sppcfw-space-y-1' },
+												h('label', { className: 'sppcfw-text-xs sppcfw-text-[#d1d5db] sppcfw-font-medium' }, 'Image URL (Direct)'),
+												h('input', {
+													type: 'text',
+													className: 'sppcfw-w-full sppcfw-bg-[#111827] sppcfw-border sppcfw-border-[#374151] sppcfw-rounded sppcfw-px-2.5 sppcfw-py-1.5 sppcfw-text-xs sppcfw-text-white focus:sppcfw-outline-none focus:sppcfw-border-[#9333ea]',
+													value: getSetting('custom_image_url') || '',
+													placeholder: 'https://example.com/image.jpg',
+													onChange: e => handleSettingChange('custom_image_url', e.target.value),
+												})
+											),
+
+											// Alt Text
+											h(
+												'div',
+												{ className: 'sppcfw-space-y-1' },
+												h('label', { className: 'sppcfw-text-xs sppcfw-text-[#d1d5db] sppcfw-font-medium' }, 'Alt Text'),
+												h('input', {
+													type: 'text',
+													className: 'sppcfw-w-full sppcfw-bg-[#111827] sppcfw-border sppcfw-border-[#374151] sppcfw-rounded sppcfw-px-2.5 sppcfw-py-1.5 sppcfw-text-xs sppcfw-text-white focus:sppcfw-outline-none focus:sppcfw-border-[#9333ea]',
+													value: getSetting('alt_text') || '',
+													placeholder: 'Descriptive alt text for image',
+													onChange: e => handleSettingChange('alt_text', e.target.value),
+												})
 											),
 
 											// Image Resolution (Size)
@@ -3150,8 +3329,8 @@
 														h('option', { value: 'thumbnail' }, 'Thumbnail (150x150)'),
 														h('option', { value: 'medium' }, 'Medium (300x300)'),
 														h('option', { value: 'large' }, 'Large (1024x1024)'),
-														h('option', { value: 'full' }, 'Full')
-													),
+														h('option', { value: 'full' }, 'Full Size')
+													)
 												)
 											),
 
@@ -3187,9 +3366,8 @@
 															onChange: e => handleSettingChange('caption_type', e.target.value),
 														},
 														h('option', { value: 'none' }, 'None'),
-														h('option', { value: 'attachment' }, 'Attachment Caption'),
 														h('option', { value: 'custom' }, 'Custom Caption')
-													),
+													)
 												)
 											),
 											getSetting('caption_type') === 'custom' &&
@@ -3230,7 +3408,7 @@
 											getSetting('link_to') === 'custom' &&
 												h(
 													'div',
-													{ className: 'sppcfw-space-y-1' },
+													{ className: 'sppcfw-space-y-2' },
 													h('label', { className: 'sppcfw-text-xs sppcfw-text-[#d1d5db] sppcfw-font-medium' }, 'Custom Link URL'),
 													h('input', {
 														type: 'text',
@@ -3238,47 +3416,30 @@
 														value: getSetting('custom_link') || '',
 														placeholder: 'https://...',
 														onChange: e => handleSettingChange('custom_link', e.target.value),
-													})
-												),
-
-											// Additional Gallery Settings (if product_gallery)
-											selectedElement.type === 'product_gallery' &&
-												h(
-													'div',
-													{ className: 'sppcfw-border-t sppcfw-border-[#374151] sppcfw-pt-3.5 sppcfw-space-y-3' },
-													h('h4', { className: 'sppcfw-text-xs sppcfw-font-bold sppcfw-text-white' }, 'Gallery Features'),
+													}),
 													h(
 														'div',
-														{ className: 'sppcfw-flex sppcfw-items-center sppcfw-justify-between' },
-														h('label', { className: 'sppcfw-text-xs sppcfw-text-[#d1d5db]' }, 'Show Thumbnail Row'),
+														{ className: 'sppcfw-flex sppcfw-items-center sppcfw-gap-2 sppcfw-pt-1' },
 														h('input', {
 															type: 'checkbox',
-															className: 'sppcfw-accent-[#9333ea] sppcfw-cursor-pointer sppcfw-w-4 sppcfw-h-4',
-															checked: getSetting('show_thumbnails') !== false,
-															onChange: e => handleSettingChange('show_thumbnails', e.target.checked),
-														})
+															id: 'img-link-blank',
+															className: 'sppcfw-accent-[#9333ea] sppcfw-cursor-pointer',
+															checked: !!getSetting('link_target_blank'),
+															onChange: e => handleSettingChange('link_target_blank', e.target.checked),
+														}),
+														h('label', { htmlFor: 'img-link-blank', className: 'sppcfw-text-xs sppcfw-text-gray-300 sppcfw-cursor-pointer' }, 'Open in new window')
 													),
 													h(
 														'div',
-														{ className: 'sppcfw-flex sppcfw-items-center sppcfw-justify-between' },
-														h('label', { className: 'sppcfw-text-xs sppcfw-text-[#d1d5db]' }, 'Lightbox Popup'),
+														{ className: 'sppcfw-flex sppcfw-items-center sppcfw-gap-2' },
 														h('input', {
 															type: 'checkbox',
-															className: 'sppcfw-accent-[#9333ea] sppcfw-cursor-pointer sppcfw-w-4 sppcfw-h-4',
-															checked: getSetting('enable_lightbox') !== false,
-															onChange: e => handleSettingChange('enable_lightbox', e.target.checked),
-														})
-													),
-													h(
-														'div',
-														{ className: 'sppcfw-flex sppcfw-items-center sppcfw-justify-between' },
-														h('label', { className: 'sppcfw-text-xs sppcfw-text-[#d1d5db]' }, 'Image Zoom'),
-														h('input', {
-															type: 'checkbox',
-															className: 'sppcfw-accent-[#9333ea] sppcfw-cursor-pointer sppcfw-w-4 sppcfw-h-4',
-															checked: getSetting('enable_zoom') !== false,
-															onChange: e => handleSettingChange('enable_zoom', e.target.checked),
-														})
+															id: 'img-link-nofollow',
+															className: 'sppcfw-accent-[#9333ea] sppcfw-cursor-pointer',
+															checked: !!getSetting('link_rel_nofollow'),
+															onChange: e => handleSettingChange('link_rel_nofollow', e.target.checked),
+														}),
+														h('label', { htmlFor: 'img-link-nofollow', className: 'sppcfw-text-xs sppcfw-text-gray-300 sppcfw-cursor-pointer' }, 'Add rel="nofollow"')
 													)
 												)
 										)
@@ -3314,22 +3475,25 @@
 											'div',
 											{ className: 'sppcfw-space-y-3.5 sppcfw-pt-1' },
 
-											// Product Title Settings
+											// Product Title Settings (Pure WooCommerce Dynamic Title)
 											selectedElement.type === 'product_title' &&
 												h(
 													'div',
 													{ className: 'sppcfw-space-y-3' },
 													h(
 														'div',
-														{ className: 'sppcfw-space-y-1' },
-														h('label', { className: 'sppcfw-text-xs sppcfw-text-[#d1d5db] sppcfw-font-medium' }, 'Title Text Override (optional)'),
-														h('input', {
-															type: 'text',
-															className: 'sppcfw-w-full sppcfw-bg-[#111827] sppcfw-border sppcfw-border-[#374151] sppcfw-rounded sppcfw-px-2.5 sppcfw-py-1.5 sppcfw-text-xs sppcfw-text-white focus:sppcfw-outline-none focus:sppcfw-border-[#9333ea]',
-															value: getSetting('title_override') || '',
-															placeholder: 'Dynamic Product Title',
-															onChange: e => handleSettingChange('title_override', e.target.value),
-														})
+														{ className: 'sppcfw-bg-[#16202e] sppcfw-border sppcfw-border-[#3b4b62] sppcfw-rounded-lg sppcfw-p-3 sppcfw-space-y-1' },
+														h(
+															'div',
+															{ className: 'sppcfw-flex sppcfw-items-center sppcfw-gap-1.5 sppcfw-text-xs sppcfw-font-bold sppcfw-text-[#92ccff]' },
+															h('span', { className: 'material-symbols-outlined sppcfw-text-sm' }, 'title'),
+															'WooCommerce Product Title'
+														),
+														h(
+															'p',
+															{ className: 'sppcfw-text-[11px] sppcfw-text-[#9ca3af] sppcfw-leading-relaxed' },
+															'This widget dynamically displays the title of the current WooCommerce product directly from your catalog.'
+														)
 													),
 													h(
 														'div',
@@ -3343,6 +3507,112 @@
 																onChange: e => handleSettingChange('html_tag', e.target.value),
 															},
 															['h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'div', 'span', 'p'].map(tag => h('option', { key: tag, value: tag }, tag.toUpperCase()))
+														)
+													),
+													h(
+														'div',
+														{ className: 'sppcfw-space-y-1.5' },
+														renderControlHeader('Alignment', true),
+														renderButtonGroup(
+															[
+																{ value: 'left', icon: 'format_align_left', title: 'Left' },
+																{ value: 'center', icon: 'format_align_center', title: 'Center' },
+																{ value: 'right', icon: 'format_align_right', title: 'Right' },
+															],
+															getStyle('alignment') || 'left',
+															v => handleStyleChange('alignment', v)
+														)
+													)
+												),
+
+											// Heading / Title Settings (Manual Custom Heading)
+											selectedElement.type === 'heading' &&
+												h(
+													'div',
+													{ className: 'sppcfw-space-y-3' },
+													h(
+														'div',
+														{ className: 'sppcfw-space-y-1' },
+														h('label', { className: 'sppcfw-text-xs sppcfw-text-[#d1d5db] sppcfw-font-medium' }, 'Heading Text'),
+														h('input', {
+															type: 'text',
+															className: 'sppcfw-w-full sppcfw-bg-[#111827] sppcfw-border sppcfw-border-[#374151] sppcfw-rounded sppcfw-px-2.5 sppcfw-py-1.5 sppcfw-text-xs sppcfw-text-white focus:sppcfw-outline-none focus:sppcfw-border-[#9333ea]',
+															value: getSetting('text') !== undefined ? getSetting('text') : 'Add Your Heading Text Here',
+															placeholder: 'Enter heading text...',
+															onChange: e => handleSettingChange('text', e.target.value),
+														})
+													),
+													h(
+														'div',
+														{ className: 'sppcfw-flex sppcfw-items-center sppcfw-justify-between' },
+														h('label', { className: 'sppcfw-text-xs sppcfw-text-[#d1d5db] sppcfw-font-medium' }, 'HTML Tag'),
+														h(
+															'select',
+															{
+																className: 'sppcfw-bg-[#111827] sppcfw-border sppcfw-border-[#374151] sppcfw-rounded sppcfw-px-2 sppcfw-py-1 sppcfw-text-xs sppcfw-text-white focus:sppcfw-outline-none',
+																value: getSetting('html_tag') || 'h2',
+																onChange: e => handleSettingChange('html_tag', e.target.value),
+															},
+															['h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'div', 'span', 'p'].map(tag => h('option', { key: tag, value: tag }, tag.toUpperCase()))
+														)
+													),
+													h(
+														'div',
+														{ className: 'sppcfw-space-y-1' },
+														h('label', { className: 'sppcfw-text-xs sppcfw-text-[#d1d5db] sppcfw-font-medium' }, 'Link URL (optional)'),
+														h('input', {
+															type: 'text',
+															className: 'sppcfw-w-full sppcfw-bg-[#111827] sppcfw-border sppcfw-border-[#374151] sppcfw-rounded sppcfw-px-2.5 sppcfw-py-1.5 sppcfw-text-xs sppcfw-text-white focus:sppcfw-outline-none focus:sppcfw-border-[#9333ea]',
+															value: getSetting('link_url') || '',
+															placeholder: 'https://...',
+															onChange: e => handleSettingChange('link_url', e.target.value),
+														})
+													),
+													h(
+														'div',
+														{ className: 'sppcfw-space-y-1.5' },
+														renderControlHeader('Alignment', true),
+														renderButtonGroup(
+															[
+																{ value: 'left', icon: 'format_align_left', title: 'Left' },
+																{ value: 'center', icon: 'format_align_center', title: 'Center' },
+																{ value: 'right', icon: 'format_align_right', title: 'Right' },
+															],
+															getStyle('alignment') || 'left',
+															v => handleStyleChange('alignment', v)
+														)
+													)
+												),
+
+											// Text Editor Settings (Manual Custom Description / Paragraphs)
+											selectedElement.type === 'text_editor' &&
+												h(
+													'div',
+													{ className: 'sppcfw-space-y-3' },
+													h(
+														'div',
+														{ className: 'sppcfw-space-y-1' },
+														h('label', { className: 'sppcfw-text-xs sppcfw-text-[#d1d5db] sppcfw-font-medium' }, 'Text Content'),
+														h('textarea', {
+															rows: 5,
+															className: 'sppcfw-w-full sppcfw-bg-[#111827] sppcfw-border sppcfw-border-[#374151] sppcfw-rounded sppcfw-p-2.5 sppcfw-text-xs sppcfw-text-white focus:sppcfw-outline-none focus:sppcfw-border-[#9333ea]',
+															value: getSetting('text_content') !== undefined ? getSetting('text_content') : 'Add your custom description or paragraph content here...',
+															placeholder: 'Enter custom text or description...',
+															onChange: e => handleSettingChange('text_content', e.target.value),
+														})
+													),
+													h(
+														'div',
+														{ className: 'sppcfw-flex sppcfw-items-center sppcfw-justify-between' },
+														h('label', { className: 'sppcfw-text-xs sppcfw-text-[#d1d5db] sppcfw-font-medium' }, 'HTML Tag'),
+														h(
+															'select',
+															{
+																className: 'sppcfw-bg-[#111827] sppcfw-border sppcfw-border-[#374151] sppcfw-rounded sppcfw-px-2 sppcfw-py-1 sppcfw-text-xs sppcfw-text-white focus:sppcfw-outline-none',
+																value: getSetting('html_tag') || 'div',
+																onChange: e => handleSettingChange('html_tag', e.target.value),
+															},
+															['div', 'p', 'span'].map(tag => h('option', { key: tag, value: tag }, tag.toUpperCase()))
 														)
 													),
 													h(
@@ -3414,27 +3684,82 @@
 													)
 												),
 
-											// Product Short / Full Description Settings
-											(selectedElement.type === 'product_short_desc' || selectedElement.type === 'product_description') &&
+											// Product Short Description Settings (Dynamic WooCommerce Excerpt)
+											selectedElement.type === 'product_short_desc' &&
 												h(
 													'div',
 													{ className: 'sppcfw-space-y-3' },
 													h(
 														'div',
-														{ className: 'sppcfw-space-y-1' },
-														h('label', { className: 'sppcfw-text-xs sppcfw-text-[#d1d5db] sppcfw-font-medium' }, 'Custom Description Override'),
-														h('textarea', {
-															rows: 4,
-															className: 'sppcfw-w-full sppcfw-bg-[#111827] sppcfw-border sppcfw-border-[#374151] sppcfw-rounded sppcfw-p-2 sppcfw-text-xs sppcfw-text-white focus:sppcfw-outline-none focus:sppcfw-border-[#9333ea]',
-															value: getSetting('custom_desc') || '',
-															placeholder: 'Leave blank to use WooCommerce product description...',
-															onChange: e => handleSettingChange('custom_desc', e.target.value),
-														})
+														{ className: 'sppcfw-bg-[#16202e] sppcfw-border sppcfw-border-[#3b4b62] sppcfw-rounded-lg sppcfw-p-3 sppcfw-space-y-1' },
+														h(
+															'div',
+															{ className: 'sppcfw-flex sppcfw-items-center sppcfw-gap-1.5 sppcfw-text-xs sppcfw-font-bold sppcfw-text-[#92ccff]' },
+															h('span', { className: 'material-symbols-outlined sppcfw-text-sm' }, 'description'),
+															'WooCommerce Short Description'
+														),
+														h(
+															'p',
+															{ className: 'sppcfw-text-[11px] sppcfw-text-[#9ca3af] sppcfw-leading-relaxed' },
+															'This widget dynamically outputs the short description / excerpt of the current WooCommerce product.'
+														)
+													),
+													h(
+														'div',
+														{ className: 'sppcfw-space-y-1.5' },
+														renderControlHeader('Alignment', true),
+														renderButtonGroup(
+															[
+																{ value: 'left', icon: 'format_align_left', title: 'Left' },
+																{ value: 'center', icon: 'format_align_center', title: 'Center' },
+																{ value: 'right', icon: 'format_align_right', title: 'Right' },
+															],
+															getStyle('alignment') || 'left',
+															v => handleStyleChange('alignment', v)
+														)
+													)
+												),
+
+											// Product Full Description & Tabs Settings (Dynamic WooCommerce Tabs)
+											selectedElement.type === 'product_description' &&
+												h(
+													'div',
+													{ className: 'sppcfw-space-y-3' },
+													h(
+														'div',
+														{ className: 'sppcfw-bg-[#16202e] sppcfw-border sppcfw-border-[#3b4b62] sppcfw-rounded-lg sppcfw-p-3 sppcfw-space-y-1' },
+														h(
+															'div',
+															{ className: 'sppcfw-flex sppcfw-items-center sppcfw-gap-1.5 sppcfw-text-xs sppcfw-font-bold sppcfw-text-[#92ccff]' },
+															h('span', { className: 'material-symbols-outlined sppcfw-text-sm' }, 'toc'),
+															'WooCommerce Full Description & Tabs'
+														),
+														h(
+															'p',
+															{ className: 'sppcfw-text-[11px] sppcfw-text-[#9ca3af] sppcfw-leading-relaxed' },
+															'This widget dynamically outputs the full description, reviews, and additional information tabs from WooCommerce.'
+														)
+													),
+													h(
+														'div',
+														{ className: 'sppcfw-space-y-1.5' },
+														renderControlHeader('Alignment', true),
+														renderButtonGroup(
+															[
+																{ value: 'left', icon: 'format_align_left', title: 'Left' },
+																{ value: 'center', icon: 'format_align_center', title: 'Center' },
+																{ value: 'right', icon: 'format_align_right', title: 'Right' },
+															],
+															getStyle('alignment') || 'left',
+															v => handleStyleChange('alignment', v)
+														)
 													)
 												),
 
 											// Generic Widget Settings
 											selectedElement.type !== 'product_title' &&
+												selectedElement.type !== 'heading' &&
+												selectedElement.type !== 'text_editor' &&
 												selectedElement.type !== 'product_price' &&
 												selectedElement.type !== 'product_add_to_cart' &&
 												selectedElement.type !== 'product_short_desc' &&
@@ -4200,9 +4525,21 @@
 			if (item.type === 'container') return 'grid_view';
 			if (item.type === 'column') return 'view_column';
 			if (item.type === 'product_title') return 'title';
+			if (item.type === 'heading') return 'format_size';
+			if (item.type === 'text_editor') return 'edit_note';
 			if (item.type === 'product_price') return 'payments';
-			if (item.type === 'product_gallery') return 'image';
+			if (item.type === 'product_gallery') return 'collections';
+			if (item.type === 'image') return 'image';
 			if (item.type === 'product_add_to_cart') return 'shopping_cart';
+			if (item.type === 'product_rating') return 'star';
+			if (item.type === 'product_short_desc') return 'description';
+			if (item.type === 'product_description') return 'toc';
+			if (item.type === 'product_meta') return 'inventory_2';
+			if (item.type === 'variation_swatches') return 'grid_view';
+			if (item.type === 'custom_message') return 'campaign';
+			if (item.type === 'plus_minus_buttons') return 'exposure';
+			if (item.type === 'related_products') return 'grid_on';
+			if (item.type === 'upsell_products') return 'auto_awesome';
 			return 'widgets';
 		}
 
@@ -4671,10 +5008,25 @@
 		const safeSample = sample || staticFallback;
 
 		switch (el.type) {
-			case 'product_title':
+			case 'product_title': {
 				const titleTag = (el.settings && el.settings.html_tag) || 'h1';
-				const titleText = (el.settings && el.settings.title_override) || safeSample.title || staticFallback.title || 'Product Title';
+				const titleText = safeSample.title || staticFallback.title || 'Product Title';
 				return h(titleTag, { className: 'sppcfw-text-2xl sppcfw-font-bold sppcfw-text-[#111827]' }, titleText);
+			}
+			case 'heading': {
+				const headingTag = (el.settings && el.settings.html_tag) || 'h2';
+				const headingText = (el.settings && el.settings.text !== undefined && el.settings.text !== '') ? el.settings.text : 'Add Your Heading Text Here';
+				const linkUrl = el.settings && el.settings.link_url;
+				const inner = linkUrl
+					? h('a', { href: linkUrl, className: 'hover:sppcfw-underline sppcfw-text-inherit' }, headingText)
+					: headingText;
+				return h(headingTag, { className: 'sppcfw-text-xl sppcfw-font-bold sppcfw-text-[#111827]' }, inner);
+			}
+			case 'text_editor': {
+				const textTag = (el.settings && el.settings.html_tag) || 'div';
+				const textContent = (el.settings && el.settings.text_content !== undefined && el.settings.text_content !== '') ? el.settings.text_content : 'Add your custom description or paragraph content here...';
+				return h(textTag, { className: 'sppcfw-text-sm sppcfw-text-[#4b5563] sppcfw-leading-relaxed', style: { whiteSpace: 'pre-line' } }, textContent);
+			}
 			case 'product_price':
 				const displayPrice = safeSample.price || staticFallback.price || '$49.99';
 				const isOnSale = safeSample.on_sale || (safeSample.sale_price && safeSample.regular_price && safeSample.sale_price !== safeSample.regular_price);
@@ -4684,21 +5036,20 @@
 					h('span', { className: 'sppcfw-text-2xl sppcfw-font-extrabold sppcfw-text-[#9333ea]', dangerouslySetInnerHTML: { __html: displayPrice } }),
 					isOnSale && h('span', { className: 'sppcfw-bg-[#ef4444] sppcfw-text-white sppcfw-text-xs sppcfw-px-2 sppcfw-py-1 sppcfw-rounded sppcfw-font-bold sppcfw-uppercase' }, 'Sale')
 				);
-			case 'image':
-			case 'product_gallery':
+			case 'product_gallery': {
 				const imgStyles = el.styles || {};
 				const imgSettings = el.settings || {};
 				const imgWidth = imgStyles.width || '100%';
 				const imgMaxWidth = imgStyles.max_width || '100%';
 				const imgHeight = imgStyles.height || 'auto';
 				const imgOpacity = imgStyles.opacity !== undefined ? imgStyles.opacity : '1';
-				const alignVal = imgStyles.alignment || 'center';
-				const flexAlign = alignVal === 'left' ? 'justify-start' : alignVal === 'right' ? 'justify-end' : 'justify-center';
+				const alignVal = imgStyles.alignment || imgSettings.alignment || 'center';
+				const flexAlign = alignVal === 'left' ? 'justify-start items-start' : alignVal === 'right' ? 'justify-end items-end' : 'justify-center items-center';
 
-				const radTop = imgStyles.border_radius_top || imgStyles.border_radius || '0px';
-				const radRight = imgStyles.border_radius_right || imgStyles.border_radius || '0px';
-				const radBottom = imgStyles.border_radius_bottom || imgStyles.border_radius || '0px';
-				const radLeft = imgStyles.border_radius_left || imgStyles.border_radius || '0px';
+				const radTop = imgStyles.border_radius_top || imgStyles.border_radius || '6px';
+				const radRight = imgStyles.border_radius_right || imgStyles.border_radius || '6px';
+				const radBottom = imgStyles.border_radius_bottom || imgStyles.border_radius || '6px';
+				const radLeft = imgStyles.border_radius_left || imgStyles.border_radius || '6px';
 				const borderRadiusCss = `${radTop} ${radRight} ${radBottom} ${radLeft}`;
 
 				const customImgStyle = {
@@ -4708,21 +5059,157 @@
 					opacity: parseFloat(imgOpacity),
 					borderRadius: borderRadiusCss,
 					borderStyle: imgStyles.border_type && imgStyles.border_type !== 'Default' ? imgStyles.border_type.toLowerCase() : 'none',
+					borderWidth: imgStyles.border_width || '0px',
+					borderColor: imgStyles.border_color || 'transparent',
 					objectFit: 'contain',
 				};
 
-				const activeImgSrc = imgSettings.custom_image_url || safeSample.image_url || staticFallback.image_url || '';
+				const mainImgSrc = safeSample.image_url || staticFallback.image_url || '';
+				const galleryUrls = Array.isArray(safeSample.gallery_urls) && safeSample.gallery_urls.length > 0
+					? safeSample.gallery_urls
+					: (mainImgSrc ? [mainImgSrc] : []);
+
+				const showThumbs = imgSettings.show_thumbnails !== false;
+				const showZoom = imgSettings.enable_zoom !== false;
+				const showLightbox = imgSettings.enable_lightbox !== false;
+				const cols = parseInt(imgSettings.gallery_columns, 10) || 4;
 
 				return h(
 					'div',
-					{ className: `sppcfw-w-full sppcfw-rounded sppcfw-overflow-hidden sppcfw-text-center sppcfw-flex ${flexAlign}` },
-					h('img', {
-						src: activeImgSrc,
-						alt: safeSample.title || 'Product Image',
-						style: customImgStyle,
-						className: 'sppcfw-max-h-[450px] sppcfw-object-contain sppcfw-transition-all sppcfw-shadow-sm'
-					})
+					{ className: `sppcfw-product-gallery-preview sppcfw-w-full sppcfw-flex sppcfw-flex-col ${flexAlign} sppcfw-gap-3` },
+					// Main Featured Image Frame
+					h(
+						'div',
+						{
+							className: 'sppcfw-relative sppcfw-w-full sppcfw-overflow-hidden sppcfw-rounded-lg sppcfw-bg-[#f9fafb] sppcfw-border sppcfw-border-[#e5e7eb] sppcfw-flex sppcfw-items-center sppcfw-justify-center sppcfw-p-2 sppcfw-min-h-[260px]',
+							style: { maxWidth: imgMaxWidth }
+						},
+						mainImgSrc
+							? h('img', {
+									src: mainImgSrc,
+									alt: safeSample.title || 'Product Featured Image',
+									style: customImgStyle,
+									className: 'sppcfw-max-h-[460px] sppcfw-w-full sppcfw-object-contain sppcfw-transition-all sppcfw-shadow-sm'
+							  })
+							: h(
+									'div',
+									{ className: 'sppcfw-py-12 sppcfw-text-center sppcfw-text-gray-400 sppcfw-space-y-1' },
+									h('span', { className: 'material-symbols-outlined sppcfw-text-4xl' }, 'collections'),
+									h('div', { className: 'sppcfw-text-xs' }, 'No Product Image Available')
+							  ),
+						// Badges / Action Icons (Zoom & Lightbox)
+						(showZoom || showLightbox) &&
+							h(
+								'div',
+								{ className: 'sppcfw-absolute sppcfw-top-3 sppcfw-right-3 sppcfw-flex sppcfw-items-center sppcfw-gap-1.5 sppcfw-opacity-80' },
+								showZoom &&
+									h(
+										'span',
+										{ className: 'sppcfw-bg-white/90 sppcfw-backdrop-blur sppcfw-p-1.5 sppcfw-rounded-full sppcfw-shadow-sm sppcfw-text-gray-700 sppcfw-flex sppcfw-items-center sppcfw-justify-center', title: 'Zoom Enabled' },
+										h('span', { className: 'material-symbols-outlined sppcfw-text-xs' }, 'zoom_in')
+									),
+								showLightbox &&
+									h(
+										'span',
+										{ className: 'sppcfw-bg-white/90 sppcfw-backdrop-blur sppcfw-p-1.5 sppcfw-rounded-full sppcfw-shadow-sm sppcfw-text-gray-700 sppcfw-flex sppcfw-items-center sppcfw-justify-center', title: 'Lightbox Enabled' },
+										h('span', { className: 'material-symbols-outlined sppcfw-text-xs' }, 'fullscreen')
+									)
+							)
+					),
+					// Thumbnails Row (if enabled and multiple gallery images exist)
+					showThumbs && galleryUrls.length > 1 &&
+						h(
+							'div',
+							{
+								className: 'sppcfw-grid sppcfw-gap-2 sppcfw-w-full',
+								style: {
+									maxWidth: imgMaxWidth,
+									gridTemplateColumns: `repeat(${cols}, minmax(0, 1fr))`
+								}
+							},
+							galleryUrls.map((gUrl, gIdx) =>
+								h(
+									'div',
+									{
+										key: 'g-thumb-' + gIdx,
+										className: `sppcfw-border sppcfw-rounded sppcfw-overflow-hidden sppcfw-cursor-pointer sppcfw-transition-all sppcfw-bg-white sppcfw-p-1 sppcfw-h-16 sppcfw-flex sppcfw-items-center sppcfw-justify-center ${
+											gIdx === 0 ? 'sppcfw-border-[#9333ea] sppcfw-ring-1 sppcfw-ring-[#9333ea]' : 'sppcfw-border-[#e5e7eb] hover:sppcfw-border-[#9333ea]'
+										}`
+									},
+									h('img', {
+										src: gUrl,
+										alt: `Gallery thumbnail ${gIdx + 1}`,
+										className: 'sppcfw-max-h-full sppcfw-w-full sppcfw-object-contain sppcfw-rounded-sm'
+									})
+								)
+							)
+						)
 				);
+			}
+			case 'image': {
+				const imgStyles = el.styles || {};
+				const imgSettings = el.settings || {};
+				const imgWidth = imgStyles.width || '100%';
+				const imgMaxWidth = imgStyles.max_width || '100%';
+				const imgHeight = imgStyles.height || 'auto';
+				const imgOpacity = imgStyles.opacity !== undefined ? imgStyles.opacity : '1';
+				const alignVal = imgStyles.alignment || imgSettings.alignment || 'center';
+				const flexAlign = alignVal === 'left' ? 'justify-start text-left' : alignVal === 'right' ? 'justify-end text-right' : 'justify-center text-center';
+
+				const radTop = imgStyles.border_radius_top || imgStyles.border_radius || '0px';
+				const radRight = imgStyles.border_radius_right || imgStyles.border_radius || '0px';
+				const radBottom = imgStyles.border_radius_bottom || imgStyles.border_radius || '0px';
+				const radLeft = imgStyles.border_radius_left || imgStyles.border_radius || '0px';
+				const borderRadiusCss = `${radTop} ${radRight} ${radBottom} ${radLeft}`;
+
+				const customImgSrc = imgSettings.custom_image_url || imgSettings.image_url || '';
+
+				const customImgStyle = {
+					width: imgWidth,
+					maxWidth: imgMaxWidth,
+					height: imgHeight,
+					opacity: parseFloat(imgOpacity),
+					borderRadius: borderRadiusCss,
+					borderStyle: imgStyles.border_type && imgStyles.border_type !== 'Default' ? imgStyles.border_type.toLowerCase() : 'none',
+					borderWidth: imgStyles.border_width || '0px',
+					borderColor: imgStyles.border_color || 'transparent',
+					objectFit: imgStyles.object_fit || 'contain',
+				};
+
+				if (!customImgSrc) {
+					return h(
+						'div',
+						{ className: `sppcfw-w-full sppcfw-flex ${flexAlign}` },
+						h(
+							'div',
+							{
+								className: 'sppcfw-w-full sppcfw-border-2 sppcfw-border-dashed sppcfw-border-[#9333ea]/50 hover:sppcfw-border-[#9333ea] sppcfw-bg-[#faf5ff] sppcfw-rounded-lg sppcfw-p-6 sppcfw-text-center sppcfw-transition-all sppcfw-cursor-pointer sppcfw-space-y-2 group',
+								style: { minHeight: '140px', maxWidth: imgMaxWidth }
+							},
+							h('span', { className: 'material-symbols-outlined sppcfw-text-4xl sppcfw-text-[#9333ea] group-hover:sppcfw-scale-110 sppcfw-transition-transform' }, 'add_photo_alternate'),
+							h('div', { className: 'sppcfw-text-xs sppcfw-font-bold sppcfw-text-[#6b21a8]' }, 'Image Widget - Choose Image'),
+							h('div', { className: 'sppcfw-text-[11px] sppcfw-text-[#7e22ce]' }, 'Click here or select this element to choose or upload an image')
+						)
+					);
+				}
+
+				return h(
+					'div',
+					{ className: `sppcfw-w-full sppcfw-flex sppcfw-flex-col ${flexAlign}` },
+					h(
+						'div',
+						{ className: `sppcfw-inline-flex ${flexAlign} sppcfw-w-full` },
+						h('img', {
+							src: customImgSrc,
+							alt: imgSettings.alt_text || 'Custom Image',
+							style: customImgStyle,
+							className: 'sppcfw-max-h-[500px] sppcfw-transition-all sppcfw-shadow-sm inline-block'
+						})
+					),
+					imgSettings.caption_type === 'custom' && imgSettings.custom_caption &&
+						h('div', { className: 'sppcfw-text-xs sppcfw-text-[#6b7280] sppcfw-mt-1.5 sppcfw-italic' }, imgSettings.custom_caption)
+				);
+			}
 			case 'product_add_to_cart':
 				const btnLabel = (el.settings && el.settings.button_text) || 'Add to cart';
 				return h(
@@ -4740,13 +5227,13 @@
 					h('span', { className: 'sppcfw-text-xs sppcfw-text-[#6b7280]' }, `(${rCount} reviews)`)
 				);
 			case 'product_short_desc':
-				return h('p', { className: 'sppcfw-text-sm sppcfw-text-[#4b5563]' }, (el.settings && el.settings.custom_desc) || safeSample.short_description || staticFallback.short_description);
+				return h('p', { className: 'sppcfw-text-sm sppcfw-text-[#4b5563]' }, safeSample.short_description || staticFallback.short_description || 'Product short description placeholder.');
 			case 'product_description':
 				return h(
 					'div',
 					{ className: 'sppcfw-border sppcfw-border-[#e5e7eb] sppcfw-rounded sppcfw-p-4 sppcfw-bg-[#f9fafb]' },
 					h('h3', { className: 'sppcfw-font-bold sppcfw-border-b sppcfw-pb-2 sppcfw-mb-2 sppcfw-text-[#111827]' }, 'Description'),
-					h('p', { className: 'sppcfw-text-sm sppcfw-text-[#4b5563]' }, (el.settings && el.settings.custom_desc) || safeSample.description || staticFallback.description)
+					h('p', { className: 'sppcfw-text-sm sppcfw-text-[#4b5563]' }, safeSample.description || staticFallback.description || 'Full product description placeholder.')
 				);
 			case 'product_meta':
 				return h(

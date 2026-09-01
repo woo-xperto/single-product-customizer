@@ -290,6 +290,26 @@ if (!class_exists('SPPCFW_Builder')) {
 				}
 			}
 
+			$variation_images = array();
+			if ($product->is_type('variable')) {
+				$available_variations = $product->get_available_variations();
+				if (!empty($available_variations)) {
+					foreach ($available_variations as $var) {
+						if (!empty($var['image']['url'])) {
+							$var_img_url = $var['image']['url'];
+							if (!in_array($var_img_url, $gallery_urls, true)) {
+								$gallery_urls[] = $var_img_url;
+							}
+							$variation_images[] = array(
+								'variation_id' => $var['variation_id'],
+								'image_url'    => $var_img_url,
+								'attributes'   => isset($var['attributes']) ? $var['attributes'] : array(),
+							);
+						}
+					}
+				}
+			}
+
 			$cat_names = wp_get_post_terms($product_id, 'product_cat', array('fields' => 'names'));
 			$tag_names = wp_get_post_terms($product_id, 'product_tag', array('fields' => 'names'));
 
@@ -402,6 +422,7 @@ if (!class_exists('SPPCFW_Builder')) {
 				'rating_count' => $product->get_rating_count(),
 				'image_url' => $image_url,
 				'gallery_urls' => $gallery_urls,
+				'variation_images' => $variation_images,
 				'short_description' => $product->get_short_description(),
 				'description' => $product->get_description(),
 				'categories' => !empty($cat_names) && !is_wp_error($cat_names) ? implode(', ', $cat_names) : '',

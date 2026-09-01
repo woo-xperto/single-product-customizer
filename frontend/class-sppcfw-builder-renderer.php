@@ -306,9 +306,49 @@ if (!class_exists('SPPCFW_Builder_Renderer')) {
 						$css .= 'padding-left: ' . esc_attr($padding_left) . ' !important;';
 					}
 
+					$margin_top = $this->sppcfw_get_device_prop($styles, 'margin_top', $device, '');
+					if (!empty($margin_top)) {
+						$css .= 'margin-top: ' . esc_attr($margin_top) . ' !important;';
+					}
+
+					$margin_right = $this->sppcfw_get_device_prop($styles, 'margin_right', $device, '');
+					if (!empty($margin_right)) {
+						$css .= 'margin-right: ' . esc_attr($margin_right) . ' !important;';
+					}
+
 					$margin_bottom = $this->sppcfw_get_device_prop($styles, 'margin_bottom', $device, '');
 					if (!empty($margin_bottom)) {
 						$css .= 'margin-bottom: ' . esc_attr($margin_bottom) . ' !important;';
+					}
+
+					$margin_left = $this->sppcfw_get_device_prop($styles, 'margin_left', $device, '');
+					if (!empty($margin_left)) {
+						$css .= 'margin-left: ' . esc_attr($margin_left) . ' !important;';
+					}
+
+					$width = $this->sppcfw_get_device_prop($styles, 'width', $device, '');
+					if (!empty($width)) {
+						$css .= 'width: ' . esc_attr($width) . ' !important;';
+					}
+
+					$max_width = $this->sppcfw_get_device_prop($styles, 'max_width', $device, '');
+					if (!empty($max_width)) {
+						$css .= 'max-width: ' . esc_attr($max_width) . ' !important;';
+					}
+
+					$height = $this->sppcfw_get_device_prop($styles, 'height', $device, '');
+					if (!empty($height)) {
+						$css .= 'height: ' . esc_attr($height) . ' !important;';
+					}
+
+					$opacity = $this->sppcfw_get_device_prop($styles, 'opacity', $device, '');
+					if ('' !== $opacity && null !== $opacity) {
+						$css .= 'opacity: ' . esc_attr($opacity) . ' !important;';
+					}
+
+					$alignment = $this->sppcfw_get_device_prop($styles, 'alignment', $device, '');
+					if (!empty($alignment)) {
+						$css .= 'text-align: ' . esc_attr($alignment) . ' !important;';
 					}
 					$css .= '}';
 
@@ -410,13 +450,99 @@ if (!class_exists('SPPCFW_Builder_Renderer')) {
 
 			switch ($type) {
 				case 'product_title':
-					woocommerce_template_single_title();
+					$settings = isset($el['settings']) ? $el['settings'] : array();
+					$tag = !empty($settings['html_tag']) ? sanitize_key($settings['html_tag']) : 'h1';
+					$valid_tags = array('h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'div', 'span', 'p');
+					if (!in_array($tag, $valid_tags, true)) {
+						$tag = 'h1';
+					}
+					if ('h1' === $tag) {
+						woocommerce_template_single_title();
+					} else {
+						the_title('<' . $tag . ' class="product_title entry-title">', '</' . $tag . '>');
+					}
+					break;
+				case 'heading':
+					$settings = isset($el['settings']) ? $el['settings'] : array();
+					$tag = !empty($settings['html_tag']) ? sanitize_key($settings['html_tag']) : 'h2';
+					$valid_tags = array('h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'div', 'span', 'p');
+					if (!in_array($tag, $valid_tags, true)) {
+						$tag = 'h2';
+					}
+					$text = isset($settings['text']) && '' !== $settings['text'] ? esc_html($settings['text']) : esc_html__('Add Your Heading Text Here', 'single-product-customizer');
+					$link_url = !empty($settings['link_url']) ? esc_url($settings['link_url']) : '';
+					$target = !empty($settings['link_target_blank']) ? ' target="_blank" rel="noopener noreferrer"' : '';
+
+					echo '<' . $tag . ' class="sppcfw-custom-heading">';
+					if (!empty($link_url)) {
+						echo '<a href="' . $link_url . '"' . $target . '>' . $text . '</a>';
+					} else {
+						echo $text;
+					}
+					echo '</' . $tag . '>';
+					break;
+				case 'text_editor':
+					$settings = isset($el['settings']) ? $el['settings'] : array();
+					$tag = !empty($settings['html_tag']) ? sanitize_key($settings['html_tag']) : 'div';
+					$valid_tags = array('div', 'p', 'span');
+					if (!in_array($tag, $valid_tags, true)) {
+						$tag = 'div';
+					}
+					$content = isset($settings['text_content']) && '' !== $settings['text_content'] ? wp_kses_post($settings['text_content']) : esc_html__('Add your custom description or paragraph content here...', 'single-product-customizer');
+					echo '<' . $tag . ' class="sppcfw-custom-text-block">' . nl2br($content) . '</' . $tag . '>';
 					break;
 				case 'product_price':
 					woocommerce_template_single_price();
 					break;
 				case 'product_gallery':
 					woocommerce_show_product_images();
+					break;
+				case 'image':
+					$settings = isset($el['settings']) ? $el['settings'] : array();
+					$styles = isset($el['styles']) ? $el['styles'] : array();
+					$img_src = !empty($settings['custom_image_url']) ? $settings['custom_image_url'] : (!empty($settings['image_url']) ? $settings['image_url'] : '');
+
+					if (!empty($img_src)) {
+						$alt = !empty($settings['alt_text']) ? esc_attr($settings['alt_text']) : esc_attr($product->get_name());
+						$link_to = isset($settings['link_to']) ? $settings['link_to'] : 'none';
+						$custom_link = isset($settings['custom_link']) ? esc_url($settings['custom_link']) : '';
+						$target = !empty($settings['link_target_blank']) ? ' target="_blank" rel="noopener noreferrer"' : '';
+						if (!empty($settings['link_rel_nofollow'])) {
+							$target = !empty($target) ? ' target="_blank" rel="noopener noreferrer nofollow"' : ' rel="nofollow"';
+						}
+						$caption_type = isset($settings['caption_type']) ? $settings['caption_type'] : 'none';
+						$custom_caption = isset($settings['custom_caption']) ? esc_html($settings['custom_caption']) : '';
+						$alignment = isset($styles['alignment']) ? $styles['alignment'] : (isset($settings['alignment']) ? $settings['alignment'] : 'center');
+						$align_class = 'text-center';
+						if ('left' === $alignment) {
+							$align_class = 'text-left';
+						} elseif ('right' === $alignment) {
+							$align_class = 'text-right';
+						}
+
+						echo '<div class="sppcfw-custom-image-wrapper ' . esc_attr($align_class) . '">';
+						if ('file' === $link_to) {
+							echo '<a href="' . esc_url($img_src) . '"' . $target . ' class="sppcfw-image-link inline-block">';
+						} elseif ('custom' === $link_to && !empty($custom_link)) {
+							echo '<a href="' . $custom_link . '"' . $target . ' class="sppcfw-image-link inline-block">';
+						}
+
+						echo '<img src="' . esc_url($img_src) . '" alt="' . $alt . '" class="sppcfw-custom-image-el inline-block" style="max-width:100%;height:auto;" />';
+
+						if ('file' === $link_to || ('custom' === $link_to && !empty($custom_link))) {
+							echo '</a>';
+						}
+
+						if ('custom' === $caption_type && !empty($custom_caption)) {
+							echo '<figcaption class="sppcfw-image-caption text-xs text-gray-500 mt-1.5">' . $custom_caption . '</figcaption>';
+						}
+						echo '</div>';
+					}
+					break;
+				case 'variation_swatches':
+					if ($product->is_type('variable')) {
+						woocommerce_variable_add_to_cart();
+					}
 					break;
 				case 'product_add_to_cart':
 					woocommerce_template_single_add_to_cart();
