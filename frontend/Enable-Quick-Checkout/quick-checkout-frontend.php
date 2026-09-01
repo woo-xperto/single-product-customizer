@@ -207,6 +207,11 @@ if (!class_exists('Sppcfw_Frontend_Quick_Checkout')) {
         /* Check if Quick Checkout is enabled */
         public function sppcfw_is_quick_checkout_enabled()
         {
+            $sppcfw_enable_builder = (int) get_option('sppcfw_enable_single_product_builder', 0);
+            if (!empty($sppcfw_enable_builder)) {
+                return false;
+            }
+
             $sppcfw_enable_quick_checkout = get_option('sppcfw_enable_quick_checkout', 0);
             return !empty($sppcfw_enable_quick_checkout) && sppcfw_is_singular();
         }
@@ -214,6 +219,11 @@ if (!class_exists('Sppcfw_Frontend_Quick_Checkout')) {
         /* Check if Quick Checkout is currently active */
         public function sppcfw_is_quick_checkout_active()
         {
+            $sppcfw_enable_builder = (int) get_option('sppcfw_enable_single_product_builder', 0);
+            if (!empty($sppcfw_enable_builder)) {
+                return false;
+            }
+
             $sppcfw_enable_quick_checkout = get_option('sppcfw_enable_quick_checkout', 0);
             return !empty($sppcfw_enable_quick_checkout);
         }

@@ -693,3 +693,44 @@ li.submenu-item.active-submenu-item {
   letter-spacing: 0.5px;
   box-shadow: 0 1px 3px rgba(0,0,0,0.2);
 }
+
+/* Builder Notice Badge in Quick Checkout */
+.sppcfw_builder_notice_badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 16px;
+  padding: 10px 16px;
+  background: #fffbeb;
+  border: 1px solid #fde68a;
+  border-radius: 8px;
+  color: #b45309;
+  font-size: 13px;
+  line-height: 1.4;
+}
+
+.sppcfw_builder_notice_badge .dashicons {
+  font-size: 18px;
+  width: 18px;
+  height: 18px;
+  color: #d97706;
+  flex-shrink: 0;
+}
+
+.sppcfw_builder_notice_badge a {
+  color: #b45309;
+  text-decoration: underline;
+}
+
+.sppcfw_builder_notice_badge a:hover {
+  color: #92400e;
+}
+
+label.sppcfw-is-disabled {
+  opacity: 0.6;
+  cursor: not-allowed !important;
+}
+
+input.sppcfw-enable-quick-checkout-toggle:disabled {
+  cursor: not-allowed;
+}

@@ -128,6 +128,14 @@ class Sppcfw_Quick_Checkout
         }
 
         $sppcfw_enable_quick_checkout = isset($_POST['sppcfw_enable_quick_checkout']) ? 1 : 0;
+
+        $is_builder_active = (int) get_option('sppcfw_enable_single_product_builder', 0);
+        if ($is_builder_active && $sppcfw_enable_quick_checkout) {
+            wp_send_json_error(array(
+                'message' => __('Cannot enable Quick Checkout while Single Product Builder is active. Please checkout in single page builder Options', 'single-product-customizer')
+            ));
+        }
+
         self::sync_quick_checkout_enabled_store((bool) $sppcfw_enable_quick_checkout);
 
         $is_pro_template_attempt = false;

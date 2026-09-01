@@ -19,15 +19,17 @@ $sppcfw_is_block_theme = $sppcfw_theme->exists() &&
 
 // Get current options (block themes force Quick Checkout off on init priority 11 before this admin view loads).
 $sppcfw_enable_quick_checkout = (int) get_option('sppcfw_enable_quick_checkout', 0);
-$sppcfw_current_template = get_option('sppcfw_enable_qc', 'template-1');
+$sppcfw_enable_builder        = (int) get_option('sppcfw_enable_single_product_builder', 0);
+$is_builder_active            = !empty($sppcfw_enable_builder);
+$sppcfw_current_template      = get_option('sppcfw_enable_qc', 'template-1');
 
 if (!sppcfw_is_pro_active()) {
     // Force template-1 in admin when Pro is inactive
     $sppcfw_current_template = 'template-1';
 }
 
-// Template / extra rows when Quick Checkout is on.
-$sppcfw_show_template_selector = !empty($sppcfw_enable_quick_checkout);
+// Template / extra rows when Quick Checkout is on and builder is not active.
+$sppcfw_show_template_selector = !empty($sppcfw_enable_quick_checkout) && !$is_builder_active;
 $sppcfw_qc_disabled_attr = '';
 ?>
 
@@ -35,6 +37,21 @@ $sppcfw_qc_disabled_attr = '';
     <h1 class="sppcfw-heading-inline"><?php esc_html_e('Enable Quick Checkout', 'single-product-customizer'); ?></h1>
     <hr class="sppcfw-header-devider">
     <div class="sppcfw-quick-checkout-settings">
+        <?php if ($is_builder_active) : ?>
+            <div class="sppcfw_builder_notice_badge">
+                <span class="dashicons dashicons-info"></span>
+                <span>
+                    <?php
+                    $builder_url = admin_url('admin.php?page=sppcfw-single-page-builder');
+                    printf(
+                        /* translators: %s: Link to Single Page Builder Options */
+                        esc_html__('Please checkout in %s', 'single-product-customizer'),
+                        '<a href="' . esc_url($builder_url) . '"><strong>' . esc_html__('single page builder Options', 'single-product-customizer') . '</strong></a>'
+                    );
+                    ?>
+                </span>
+            </div>
+        <?php endif; ?>
         <form method="post" action="">
             <?php wp_nonce_field('sppcfw_qc_nonce', 'nonce'); ?>
 
@@ -42,10 +59,11 @@ $sppcfw_qc_disabled_attr = '';
                 <table class="form-table">
                     <tr>
                         <th scope="row">
-                            <label for="sppcfw_enable_quick_checkout">
+                            <label for="sppcfw_enable_quick_checkout" class="<?php echo $is_builder_active ? 'sppcfw-is-disabled' : ''; ?>" title="<?php echo $is_builder_active ? esc_attr__('Single Page Builder is active', 'single-product-customizer') : ''; ?>">
                                 <?php esc_html_e('Enable Quick Checkout', 'single-product-customizer'); ?>
                                 <input type="checkbox" name="sppcfw_enable_quick_checkout" id="sppcfw_enable_quick_checkout" value="1" class="sppcfw-enable-quick-checkout-toggle" 
-                                <?php checked(!empty($sppcfw_enable_quick_checkout), 1); ?> />
+                                <?php checked(!empty($sppcfw_enable_quick_checkout) && !$is_builder_active, 1); ?> 
+                                <?php disabled($is_builder_active, true); ?> />
                             </label>
                         </th>
                         <td>
