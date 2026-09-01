@@ -30,7 +30,7 @@
 
 	// Static Visual Sample Data for Edit Canvas
 	const CANVAS_STATIC_DATA = {
-		title: 'Feature image',
+		title: 'Single Product Title',
 		price: '$49.99',
 		sku: 'SAMPLE-SKU-123',
 		stock_text: 'In Stock',
@@ -2950,9 +2950,9 @@
 										h(
 											'div',
 											{ className: 'sppcfw-flex sppcfw-border sppcfw-border-[#374151] sppcfw-rounded sppcfw-bg-[#111827] sppcfw-overflow-hidden' },
-											h('button', { className: `sppcfw-p-1.5 sppcfw-text-xs sppcfw-text-white hover:sppcfw-bg-[#1f2937] ${getSetting('justify_content') === 'flex-start' || !getSetting('justify_content') ? 'sppcfw-bg-[#374151]' : ''}`, onClick: () => handleSettingChange('justify_content', 'flex-start'), title: 'Start' }, '├─'),
-											h('button', { className: `sppcfw-p-1.5 sppcfw-text-xs sppcfw-text-white hover:sppcfw-bg-[#1f2937] ${getSetting('justify_content') === 'center' ? 'sppcfw-bg-[#374151]' : ''}`, onClick: () => handleSettingChange('justify_content', 'center'), title: 'Center' }, '─┼─'),
-											h('button', { className: `sppcfw-p-1.5 sppcfw-text-xs sppcfw-text-white hover:sppcfw-bg-[#1f2937] ${getSetting('justify_content') === 'flex-end' ? 'sppcfw-bg-[#374151]' : ''}`, onClick: () => handleSettingChange('justify_content', 'flex-end'), title: 'End' }, '─┤')
+											h('button', { className: `sppcfw-p-1.5 sppcfw-text-xs sppcfw-text-white hover:sppcfw-bg-[#1f2937] ${getSetting('justify_content') === 'flex-start' || !getSetting('justify_content') ? 'sppcfw-bg-[#374151]' : ''}`, onClick: () => handleSettingChange('justify_content', 'flex-start'), title: 'Start' }, '┬'),
+											h('button', { className: `sppcfw-p-1.5 sppcfw-text-xs sppcfw-text-white hover:sppcfw-bg-[#1f2937] ${getSetting('justify_content') === 'center' ? 'sppcfw-bg-[#374151]' : ''}`, onClick: () => handleSettingChange('justify_content', 'center'), title: 'Center' }, '┼'),
+											h('button', { className: `sppcfw-p-1.5 sppcfw-text-xs sppcfw-text-white hover:sppcfw-bg-[#1f2937] ${getSetting('justify_content') === 'flex-end' ? 'sppcfw-bg-[#374151]' : ''}`, onClick: () => handleSettingChange('justify_content', 'flex-end'), title: 'End' }, '┴'),
 										)
 									),
 
@@ -2964,9 +2964,9 @@
 										h(
 											'div',
 											{ className: 'sppcfw-flex sppcfw-border sppcfw-border-[#374151] sppcfw-rounded sppcfw-bg-[#111827] sppcfw-overflow-hidden' },
-											h('button', { className: `sppcfw-p-1.5 sppcfw-text-xs sppcfw-text-white hover:sppcfw-bg-[#1f2937] ${getSetting('align_items') === 'flex-start' ? 'sppcfw-bg-[#374151]' : ''}`, onClick: () => handleSettingChange('align_items', 'flex-start'), title: 'Start' }, '┬'),
-											h('button', { className: `sppcfw-p-1.5 sppcfw-text-xs sppcfw-text-white hover:sppcfw-bg-[#1f2937] ${getSetting('align_items') === 'center' ? 'sppcfw-bg-[#374151]' : ''}`, onClick: () => handleSettingChange('align_items', 'center'), title: 'Center' }, '┼'),
-											h('button', { className: `sppcfw-p-1.5 sppcfw-text-xs sppcfw-text-white hover:sppcfw-bg-[#1f2937] ${getSetting('align_items') === 'flex-end' ? 'sppcfw-bg-[#374151]' : ''}`, onClick: () => handleSettingChange('align_items', 'flex-end'), title: 'End' }, '┴'),
+											h('button', { className: `sppcfw-p-1.5 sppcfw-text-xs sppcfw-text-white hover:sppcfw-bg-[#1f2937] ${getSetting('align_items') === 'flex-start' ? 'sppcfw-bg-[#374151]' : ''}`, onClick: () => handleSettingChange('align_items', 'flex-start'), title: 'Start' }, '├─'),
+											h('button', { className: `sppcfw-p-1.5 sppcfw-text-xs sppcfw-text-white hover:sppcfw-bg-[#1f2937] ${getSetting('align_items') === 'center' ? 'sppcfw-bg-[#374151]' : ''}`, onClick: () => handleSettingChange('align_items', 'center'),title: 'Center' }, '─┼─'),
+											h('button', { className: `sppcfw-p-1.5 sppcfw-text-xs sppcfw-text-white hover:sppcfw-bg-[#1f2937] ${getSetting('align_items') === 'flex-end' ? 'sppcfw-bg-[#374151]' : ''}`, onClick: () => handleSettingChange('align_items', 'flex-end'), title: 'End' }, '─┤'),
 											h('button', { className: `sppcfw-p-1.5 sppcfw-text-xs sppcfw-text-white hover:sppcfw-bg-[#1f2937] ${getSetting('align_items') === 'stretch' || !getSetting('align_items') ? 'sppcfw-bg-[#374151]' : ''}`, onClick: () => handleSettingChange('align_items', 'stretch'), title: 'Stretch' }, '↕')
 										)
 									),
