@@ -2139,21 +2139,24 @@
 		);
 	}
 
-	// 3b. Left Inspector Component ("Edit Container" / "Edit Element")
+	// 3b. Left Inspector & Modular Individual Edit Panels System
 	function LeftInspector({ deviceView = 'desktop', selectedElement, updateElementProperties, closeInspector, categories, products, sampleData, addColumnToContainer, duplicateColumn, removeElement }) {
 		const [activeTab, setActiveTab] = useState('layout'); // 'layout'/'content' | 'style' | 'advanced'
-		const [isContainerOpen, setIsContainerOpen] = useState(true);
-		const [isItemsOpen, setIsItemsOpen] = useState(true);
-		const [isImageOpen, setIsImageOpen] = useState(true);
-		const [isLayoutAdvOpen, setIsLayoutAdvOpen] = useState(true);
-		const [isBgOpen, setIsBgOpen] = useState(true);
-		const [isOverlayOpen, setIsOverlayOpen] = useState(false);
-		const [isBorderOpen, setIsBorderOpen] = useState(false);
-		const [bgMode, setBgMode] = useState('normal'); // 'normal' | 'hover'
-		const [bgType, setBgType] = useState('classic'); // 'classic' | 'gradient' | 'video' | 'image'
-		const [styleMode, setStyleMode] = useState('normal'); // 'normal' | 'hover'
-		const [scrollEffects, setScrollEffects] = useState(false);
-		const [mouseEffects, setMouseEffects] = useState(false);
+		const [openAccordions, setOpenAccordions] = useState({
+			general: true,
+			items: true,
+			typography: true,
+			colors: true,
+			image: true,
+			button: true,
+			rating: true,
+			border: false,
+			background: true,
+			shadow: false,
+			spacing: true,
+			position: true,
+			responsive: false,
+		});
 		const [widthUnit, setWidthUnit] = useState('px');
 		const [heightUnit, setHeightUnit] = useState('px');
 		const [imgWidthUnit, setImgWidthUnit] = useState('%');
@@ -2167,6 +2170,10 @@
 		const [isRadiusLinked, setIsRadiusLinked] = useState(true);
 		const [isMarginLinked, setIsMarginLinked] = useState(true);
 		const [isPaddingLinked, setIsPaddingLinked] = useState(true);
+
+		function toggleAccordion(key) {
+			setOpenAccordions(prev => ({ ...prev, [key]: !prev[key] }));
+		}
 
 		function getSetting(key) {
 			return getResponsiveProp(selectedElement.settings, key, deviceView);
@@ -2240,21 +2247,29 @@
 		const isHeading = selectedElement.type === 'heading';
 		const isTextEditor = selectedElement.type === 'text_editor';
 		const isImage = isProductGallery || isCustomImage;
-		const panelTitle = isContainer
-			? 'Edit Container'
-			: isColumn
-			? 'Edit Column'
-			: isProductGallery
-			? 'Edit Product Gallery'
-			: isCustomImage
-			? 'Edit Image'
-			: isHeading
-			? 'Edit Heading'
-			: isTextEditor
-			? 'Edit Text Editor'
-			: selectedElement.type === 'product_title'
-			? 'Edit Product Title'
-			: (selectedElement.label || 'Edit Element');
+
+		const typeLabels = {
+			container: 'Edit Container',
+			column: 'Edit Column',
+			image: 'Edit Image',
+			product_gallery: 'Edit Product Gallery',
+			heading: 'Edit Heading',
+			text_editor: 'Edit Text Editor',
+			product_title: 'Edit Product Title',
+			product_price: 'Edit Product Price',
+			product_add_to_cart: 'Edit Add to Cart',
+			product_rating: 'Edit Rating Stars',
+			product_short_desc: 'Edit Short Description',
+			product_description: 'Edit Product Description',
+			product_meta: 'Edit Product Meta',
+			product_meta_item: 'Edit Meta Field',
+			variation_swatches: 'Edit Variation Swatches',
+			custom_message: 'Edit Custom Message',
+			plus_minus_buttons: 'Edit Stepper Buttons',
+			related_products: 'Edit Related Products',
+			upsell_products: 'Edit Upsell Products',
+		};
+		const panelTitle = typeLabels[selectedElement.type] || (selectedElement.label ? 'Edit ' + selectedElement.label : 'Edit Element');
 		const firstTabLabel = (isContainer || isColumn) ? 'Layout' : 'Content';
 		const firstTabIcon = (isContainer || isColumn)
 			? 'view_column'
@@ -2266,7 +2281,7 @@
 			? 'format_size'
 			: isTextEditor
 			? 'edit_note'
-			: 'edit';
+			: 'widgets';
 
 		function renderControlHeader(label, showDeviceIcon = true, unitValue = null, onUnitChange = null, units = null) {
 			return h(
@@ -2289,7 +2304,7 @@
 							onChange: e => onUnitChange(e.target.value),
 						},
 						units.map(u => h('option', { key: u, value: u }, u))
-					),
+					)
 				)
 			);
 		}
@@ -2322,7 +2337,7 @@
 			);
 		}
 
-		function renderFourBoxInput(sourceObj, prefix, onChangeFour, unit = 'px', isLinked, setIsLinked) {
+		function renderFourBoxInput(getValueFn, prefix, onChangeFour, unit = 'px', isLinked, setIsLinked) {
 			const sides = ['top', 'right', 'bottom', 'left'];
 
 			function handleSingleChange(side, rawVal) {
@@ -2346,18 +2361,18 @@
 					'ul',
 					{ className: 'sppcfw-grid sppcfw-grid-cols-5 sppcfw-flex-1' },
 					sides.map(side => {
-						const sideVal = (sourceObj && sourceObj[`${prefix}_${side}`]) || '';
-						const num = sideVal !== '' ? parseFloat(sideVal) : '';
+						const sideVal = getValueFn(`${prefix}_${side}`) || '';
+						const num = sideVal !== '' && sideVal !== undefined ? parseFloat(sideVal) : '';
 						return h(
 							'li',
 							{ key: side, className: 'sppcfw-flex sppcfw-flex-col sppcfw-items-center' },
 							h('input', {
 								type: 'number',
 								className: 'sppcfw-w-full sppcfw-bg-[#111827] sppcfw-border sppcfw-border-[#374151] sppcfw-rounded sppcfw-px-1.5 sppcfw-py-1 sppcfw-text-xs sppcfw-text-center sppcfw-text-white focus:sppcfw-outline-none focus:sppcfw-border-[#9333ea]',
-								value: num,
+								value: typeof num === 'number' && !isNaN(num) ? num : '',
 								onChange: e => handleSingleChange(side, e.target.value),
 							}),
-							h('span', { className: 'sppcfw-text-[9px] sppcfw-text-gray-400 sppcfw-capitalize sppcfw-mt-0.5' }, side),
+							h('span', { className: 'sppcfw-text-[9px] sppcfw-text-gray-400 sppcfw-capitalize sppcfw-mt-0.5' }, side)
 						);
 					}),
 					h(
@@ -2372,7 +2387,7 @@
 						},
 						h('span', { className: 'material-symbols-outlined sppcfw-text-xs' }, isLinked ? 'link' : 'link_off')
 					)
-				),
+				)
 			);
 		}
 
@@ -2393,17 +2408,1764 @@
 							onClick: () => onChange(opt.value),
 							title: opt.title || opt.label,
 						},
-						opt.icon ? h('span', { className: 'material-symbols-outlined sppcfw-text-sm' }, opt.icon) : opt.label
+						opt.icon ? (typeof opt.icon === 'string' ? h('span', { className: 'material-symbols-outlined sppcfw-text-sm' }, opt.icon) : opt.icon) : opt.label
 					);
 				})
 			);
 		}
 
+		function renderColorPicker(label, value, onChange, defaultVal = '#000000') {
+			return h(
+				'div',
+				{ className: 'sppcfw-flex sppcfw-items-center sppcfw-justify-between' },
+				h('label', { className: 'sppcfw-text-xs sppcfw-text-gray-200 sppcfw-font-medium' }, label),
+				h(
+					'div',
+					{ className: 'sppcfw-flex sppcfw-items-center sppcfw-gap-2' },
+					h('input', {
+						type: 'color',
+						className: 'sppcfw-w-7 sppcfw-h-7 sppcfw-bg-[#111827] sppcfw-border sppcfw-border-[#374151] sppcfw-rounded sppcfw-cursor-pointer sppcfw-p-0.5',
+						value: value || defaultVal,
+						onChange: e => onChange(e.target.value),
+					}),
+					h(
+						'button',
+						{
+							type: 'button',
+							className: 'sppcfw-text-[10px] sppcfw-text-gray-400 hover:sppcfw-text-gray-200 sppcfw-underline sppcfw-cursor-pointer',
+							onClick: () => onChange(''),
+							title: 'Reset color',
+						},
+						'Reset'
+					)
+				)
+			);
+		}
+
+		function renderAccordion(key, title, content, icon = null, badge = null) {
+			const isOpen = !!openAccordions[key];
+			return h(
+				'div',
+				{ key: key, className: 'sppcfw-border-b sppcfw-border-[#374151] sppcfw-pb-4 sppcfw-space-y-3.5' },
+				h(
+					'div',
+					{
+						className: 'sppcfw-flex sppcfw-items-center sppcfw-justify-between sppcfw-cursor-pointer sppcfw-select-none sppcfw-pb-1',
+						onClick: () => toggleAccordion(key),
+					},
+					h(
+						'h4',
+						{ className: 'sppcfw-text-xs sppcfw-font-bold sppcfw-text-white sppcfw-flex sppcfw-items-center sppcfw-gap-1.5' },
+						h('span', { className: 'sppcfw-text-[10px] sppcfw-text-gray-300' }, isOpen ? '▼' : '▶'),
+						icon && h('span', { className: 'material-symbols-outlined sppcfw-text-sm sppcfw-text-gray-400' }, icon),
+						title
+					),
+					badge && h('span', { className: 'sppcfw-text-[10px] sppcfw-px-1.5 sppcfw-py-0.5 sppcfw-rounded sppcfw-bg-[#212b39] sppcfw-text-[#92ccff]' }, badge)
+				),
+				isOpen && h('div', { className: 'sppcfw-space-y-4 sppcfw-pt-1' }, content)
+			);
+		}
+
+		// ==========================================
+		// 1. INDIVIDUAL CONTENT PANELS
+		// ==========================================
+
+		// 1a. Container Content Panel
+		function renderContainerContent() {
+			return h(
+				'div',
+				{ className: 'sppcfw-space-y-4' },
+				renderAccordion(
+					'general',
+					'Container Layout',
+					h(
+						'div',
+						{ className: 'sppcfw-space-y-4' },
+						h(
+							'div',
+							{ className: 'sppcfw-flex sppcfw-items-center sppcfw-justify-between' },
+							h('label', { className: 'sppcfw-text-xs sppcfw-text-[#d1d5db] sppcfw-font-medium' }, 'Container Layout'),
+							h(
+								'div',
+								{ className: 'sppcfw-relative sppcfw-w-44' },
+								h(
+									'select',
+									{
+										className: 'sppcfw-w-full sppcfw-bg-[#111827] sppcfw-border sppcfw-border-[#374151] sppcfw-rounded sppcfw-px-2.5 sppcfw-py-1.5 sppcfw-pr-6 sppcfw-text-xs sppcfw-text-white sppcfw-appearance-none focus:sppcfw-outline-none focus:sppcfw-border-[#9333ea] sppcfw-cursor-pointer',
+										value: getSetting('flex_direction') === 'grid' ? 'Grid' : 'Flexbox',
+										onChange: e => handleSettingChange('flex_direction', e.target.value === 'Grid' ? 'grid' : 'row'),
+									},
+									h('option', { value: 'Flexbox' }, 'Flexbox'),
+									h('option', { value: 'Grid' }, 'Grid')
+								)
+							)
+						),
+						h('hr', { className: 'sppcfw-border-[#374151]/60' }),
+						h(
+							'div',
+							{ className: 'sppcfw-flex sppcfw-items-center sppcfw-justify-between' },
+							h('label', { className: 'sppcfw-text-xs sppcfw-text-[#d1d5db] sppcfw-font-medium' }, 'Content Width'),
+							h(
+								'div',
+								{ className: 'sppcfw-relative sppcfw-w-44' },
+								h(
+									'select',
+									{
+										className: 'sppcfw-w-full sppcfw-bg-[#111827] sppcfw-border sppcfw-border-[#374151] sppcfw-rounded sppcfw-px-2.5 sppcfw-py-1.5 sppcfw-pr-6 sppcfw-text-xs sppcfw-text-white sppcfw-appearance-none focus:sppcfw-outline-none focus:sppcfw-border-[#9333ea] sppcfw-cursor-pointer',
+										value: getSetting('width_mode') === 'full' ? 'Full Width' : 'Boxed',
+										onChange: e => handleSettingChange('width_mode', e.target.value === 'Full Width' ? 'full' : 'boxed'),
+									},
+									h('option', { value: 'Boxed' }, 'Boxed'),
+									h('option', { value: 'Full Width' }, 'Full Width')
+								)
+							)
+						),
+						h(
+							'div',
+							{ className: 'sppcfw-space-y-1.5' },
+							renderControlHeader('Width', true, widthUnit, setWidthUnit, ['px', '%', 'vw']),
+							renderSliderInput(getSetting('boxed_width') || '1140px', v => handleSettingChange('boxed_width', v), 100, 2000, 1, widthUnit, '1140')
+						),
+						h(
+							'div',
+							{ className: 'sppcfw-space-y-1.5' },
+						renderControlHeader('Min Height', true, heightUnit, setHeightUnit, ['px', 'vh', 'em']),
+						renderSliderInput(getSetting('min_height') || '', v => handleSettingChange('min_height', v), 0, 1000, 1, heightUnit, ''),
+						h('p', { className: 'sppcfw-text-[11px] sppcfw-text-gray-400 sppcfw-italic sppcfw-pt-0.5' }, 'To achieve full height Container use 100vh.')
+						)
+					)
+				),
+				renderAccordion(
+					'items',
+					'Container Items',
+					h(
+						'div',
+						{ className: 'sppcfw-space-y-4' },
+						h(
+							'div',
+							{ className: 'sppcfw-flex sppcfw-items-center sppcfw-justify-between' },
+							h('div', { className: 'sppcfw-flex sppcfw-items-center sppcfw-gap-1.5 sppcfw-text-xs sppcfw-text-[#e5e7eb] sppcfw-font-medium' }, 'Direction', h('span', { className: 'material-symbols-outlined sppcfw-text-[13px] sppcfw-text-gray-400', title: deviceView }, 'desktop_windows')),
+							h(
+								'div',
+								{ className: 'sppcfw-flex sppcfw-border sppcfw-border-[#374151] sppcfw-rounded sppcfw-bg-[#111827] sppcfw-overflow-hidden' },
+								[
+									{ val: 'row', title: 'Row - Horizontal', icon: h('svg', { width: 14, height: 14, viewBox: '0 0 16 16', fill: 'none', stroke: 'currentColor', strokeWidth: 2, strokeLinecap: 'round', strokeLinejoin: 'round' }, h('path', { d: 'M3 8h10M9 4l4 4-4 4' })) },
+									{ val: 'column', title: 'Column - Vertical', icon: h('svg', { width: 14, height: 14, viewBox: '0 0 16 16', fill: 'none', stroke: 'currentColor', strokeWidth: 2, strokeLinecap: 'round', strokeLinejoin: 'round' }, h('path', { d: 'M8 3v10M4 9l4 4 4-4' })) },
+									{ val: 'row-reverse', title: 'Row Reverse', icon: h('svg', { width: 14, height: 14, viewBox: '0 0 16 16', fill: 'none', stroke: 'currentColor', strokeWidth: 2, strokeLinecap: 'round', strokeLinejoin: 'round' }, h('path', { d: 'M13 8H3M7 4L3 8l4 4' })) },
+									{ val: 'column-reverse', title: 'Column Reverse', icon: h('svg', { width: 14, height: 14, viewBox: '0 0 16 16', fill: 'none', stroke: 'currentColor', strokeWidth: 2, strokeLinecap: 'round', strokeLinejoin: 'round' }, h('path', { d: 'M8 13V3M4 7l4-4 4 4' })) },
+								].map(dirOpt => {
+									const isAct = (getSetting('flex_direction') || 'row') === dirOpt.val;
+									return h('button', { key: dirOpt.val, type: 'button', className: `sppcfw-p-2 sppcfw-flex sppcfw-items-center sppcfw-justify-center sppcfw-transition-colors sppcfw-cursor-pointer ${isAct ? 'sppcfw-bg-[#374151] sppcfw-text-white' : 'sppcfw-text-gray-400 hover:sppcfw-text-white hover:sppcfw-bg-[#1f2937]'}`, onClick: () => handleSettingChange('flex_direction', dirOpt.val), title: dirOpt.title }, dirOpt.icon);
+								})
+							)
+						),
+						h(
+							'div',
+							{ className: 'sppcfw-space-y-1.5' },
+							h('div', { className: 'sppcfw-flex sppcfw-items-center sppcfw-gap-1.5 sppcfw-text-xs sppcfw-text-[#e5e7eb] sppcfw-font-medium' }, 'Justify Content', h('span', { className: 'material-symbols-outlined sppcfw-text-[13px] sppcfw-text-gray-400', title: deviceView }, 'desktop_windows')),
+							h(
+								'div',
+								{ className: 'sppcfw-flex sppcfw-border sppcfw-border-[#374151] sppcfw-rounded sppcfw-bg-[#111827] sppcfw-overflow-hidden' },
+								[
+									{ val: 'flex-start', title: 'Start', icon: h('svg', { width: 14, height: 14, viewBox: '0 0 16 16', fill: 'currentColor' }, h('rect', { x: 1.5, y: 1.5, width: 1.5, height: 13, rx: 0.5 }), h('rect', { x: 4.5, y: 4, width: 3, height: 8, rx: 0.5 }), h('rect', { x: 9, y: 4, width: 3, height: 8, rx: 0.5 })) },
+									{ val: 'center', title: 'Center', icon: h('svg', { width: 14, height: 14, viewBox: '0 0 16 16', fill: 'currentColor' }, h('rect', { x: 4, y: 4, width: 3.5, height: 8, rx: 0.5 }), h('rect', { x: 8.5, y: 4, width: 3.5, height: 8, rx: 0.5 })) },
+									{ val: 'flex-end', title: 'End', icon: h('svg', { width: 14, height: 14, viewBox: '0 0 16 16', fill: 'currentColor' }, h('rect', { x: 13, y: 1.5, width: 1.5, height: 13, rx: 0.5 }), h('rect', { x: 4, y: 4, width: 3, height: 8, rx: 0.5 }), h('rect', { x: 8.5, y: 4, width: 3, height: 8, rx: 0.5 })) },
+									{ val: 'space-between', title: 'Space Between', icon: h('svg', { width: 14, height: 14, viewBox: '0 0 16 16', fill: 'currentColor' }, h('rect', { x: 1.5, y: 1.5, width: 1.5, height: 13, rx: 0.5 }), h('rect', { x: 13, y: 1.5, width: 1.5, height: 13, rx: 0.5 }), h('rect', { x: 4.5, y: 4, width: 2.5, height: 8, rx: 0.5 }), h('rect', { x: 9, y: 4, width: 2.5, height: 8, rx: 0.5 })) },
+									{ val: 'space-around', title: 'Space Around', icon: h('svg', { width: 14, height: 14, viewBox: '0 0 16 16', fill: 'currentColor' }, h('rect', { x: 2.5, y: 4, width: 3, height: 8, rx: 0.5 }), h('rect', { x: 7, y: 2, width: 1.5, height: 12, rx: 0.5, opacity: 0.35 }), h('rect', { x: 10.5, y: 4, width: 3, height: 8, rx: 0.5 })) },
+									{ val: 'space-evenly', title: 'Space Evenly', icon: h('svg', { width: 14, height: 14, viewBox: '0 0 16 16', fill: 'currentColor' }, h('rect', { x: 2, y: 4, width: 2.5, height: 8, rx: 0.5 }), h('rect', { x: 6.75, y: 4, width: 2.5, height: 8, rx: 0.5 }), h('rect', { x: 11.5, y: 4, width: 2.5, height: 8, rx: 0.5 })) },
+								].map(jcOpt => {
+									const isAct = (getSetting('justify_content') || 'flex-start') === jcOpt.val;
+									return h('button', { key: jcOpt.val, type: 'button', className: `sppcfw-flex-1 sppcfw-py-2 sppcfw-flex sppcfw-items-center sppcfw-justify-center sppcfw-transition-colors sppcfw-cursor-pointer ${isAct ? 'sppcfw-bg-[#374151] sppcfw-text-white' : 'sppcfw-text-gray-400 hover:sppcfw-text-white hover:sppcfw-bg-[#1f2937]'}`, onClick: () => handleSettingChange('justify_content', jcOpt.val), title: jcOpt.title }, jcOpt.icon);
+								})
+							)
+						),
+						h(
+							'div',
+							{ className: 'sppcfw-flex sppcfw-items-center sppcfw-justify-between' },
+							h('div', { className: 'sppcfw-flex sppcfw-items-center sppcfw-gap-1.5 sppcfw-text-xs sppcfw-text-[#e5e7eb] sppcfw-font-medium' }, 'Align Items', h('span', { className: 'material-symbols-outlined sppcfw-text-[13px] sppcfw-text-gray-400', title: deviceView }, 'desktop_windows')),
+							h(
+								'div',
+								{ className: 'sppcfw-flex sppcfw-border sppcfw-border-[#374151] sppcfw-rounded sppcfw-bg-[#111827] sppcfw-overflow-hidden' },
+								[
+									{ val: 'flex-start', title: 'Start', icon: h('svg', { width: 14, height: 14, viewBox: '0 0 16 16', fill: 'currentColor' }, h('rect', { x: 1.5, y: 1.5, width: 13, height: 1.5, rx: 0.5 }), h('rect', { x: 6, y: 4.5, width: 4, height: 9, rx: 0.5 })) },
+									{ val: 'center', title: 'Center', icon: h('svg', { width: 14, height: 14, viewBox: '0 0 16 16', fill: 'currentColor' }, h('rect', { x: 1.5, y: 7.25, width: 13, height: 1.5, rx: 0.5 }), h('rect', { x: 6, y: 2.5, width: 4, height: 11, rx: 0.5 })) },
+									{ val: 'flex-end', title: 'End', icon: h('svg', { width: 14, height: 14, viewBox: '0 0 16 16', fill: 'currentColor' }, h('rect', { x: 1.5, y: 13, width: 13, height: 1.5, rx: 0.5 }), h('rect', { x: 6, y: 2.5, width: 4, height: 9, rx: 0.5 })) },
+									{ val: 'stretch', title: 'Stretch', icon: h('svg', { width: 14, height: 14, viewBox: '0 0 16 16', fill: 'currentColor' }, h('rect', { x: 1.5, y: 1.5, width: 13, height: 1.5, rx: 0.5 }), h('rect', { x: 1.5, y: 13, width: 13, height: 1.5, rx: 0.5 }), h('rect', { x: 6, y: 4, width: 4, height: 8, rx: 0.5 })) },
+								].map(aiOpt => {
+									const isAct = (getSetting('align_items') || 'stretch') === aiOpt.val;
+									return h('button', { key: aiOpt.val, type: 'button', className: `sppcfw-p-2 sppcfw-flex sppcfw-items-center sppcfw-justify-center sppcfw-transition-colors sppcfw-cursor-pointer ${isAct ? 'sppcfw-bg-[#374151] sppcfw-text-white' : 'sppcfw-text-gray-400 hover:sppcfw-text-white hover:sppcfw-bg-[#1f2937]'}`, onClick: () => handleSettingChange('align_items', aiOpt.val), title: aiOpt.title }, aiOpt.icon);
+								})
+							)
+						),
+						h(
+							'div',
+							{ className: 'sppcfw-space-y-1.5' },
+							renderControlHeader('Gaps', true, gapsUnit, setGapsUnit, ['px', 'em', '%']),
+							h(
+								'div',
+								{ className: 'sppcfw-flex sppcfw-items-start sppcfw-gap-1.5' },
+								h(
+									'div',
+									{ className: 'sppcfw-flex-1 sppcfw-grid sppcfw-grid-cols-2 sppcfw-border sppcfw-border-[#374151] sppcfw-rounded sppcfw-bg-[#111827] sppcfw-overflow-hidden' },
+									h(
+										'div',
+										{ className: 'sppcfw-border-r sppcfw-border-[#374151]' },
+										h('input', {
+											type: 'number',
+											className: 'sppcfw-w-full sppcfw-bg-transparent sppcfw-px-2 sppcfw-py-1.5 sppcfw-text-xs sppcfw-text-center sppcfw-text-white focus:sppcfw-outline-none',
+											value: parseInt(getSetting('column_gap') || getSetting('gap') || '20', 10),
+											onChange: e => {
+												const v = e.target.value ? e.target.value + gapsUnit : '0px';
+												if (isGapsLinked) {
+													handleSettingChange('gap', v);
+													handleSettingChange('column_gap', v);
+													handleSettingChange('row_gap', v);
+												} else {
+													handleSettingChange('column_gap', v);
+												}
+											},
+										})
+									),
+									h(
+										'div',
+										null,
+										h('input', {
+											type: 'number',
+											className: 'sppcfw-w-full sppcfw-bg-transparent sppcfw-px-2 sppcfw-py-1.5 sppcfw-text-xs sppcfw-text-center sppcfw-text-white focus:sppcfw-outline-none',
+											value: parseInt(getSetting('row_gap') || getSetting('gap') || '20', 10),
+											onChange: e => {
+												const v = e.target.value ? e.target.value + gapsUnit : '0px';
+												if (isGapsLinked) {
+													handleSettingChange('gap', v);
+													handleSettingChange('column_gap', v);
+													handleSettingChange('row_gap', v);
+												} else {
+													handleSettingChange('row_gap', v);
+												}
+											},
+										})
+									)
+								),
+								h(
+									'button',
+									{
+										type: 'button',
+										className: `sppcfw-p-2 sppcfw-rounded sppcfw-border sppcfw-transition-colors sppcfw-cursor-pointer ${
+											isGapsLinked ? 'sppcfw-bg-[#374151] sppcfw-border-[#4b5563] sppcfw-text-white' : 'sppcfw-bg-[#111827] sppcfw-border-[#374151] sppcfw-text-gray-400 hover:sppcfw-text-white'
+										}`,
+										onClick: () => setIsGapsLinked(!isGapsLinked),
+										title: isGapsLinked ? 'Unlink values' : 'Link values',
+									},
+									h('span', { className: 'material-symbols-outlined sppcfw-text-xs' }, isGapsLinked ? 'link' : 'link_off')
+								)
+							),
+							h(
+								'div',
+								{ className: 'sppcfw-flex sppcfw-text-[10px] sppcfw-text-gray-400 sppcfw-pr-9' },
+								h('span', { className: 'sppcfw-flex-1 sppcfw-text-center' }, 'Column'),
+								h('span', { className: 'sppcfw-flex-1 sppcfw-text-center' }, 'Row')
+							)
+						),
+						h(
+							'div',
+							{ className: 'sppcfw-flex sppcfw-items-center sppcfw-justify-between' },
+							h('div', { className: 'sppcfw-flex sppcfw-items-center sppcfw-gap-1.5 sppcfw-text-xs sppcfw-text-[#e5e7eb] sppcfw-font-medium' }, 'Wrap', h('span', { className: 'material-symbols-outlined sppcfw-text-[13px] sppcfw-text-gray-400', title: deviceView }, 'desktop_windows')),
+							h(
+								'div',
+								{ className: 'sppcfw-flex sppcfw-border sppcfw-border-[#374151] sppcfw-rounded sppcfw-bg-[#111827] sppcfw-overflow-hidden' },
+								[
+									{ val: 'nowrap', title: 'No Wrap', icon: h('svg', { width: 14, height: 14, viewBox: '0 0 16 16', fill: 'none', stroke: 'currentColor', strokeWidth: 1.75, strokeLinecap: 'round', strokeLinejoin: 'round' }, h('path', { d: 'M2 3v10M5 8h8M9.5 4.5L13 8l-3.5 3.5' })) },
+									{ val: 'wrap', title: 'Wrap', icon: h('svg', { width: 14, height: 14, viewBox: '0 0 16 16', fill: 'none', stroke: 'currentColor', strokeWidth: 1.75, strokeLinecap: 'round', strokeLinejoin: 'round' }, h('path', { d: 'M3 5.5h7a3 3 0 0 1 3 3v0a3 3 0 0 1-3 3H4M7 8.5L4 11.5l3 3' })) },
+								].map(wrapOpt => {
+									const isAct = (getSetting('flex_wrap') || 'nowrap') === wrapOpt.val;
+									return h('button', { key: wrapOpt.val, type: 'button', className: `sppcfw-p-2 sppcfw-flex sppcfw-items-center sppcfw-justify-center sppcfw-transition-colors sppcfw-cursor-pointer ${isAct ? 'sppcfw-bg-[#374151] sppcfw-text-white' : 'sppcfw-text-gray-400 hover:sppcfw-text-white hover:sppcfw-bg-[#1f2937]'}`, onClick: () => handleSettingChange('flex_wrap', wrapOpt.val), title: wrapOpt.title }, wrapOpt.icon);
+								})
+							)
+						)
+					)
+				)
+			);
+		}
+
+		// 1b. Column Content Panel
+		function renderColumnContent() {
+			return h(
+				'div',
+				{ className: 'sppcfw-space-y-4' },
+				renderAccordion(
+					'general',
+					'Column Width & Size',
+					h(
+						'div',
+						{ className: 'sppcfw-space-y-3.5' },
+						h(
+							'div',
+							{ className: 'sppcfw-space-y-1.5' },
+							h('label', { className: 'sppcfw-text-xs sppcfw-text-gray-200 sppcfw-font-medium sppcfw-block' }, 'Quick Width Presets'),
+							h(
+								'div',
+								{ className: 'sppcfw-grid sppcfw-grid-cols-4 sppcfw-gap-1.5' },
+								['100%', '50%', '33.33%', '25%', '66.66%', '75%', '20%'].map(w =>
+									h(
+										'button',
+										{
+											key: w,
+											className: `sppcfw-py-1 sppcfw-text-[11px] sppcfw-font-semibold sppcfw-rounded sppcfw-border sppcfw-transition-all ${
+												(getSetting('flex_width') || '100%') === w
+													? 'sppcfw-bg-[#9333ea] sppcfw-border-[#9333ea] sppcfw-text-white sppcfw-shadow'
+													: 'sppcfw-bg-[#111827] sppcfw-border-[#374151] sppcfw-text-gray-300 hover:sppcfw-border-[#9333ea] hover:sppcfw-text-white'
+											}`,
+											onClick: () => {
+												handleSettingChange('flex_width', w);
+												const targetKey = getDeviceKey('flex_width', deviceView);
+												updateElementProperties({ ...selectedElement, label: 'Column (' + w + ')', settings: { ...selectedElement.settings, [targetKey]: w } });
+											},
+										},
+										w
+									)
+								)
+							)
+						),
+						h(
+							'div',
+							{ className: 'sppcfw-space-y-1.5' },
+							h(
+								'div',
+								{ className: 'sppcfw-flex sppcfw-items-center sppcfw-justify-between' },
+							h('div', { className: 'sppcfw-flex sppcfw-items-center sppcfw-gap-1.5 sppcfw-text-gray-200 sppcfw-font-medium' }, 'Flex Width'),
+								h('span', { className: 'sppcfw-text-[10px] sppcfw-text-gray-300 font-mono' }, getSetting('flex_width') || '100%')
+							),
+							renderSliderInput(getSetting('flex_width') || '100%', v => {
+								handleSettingChange('flex_width', v);
+								const targetKey = getDeviceKey('flex_width', deviceView);
+								updateElementProperties({ ...selectedElement, label: 'Column (' + v + ')', settings: { ...selectedElement.settings, [targetKey]: v } });
+							}, 5, 100, 1, '%')
+						),
+						h(
+							'div',
+							{ className: 'sppcfw-space-y-1.5' },
+						renderControlHeader('Min Height', true, heightUnit, setHeightUnit, ['px', 'vh']),
+						renderSliderInput(getSetting('min_height') || '', v => handleSettingChange('min_height', v), 0, 800, 1, heightUnit, '')
+						)
+					)
+				),
+				renderAccordion(
+					'items',
+					'Column Items Layout',
+					h(
+						'div',
+						{ className: 'sppcfw-space-y-3.5' },
+						h(
+							'div',
+							{ className: 'sppcfw-flex sppcfw-items-center sppcfw-justify-between' },
+							h('div', { className: 'sppcfw-flex sppcfw-items-center sppcfw-gap-1.5 sppcfw-text-gray-200 sppcfw-font-medium' }, 'Direction'),
+							renderButtonGroup(
+								[
+									{ value: 'column', label: '↓ Column' },
+									{ value: 'row', label: '→ Row' },
+								],
+								getSetting('flex_direction') || 'column',
+								v => handleSettingChange('flex_direction', v)
+							)
+						),
+						h(
+							'div',
+							{ className: 'sppcfw-flex sppcfw-items-center sppcfw-justify-between' },
+							h('div', { className: 'sppcfw-flex sppcfw-items-center sppcfw-gap-1.5 sppcfw-text-gray-200 sppcfw-font-medium' }, 'Justify Content'),
+							renderButtonGroup(
+								[
+									{ value: 'flex-start', title: 'Start', label: 'Top' },
+									{ value: 'center', title: 'Center', label: 'Mid' },
+									{ value: 'flex-end', title: 'End', label: 'Btm' },
+								],
+								getSetting('justify_content') || 'flex-start',
+								v => handleSettingChange('justify_content', v)
+							)
+						),
+						h(
+							'div',
+							{ className: 'sppcfw-flex sppcfw-items-center sppcfw-justify-between' },
+							h('div', { className: 'sppcfw-flex sppcfw-items-center sppcfw-gap-1.5 sppcfw-text-gray-200 sppcfw-font-medium' }, 'Align Items'),
+							renderButtonGroup(
+								[
+									{ value: 'flex-start', title: 'Start', label: 'Left' },
+									{ value: 'center', title: 'Center', label: 'Mid' },
+									{ value: 'flex-end', title: 'End', label: 'Right' },
+									{ value: 'stretch', title: 'Stretch', label: 'Full' },
+								],
+								getSetting('align_items') || 'stretch',
+								v => handleSettingChange('align_items', v)
+							)
+						),
+						h(
+							'div',
+							{ className: 'sppcfw-space-y-1.5' },
+							renderControlHeader('Widget Gap', true, gapsUnit, setGapsUnit, ['px', 'em']),
+							renderSliderInput(getSetting('gap') || '12px', v => handleSettingChange('gap', v), 0, 80, 1, gapsUnit, '12')
+						)
+					)
+				),
+				renderAccordion(
+					'button',
+					'Column Actions',
+					h(
+						'div',
+						{ className: 'sppcfw-space-y-2.5' },
+						h(
+							'button',
+							{
+								type: 'button',
+								className: 'sppcfw-w-full sppcfw-py-2 sppcfw-bg-[#9333ea] hover:sppcfw-bg-[#7e22ce] sppcfw-text-white sppcfw-rounded sppcfw-font-bold sppcfw-flex sppcfw-items-center sppcfw-justify-center sppcfw-gap-1.5 sppcfw-transition-colors sppcfw-shadow sppcfw-text-xs sppcfw-cursor-pointer',
+								onClick: () => addColumnToContainer && addColumnToContainer(selectedElement.id),
+							},
+							h('span', { className: 'material-symbols-outlined sppcfw-text-sm' }, 'add'),
+							'Add New Column To Container'
+						),
+						h(
+							'div',
+							{ className: 'sppcfw-flex sppcfw-gap-2' },
+							h(
+								'button',
+								{
+									type: 'button',
+									className: 'sppcfw-flex-1 sppcfw-py-1.5 sppcfw-bg-[#374151] hover:sppcfw-bg-[#4b5563] sppcfw-text-white sppcfw-rounded sppcfw-font-semibold sppcfw-flex sppcfw-items-center sppcfw-justify-center sppcfw-gap-1 sppcfw-transition-colors sppcfw-text-xs sppcfw-cursor-pointer',
+									onClick: () => duplicateColumn && duplicateColumn(selectedElement.id),
+								},
+								h('span', { className: 'material-symbols-outlined sppcfw-text-xs' }, 'content_copy'),
+								'Duplicate'
+							),
+							h(
+								'button',
+								{
+									type: 'button',
+									className: 'sppcfw-flex-1 sppcfw-py-1.5 sppcfw-bg-red-900/40 hover:sppcfw-bg-red-800/60 sppcfw-border sppcfw-border-red-700/50 sppcfw-text-red-200 sppcfw-rounded sppcfw-font-semibold sppcfw-flex sppcfw-items-center sppcfw-justify-center sppcfw-gap-1 sppcfw-transition-colors sppcfw-text-xs sppcfw-cursor-pointer',
+								onClick: () => removeElement && removeElement(selectedElement.id),
+								},
+								h('span', { className: 'material-symbols-outlined sppcfw-text-xs' }, 'delete'),
+								'Delete'
+							)
+						)
+					)
+				)
+			);
+		}
+
+		// 1c. Image Content Panel
+		function renderImageContent() {
+			return h(
+				'div',
+				{ className: 'sppcfw-space-y-4' },
+				renderAccordion(
+					'general',
+					'Choose Image',
+					h(
+						'div',
+						{ className: 'sppcfw-space-y-4' },
+						h(
+							'div',
+							{ className: 'sppcfw-space-y-2' },
+							h('label', { className: 'sppcfw-text-xs sppcfw-text-[#d1d5db] sppcfw-font-medium sppcfw-block' }, 'Image Asset'),
+							h(
+								'div',
+								{
+									className: 'sppcfw-border-2 sppcfw-border-dashed sppcfw-border-[#374151] hover:sppcfw-border-[#9333ea] sppcfw-rounded-lg sppcfw-p-3 sppcfw-bg-[#111827] sppcfw-text-center sppcfw-cursor-pointer sppcfw-transition-colors sppcfw-relative group',
+									onClick: () => {
+										if (typeof wp !== 'undefined' && wp.media) {
+											const frame = wp.media({
+												title: 'Select Image',
+												button: { text: 'Insert Image' },
+												multiple: false,
+											});
+											frame.on('select', () => {
+												const attachment = frame.state().get('selection').first().toJSON();
+												if (attachment && attachment.url) {
+													handleSettingChange('custom_image_url', attachment.url);
+													if (attachment.alt && !getSetting('alt_text')) {
+														handleSettingChange('alt_text', attachment.alt);
+													}
+												}
+											});
+											frame.open();
+										} else {
+											const url = prompt('Enter Image URL:', getSetting('custom_image_url') || '');
+											if (url !== null && url.trim() !== '') {
+												handleSettingChange('custom_image_url', url.trim());
+											}
+										}
+									},
+								},
+								getSetting('custom_image_url')
+									? h(
+											'div',
+											{ className: 'sppcfw-space-y-2' },
+											h('img', {
+												src: getSetting('custom_image_url'),
+												alt: getSetting('alt_text') || 'Selected Custom Preview',
+												className: 'sppcfw-h-32 sppcfw-w-full sppcfw-object-contain sppcfw-rounded sppcfw-bg-[#091421]/60 sppcfw-p-1',
+											}),
+											h('div', { className: 'sppcfw-text-[11px] sppcfw-text-[#ddb8ff] sppcfw-font-semibold' }, 'Click to Change Image')
+									  )
+									: h(
+											'div',
+											{ className: 'sppcfw-py-6 sppcfw-space-y-2' },
+											h('span', { className: 'material-symbols-outlined sppcfw-text-3xl sppcfw-text-gray-400 group-hover:sppcfw-text-[#ddb8ff] sppcfw-transition-colors' }, 'add_photo_alternate'),
+											h('div', { className: 'sppcfw-text-xs sppcfw-font-semibold sppcfw-text-gray-200' }, 'Choose Image from Media Library'),
+											h('div', { className: 'sppcfw-text-[10px] sppcfw-text-gray-400' }, 'Insert any custom image into your layout')
+									  )
+							),
+							getSetting('custom_image_url') &&
+								h(
+									'div',
+									{ className: 'sppcfw-flex sppcfw-items-center sppcfw-justify-between sppcfw-pt-1' },
+									h('button', { type: 'button', className: 'sppcfw-text-[11px] sppcfw-text-red-400 hover:sppcfw-text-red-300 sppcfw-underline sppcfw-cursor-pointer', onClick: () => handleSettingChange('custom_image_url', '') }, 'Remove Image'),
+									h('span', { className: 'sppcfw-text-[10px] sppcfw-text-gray-400' }, 'Custom Image Set')
+								)
+						),
+						h(
+							'div',
+							{ className: 'sppcfw-space-y-1' },
+							h('label', { className: 'sppcfw-text-xs sppcfw-text-[#d1d5db] sppcfw-font-medium' }, 'Image URL (Direct)'),
+						h('input', {
+							type: 'text',
+							className: 'sppcfw-w-full sppcfw-bg-[#111827] sppcfw-border sppcfw-border-[#374151] sppcfw-rounded sppcfw-px-2.5 sppcfw-py-1.5 sppcfw-text-xs sppcfw-text-white focus:sppcfw-outline-none focus:sppcfw-border-[#9333ea]',
+							value: getSetting('custom_image_url') || '',
+							placeholder: 'https://example.com/image.jpg',
+							onChange: e => handleSettingChange('custom_image_url', e.target.value),
+						})
+						),
+						h(
+							'div',
+							{ className: 'sppcfw-space-y-1' },
+							h('label', { className: 'sppcfw-text-xs sppcfw-text-[#d1d5db] sppcfw-font-medium' }, 'Alt Text'),
+						h('input', {
+							type: 'text',
+							className: 'sppcfw-w-full sppcfw-bg-[#111827] sppcfw-border sppcfw-border-[#374151] sppcfw-rounded sppcfw-px-2.5 sppcfw-py-1.5 sppcfw-text-xs sppcfw-text-white focus:sppcfw-outline-none focus:sppcfw-border-[#9333ea]',
+							value: getSetting('alt_text') || '',
+							placeholder: 'Descriptive alt text for image',
+							onChange: e => handleSettingChange('alt_text', e.target.value),
+						})
+						),
+						h(
+							'div',
+							{ className: 'sppcfw-flex sppcfw-items-center sppcfw-justify-between' },
+							h('label', { className: 'sppcfw-text-xs sppcfw-text-[#d1d5db] sppcfw-font-medium' }, 'Image Resolution'),
+							h(
+								'select',
+								{
+									className: 'sppcfw-w-44 sppcfw-bg-[#111827] sppcfw-border sppcfw-border-[#374151] sppcfw-rounded sppcfw-px-2.5 sppcfw-py-1.5 sppcfw-text-xs sppcfw-text-white focus:sppcfw-outline-none focus:sppcfw-border-[#9333ea]',
+									value: getSetting('image_size') || 'large',
+									onChange: e => handleSettingChange('image_size', e.target.value),
+								},
+								h('option', { value: 'thumbnail' }, 'Thumbnail (150x150)'),
+								h('option', { value: 'medium' }, 'Medium (300x300)'),
+								h('option', { value: 'large' }, 'Large (1024x1024)'),
+								h('option', { value: 'full' }, 'Full Size')
+							)
+						),
+						h(
+							'div',
+							{ className: 'sppcfw-space-y-1.5' },
+						renderControlHeader('Alignment', true),
+						renderButtonGroup(
+							[
+								{ value: 'left', icon: 'format_align_left', title: 'Left' },
+								{ value: 'center', icon: 'format_align_center', title: 'Center' },
+								{ value: 'right', icon: 'format_align_right', title: 'Right' },
+							],
+							getStyle('alignment') || 'center',
+							v => handleStyleChange('alignment', v)
+						)
+						)
+					)
+				),
+				renderAccordion(
+					'items',
+					'Caption & Link Options',
+					h(
+						'div',
+						{ className: 'sppcfw-space-y-3.5' },
+						h(
+							'div',
+							{ className: 'sppcfw-flex sppcfw-items-center sppcfw-justify-between' },
+							h('label', { className: 'sppcfw-text-xs sppcfw-text-[#d1d5db] sppcfw-font-medium' }, 'Caption'),
+						h(
+							'select',
+							{
+								className: 'sppcfw-w-44 sppcfw-bg-[#111827] sppcfw-border sppcfw-border-[#374151] sppcfw-rounded sppcfw-px-2.5 sppcfw-py-1.5 sppcfw-text-xs sppcfw-text-white focus:sppcfw-outline-none',
+								value: getSetting('caption_type') || 'none',
+								onChange: e => handleSettingChange('caption_type', e.target.value),
+							},
+							h('option', { value: 'none' }, 'None'),
+							h('option', { value: 'custom' }, 'Custom Caption')
+						)
+						),
+						getSetting('caption_type') === 'custom' &&
+							h('input', {
+								type: 'text',
+								className: 'sppcfw-w-full sppcfw-bg-[#111827] sppcfw-border sppcfw-border-[#374151] sppcfw-rounded sppcfw-px-2.5 sppcfw-py-1.5 sppcfw-text-xs sppcfw-text-white focus:sppcfw-outline-none',
+								value: getSetting('custom_caption') || '',
+								placeholder: 'Enter custom caption text...',
+								onChange: e => handleSettingChange('custom_caption', e.target.value),
+							}),
+						h(
+							'div',
+							{ className: 'sppcfw-flex sppcfw-items-center sppcfw-justify-between' },
+							h('label', { className: 'sppcfw-text-xs sppcfw-text-[#d1d5db] sppcfw-font-medium' }, 'Link'),
+						h(
+							'select',
+							{
+								className: 'sppcfw-w-44 sppcfw-bg-[#111827] sppcfw-border sppcfw-border-[#374151] sppcfw-rounded sppcfw-px-2.5 sppcfw-py-1.5 sppcfw-text-xs sppcfw-text-white focus:sppcfw-outline-none',
+								value: getSetting('link_to') || 'none',
+								onChange: e => handleSettingChange('link_to', e.target.value),
+							},
+							h('option', { value: 'none' }, 'None'),
+							h('option', { value: 'file' }, 'Media File'),
+							h('option', { value: 'custom' }, 'Custom URL')
+						)
+						),
+						getSetting('link_to') === 'custom' &&
+							h(
+								'div',
+								{ className: 'sppcfw-space-y-2' },
+								h('input', {
+									type: 'text',
+									className: 'sppcfw-w-full sppcfw-bg-[#111827] sppcfw-border sppcfw-border-[#374151] sppcfw-rounded sppcfw-px-2.5 sppcfw-py-1.5 sppcfw-text-xs sppcfw-text-white focus:sppcfw-outline-none',
+									value: getSetting('custom_link') || '',
+									placeholder: 'https://...',
+									onChange: e => handleSettingChange('custom_link', e.target.value),
+								}),
+								h(
+									'div',
+									{ className: 'sppcfw-flex sppcfw-items-center sppcfw-gap-2' },
+									h('input', { type: 'checkbox', id: 'chk-blank', className: 'sppcfw-accent-[#9333ea]', checked: !!getSetting('link_target_blank'), onChange: e => handleSettingChange('link_target_blank', e.target.checked) }),
+									h('label', { htmlFor: 'chk-blank', className: 'sppcfw-text-xs sppcfw-text-gray-300' }, 'Open in new window')
+								)
+							)
+					)
+				)
+			);
+		}
+
+		// 1d. Product Gallery Content Panel
+		function renderProductGalleryContent() {
+			const showThumbs = getSetting('show_thumbnails') !== false;
+			const thumbsLayout = getSetting('thumbs_layout') || 'grid'; // 'grid' | 'carousel'
+
+			return h(
+				'div',
+				{ className: 'sppcfw-space-y-4' },
+				h(
+					'div',
+					{ className: 'sppcfw-bg-[#16202e] sppcfw-border sppcfw-border-[#3b4b62] sppcfw-rounded-lg sppcfw-p-3.5 sppcfw-space-y-1.5' },
+					h('div', { className: 'sppcfw-flex sppcfw-items-center sppcfw-gap-1.5 sppcfw-text-xs sppcfw-font-bold sppcfw-text-[#92ccff]' }, h('span', { className: 'material-symbols-outlined sppcfw-text-base' }, 'collections'), 'WooCommerce Product Gallery'),
+					h('p', { className: 'sppcfw-text-[11px] sppcfw-text-[#9ca3af] sppcfw-leading-relaxed' }, 'This widget automatically displays the featured image and gallery thumbnails of the active product from WooCommerce.')
+				),
+				renderAccordion(
+					'general',
+					'Gallery Options',
+					h(
+						'div',
+						{ className: 'sppcfw-space-y-3.5' },
+						h(
+							'div',
+							{ className: 'sppcfw-flex sppcfw-items-center sppcfw-justify-between' },
+							h('label', { className: 'sppcfw-text-xs sppcfw-text-[#d1d5db] sppcfw-font-medium' }, 'Show Gallery Thumbnails'),
+							h('input', { type: 'checkbox', className: 'sppcfw-accent-[#9333ea] sppcfw-w-4 sppcfw-h-4 sppcfw-cursor-pointer', checked: showThumbs, onChange: e => handleSettingChange('show_thumbnails', e.target.checked) })
+						),
+						showThumbs &&
+							h(
+								'div',
+								{ className: 'sppcfw-space-y-1.5' },
+								h('label', { className: 'sppcfw-text-xs sppcfw-text-[#d1d5db] sppcfw-font-medium sppcfw-block' }, 'Thumbnail Display Format'),
+								renderButtonGroup(
+									[
+										{ value: 'grid', label: 'Grid', icon: 'grid_view', title: 'Static Thumbnail Grid' },
+										{ value: 'carousel', label: 'Carousel', icon: 'view_carousel', title: 'Interactive Thumbnail Carousel' },
+									],
+									thumbsLayout,
+									v => handleSettingChange('thumbs_layout', v)
+								)
+							),
+						showThumbs &&
+							h(
+								'div',
+								{ className: 'sppcfw-flex sppcfw-items-center sppcfw-justify-between' },
+								h('label', { className: 'sppcfw-text-xs sppcfw-text-[#d1d5db] sppcfw-font-medium' }, thumbsLayout === 'carousel' ? 'Visible Carousel Items' : 'Thumbnail Columns'),
+								h(
+									'select',
+									{
+										className: 'sppcfw-bg-[#111827] sppcfw-border sppcfw-border-[#374151] sppcfw-rounded sppcfw-px-2.5 sppcfw-py-1.5 sppcfw-text-xs sppcfw-text-white sppcfw-w-36',
+										value: getSetting('gallery_columns') || '4',
+										onChange: e => handleSettingChange('gallery_columns', e.target.value),
+									},
+									h('option', { value: '3' }, '3 Items'),
+									h('option', { value: '4' }, '4 Items'),
+									h('option', { value: '5' }, '5 Items'),
+									h('option', { value: '6' }, '6 Items')
+								)
+							),
+						showThumbs && thumbsLayout === 'carousel' &&
+							h(
+								'div',
+								{ className: 'sppcfw-flex sppcfw-items-center sppcfw-justify-between' },
+								h('label', { className: 'sppcfw-text-xs sppcfw-text-[#d1d5db] sppcfw-font-medium' }, 'Show Carousel Navigation Arrows'),
+								h('input', { type: 'checkbox', className: 'sppcfw-accent-[#9333ea] sppcfw-w-4 sppcfw-h-4 sppcfw-cursor-pointer', checked: getSetting('show_carousel_arrows') !== false, onChange: e => handleSettingChange('show_carousel_arrows', e.target.checked) })
+							),
+						h(
+							'div',
+							{ className: 'sppcfw-flex sppcfw-items-center sppcfw-justify-between' },
+							h('label', { className: 'sppcfw-text-xs sppcfw-text-[#d1d5db] sppcfw-font-medium' }, 'Lightbox Popup'),
+							h('input', { type: 'checkbox', className: 'sppcfw-accent-[#9333ea] sppcfw-w-4 sppcfw-h-4 sppcfw-cursor-pointer', checked: getSetting('enable_lightbox') !== false, onChange: e => handleSettingChange('enable_lightbox', e.target.checked) })
+						),
+						h(
+							'div',
+							{ className: 'sppcfw-flex sppcfw-items-center sppcfw-justify-between' },
+							h('label', { className: 'sppcfw-text-xs sppcfw-text-[#d1d5db] sppcfw-font-medium' }, 'Image Zoom On Hover'),
+							h('input', { type: 'checkbox', className: 'sppcfw-accent-[#9333ea] sppcfw-w-4 sppcfw-h-4 sppcfw-cursor-pointer', checked: getSetting('enable_zoom') !== false, onChange: e => handleSettingChange('enable_zoom', e.target.checked) })
+						),
+						h(
+							'div',
+							{ className: 'sppcfw-space-y-1.5 sppcfw-pt-1' },
+							renderControlHeader('Gallery Alignment', true),
+							renderButtonGroup(
+								[
+									{ value: 'left', icon: 'format_align_left', title: 'Left' },
+									{ value: 'center', icon: 'format_align_center', title: 'Center' },
+									{ value: 'right', icon: 'format_align_right', title: 'Right' },
+								],
+								getStyle('alignment') || 'center',
+								v => handleStyleChange('alignment', v)
+							)
+						)
+					)
+				)
+			);
+		}
+
+		// 1e. Product Title Content Panel
+		function renderProductTitleContent() {
+			return h(
+				'div',
+				{ className: 'sppcfw-space-y-4' },
+				h(
+					'div',
+					{ className: 'sppcfw-bg-[#16202e] sppcfw-border sppcfw-border-[#3b4b62] sppcfw-rounded-lg sppcfw-p-3.5 sppcfw-space-y-1.5' },
+					h('div', { className: 'sppcfw-flex sppcfw-items-center sppcfw-gap-1.5 sppcfw-text-xs sppcfw-font-bold sppcfw-text-[#92ccff]' }, h('span', { className: 'material-symbols-outlined sppcfw-text-base' }, 'title'), 'WooCommerce Product Title'),
+					h('p', { className: 'sppcfw-text-[11px] sppcfw-text-[#9ca3af] sppcfw-leading-relaxed' }, 'This widget automatically renders the title of the active product from WooCommerce.')
+				),
+				renderAccordion(
+					'general',
+					'Title Settings',
+					h(
+						'div',
+						{ className: 'sppcfw-space-y-3.5' },
+						h(
+							'div',
+							{ className: 'sppcfw-flex sppcfw-items-center sppcfw-justify-between' },
+							h('label', { className: 'sppcfw-text-xs sppcfw-text-[#d1d5db] sppcfw-font-medium' }, 'HTML Tag'),
+							h(
+								'select',
+								{
+									className: 'sppcfw-bg-[#111827] sppcfw-border sppcfw-border-[#374151] sppcfw-rounded sppcfw-px-2.5 sppcfw-py-1.5 sppcfw-text-xs sppcfw-text-white focus:sppcfw-outline-none sppcfw-w-32',
+									value: getSetting('html_tag') || 'h1',
+									onChange: e => handleSettingChange('html_tag', e.target.value),
+								},
+								['h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'div', 'span', 'p'].map(tag => h('option', { key: tag, value: tag }, tag.toUpperCase()))
+							)
+						),
+						h(
+							'div',
+							{ className: 'sppcfw-flex sppcfw-items-center sppcfw-justify-between' },
+							h('label', { className: 'sppcfw-text-xs sppcfw-text-[#d1d5db] sppcfw-font-medium' }, 'Link to Product Page'),
+							h('input', { type: 'checkbox', className: 'sppcfw-accent-[#9333ea] sppcfw-w-4 sppcfw-h-4 sppcfw-cursor-pointer', checked: !!getSetting('link_to_product'), onChange: e => handleSettingChange('link_to_product', e.target.checked) })
+						),
+						h(
+							'div',
+							{ className: 'sppcfw-space-y-1.5' },
+							renderControlHeader('Alignment', true),
+							renderButtonGroup(
+								[
+									{ value: 'left', icon: 'format_align_left', title: 'Left' },
+									{ value: 'center', icon: 'format_align_center', title: 'Center' },
+									{ value: 'right', icon: 'format_align_right', title: 'Right' },
+									{ value: 'justify', icon: 'format_align_justify', title: 'Justify' },
+								],
+								getStyle('alignment') || 'left',
+								v => handleStyleChange('alignment', v)
+							)
+						)
+					)
+				)
+			);
+		}
+
+		// 1f. Heading Content Panel
+		function renderHeadingContent() {
+			return h(
+				'div',
+				{ className: 'sppcfw-space-y-4' },
+				renderAccordion(
+					'general',
+					'Heading Content',
+					h(
+						'div',
+						{ className: 'sppcfw-space-y-3.5' },
+						h(
+							'div',
+							{ className: 'sppcfw-space-y-1' },
+							h('label', { className: 'sppcfw-text-xs sppcfw-text-[#d1d5db] sppcfw-font-medium' }, 'Heading Text'),
+						h('input', {
+							type: 'text',
+							className: 'sppcfw-w-full sppcfw-bg-[#111827] sppcfw-border sppcfw-border-[#374151] sppcfw-rounded sppcfw-px-2.5 sppcfw-py-1.5 sppcfw-text-xs sppcfw-text-white focus:sppcfw-outline-none focus:sppcfw-border-[#9333ea]',
+							value: getSetting('text') !== undefined ? getSetting('text') : 'Add Your Heading Text Here',
+							placeholder: 'Enter heading text...',
+							onChange: e => handleSettingChange('text', e.target.value),
+						})
+						),
+						h(
+							'div',
+							{ className: 'sppcfw-flex sppcfw-items-center sppcfw-justify-between' },
+							h('label', { className: 'sppcfw-text-xs sppcfw-text-[#d1d5db] sppcfw-font-medium' }, 'HTML Tag'),
+							h(
+								'select',
+								{
+									className: 'sppcfw-bg-[#111827] sppcfw-border sppcfw-border-[#374151] sppcfw-rounded sppcfw-px-2 sppcfw-py-1 sppcfw-text-xs sppcfw-text-white focus:sppcfw-outline-none',
+									value: getSetting('html_tag') || 'h2',
+									onChange: e => handleSettingChange('html_tag', e.target.value),
+								},
+								['h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'div', 'span', 'p'].map(tag => h('option', { key: tag, value: tag }, tag.toUpperCase()))
+							)
+						),
+						h(
+							'div',
+							{ className: 'sppcfw-space-y-1' },
+							h('label', { className: 'sppcfw-text-xs sppcfw-text-[#d1d5db] sppcfw-font-medium' }, 'Link URL (optional)'),
+						h('input', {
+							type: 'text',
+							className: 'sppcfw-w-full sppcfw-bg-[#111827] sppcfw-border sppcfw-border-[#374151] sppcfw-rounded sppcfw-px-2.5 sppcfw-py-1.5 sppcfw-text-xs sppcfw-text-white focus:sppcfw-outline-none focus:sppcfw-border-[#9333ea]',
+							value: getSetting('link_url') || '',
+							placeholder: 'https://...',
+							onChange: e => handleSettingChange('link_url', e.target.value),
+						})
+						),
+						h(
+							'div',
+							{ className: 'sppcfw-space-y-1.5' },
+						renderControlHeader('Alignment', true),
+						renderButtonGroup(
+							[
+								{ value: 'left', icon: 'format_align_left', title: 'Left' },
+								{ value: 'center', icon: 'format_align_center', title: 'Center' },
+								{ value: 'right', icon: 'format_align_right', title: 'Right' },
+							],
+							getStyle('alignment') || 'left',
+							v => handleStyleChange('alignment', v)
+						)
+						)
+					)
+				)
+			);
+		}
+
+		// 1f. Text Editor Content Panel
+		function renderTextEditorContent() {
+			return h(
+				'div',
+				{ className: 'sppcfw-space-y-4' },
+				renderAccordion(
+					'general',
+					'Text Content',
+					h(
+						'div',
+						{ className: 'sppcfw-space-y-3.5' },
+						h(
+							'div',
+							{ className: 'sppcfw-space-y-1' },
+							h('label', { className: 'sppcfw-text-xs sppcfw-text-[#d1d5db] sppcfw-font-medium' }, 'Text Content'),
+						h('textarea', {
+							rows: 6,
+							className: 'sppcfw-w-full sppcfw-bg-[#111827] sppcfw-border sppcfw-border-[#374151] sppcfw-rounded sppcfw-p-2.5 sppcfw-text-xs sppcfw-text-white focus:sppcfw-outline-none focus:sppcfw-border-[#9333ea]',
+							value: getSetting('text_content') !== undefined ? getSetting('text_content') : 'Add your custom description or paragraph content here...',
+							placeholder: 'Enter custom text or description...',
+							onChange: e => handleSettingChange('text_content', e.target.value),
+						})
+						),
+						h(
+							'div',
+							{ className: 'sppcfw-flex sppcfw-items-center sppcfw-justify-between' },
+							h('label', { className: 'sppcfw-text-xs sppcfw-text-[#d1d5db] sppcfw-font-medium' }, 'HTML Tag'),
+							h(
+								'select',
+								{
+									className: 'sppcfw-bg-[#111827] sppcfw-border sppcfw-border-[#374151] sppcfw-rounded sppcfw-px-2 sppcfw-py-1 sppcfw-text-xs sppcfw-text-white focus:sppcfw-outline-none',
+									value: getSetting('html_tag') || 'div',
+									onChange: e => handleSettingChange('html_tag', e.target.value),
+								},
+								['div', 'p', 'span'].map(tag => h('option', { key: tag, value: tag }, tag.toUpperCase()))
+							)
+						),
+						h(
+							'div',
+							{ className: 'sppcfw-space-y-1.5' },
+						renderControlHeader('Alignment', true),
+						renderButtonGroup(
+							[
+								{ value: 'left', icon: 'format_align_left', title: 'Left' },
+								{ value: 'center', icon: 'format_align_center', title: 'Center' },
+								{ value: 'right', icon: 'format_align_right', title: 'Right' },
+							],
+							getStyle('alignment') || 'left',
+							v => handleStyleChange('alignment', v)
+						)
+						)
+					)
+				)
+			);
+		}
+
+		// 1g. Dynamic Product Elements Information Panel (Used for all other Product Elements)
+		function renderProductElementDynamicCard() {
+			const typeDescriptions = {
+				product_title: 'Displays the active product title dynamically from WooCommerce catalog.',
+				product_price: 'Displays the dynamic price, sale price, and discount badge automatically.',
+				product_add_to_cart: 'Displays the dynamic Add to Cart button and quantity selector.',
+				product_rating: 'Displays the average star rating and review count from WooCommerce.',
+				product_short_desc: 'Displays the product excerpt or short description from WooCommerce.',
+				product_description: 'Displays the full product description, reviews, and data tabs.',
+				product_meta: 'Displays SKU, product categories, and tags dynamically.',
+				product_meta_item: 'Displays custom WooCommerce product meta field values.',
+				variation_swatches: 'Displays variable product options, attributes, and variation table.',
+				custom_message: 'Displays customizable notification banner on the product page.',
+				plus_minus_buttons: 'Displays plus/minus quantity stepper buttons.',
+				related_products: 'Displays related products grid generated by WooCommerce.',
+				upsell_products: 'Displays upsell recommendations from WooCommerce.',
+			};
+
+			const desc = typeDescriptions[selectedElement.type] || 'This element renders dynamic WooCommerce single product content.';
+
+			return h(
+				'div',
+				{ className: 'sppcfw-space-y-4' },
+				h(
+					'div',
+					{ className: 'sppcfw-bg-[#16202e] sppcfw-border sppcfw-border-[#3b4b62] sppcfw-rounded-lg sppcfw-p-4 sppcfw-space-y-3' },
+					h(
+						'div',
+						{ className: 'sppcfw-flex sppcfw-items-center sppcfw-gap-2 sppcfw-text-xs sppcfw-font-bold sppcfw-text-[#92ccff]' },
+						h('span', { className: 'material-symbols-outlined sppcfw-text-lg sppcfw-text-[#ddb8ff]' }, selectedElement.icon || 'widgets'),
+						selectedElement.label || panelTitle
+					),
+					h('p', { className: 'sppcfw-text-xs sppcfw-text-[#d9e3f6] sppcfw-leading-relaxed' }, desc),
+					h(
+						'div',
+						{ className: 'sppcfw-bg-[#111827] sppcfw-p-3 sppcfw-rounded sppcfw-border sppcfw-border-[#374151] sppcfw-text-[11px] sppcfw-text-[#9ca3af] sppcfw-space-y-1' },
+						h('div', { className: 'sppcfw-font-bold sppcfw-text-[#ddb8ff] sppcfw-flex sppcfw-items-center sppcfw-gap-1' }, h('span', { className: 'material-symbols-outlined sppcfw-text-xs' }, 'info'), 'Dynamic WooCommerce Element'),
+						h('p', null, 'Content for this element is automatically managed by WooCommerce. To customize colors, typography, spacing, or borders, switch to the Style and Advanced tabs.')
+					),
+					h(
+						'button',
+						{
+							type: 'button',
+							className: 'sppcfw-w-full sppcfw-py-2 sppcfw-bg-[#9333ea] hover:sppcfw-bg-[#7e22ce] sppcfw-text-white sppcfw-rounded sppcfw-font-bold sppcfw-text-xs sppcfw-flex sppcfw-items-center sppcfw-justify-center sppcfw-gap-1.5 sppcfw-transition-all sppcfw-shadow sppcfw-cursor-pointer',
+							onClick: () => setActiveTab('style'),
+						},
+						h('span', { className: 'material-symbols-outlined sppcfw-text-sm' }, 'contrast'),
+						'Customize in Style Panel →'
+					)
+				)
+			);
+		}
+
+		// ==========================================
+		// 2. INDIVIDUAL STYLE PANELS
+		// ==========================================
+
+		// 2a. Container & Column Style Panel
+		function renderContainerStyle() {
+			return h(
+				'div',
+				{ className: 'sppcfw-space-y-4' },
+				renderAccordion(
+					'background',
+					'Background',
+					h(
+						'div',
+						{ className: 'sppcfw-space-y-3.5' },
+						renderColorPicker('Background Color', getStyle('bg_color'), v => handleStyleChange('bg_color', v), '#ffffff')
+					)
+				),
+				renderAccordion(
+					'border',
+					'Border & Radius',
+					h(
+						'div',
+						{ className: 'sppcfw-space-y-3.5' },
+						h(
+							'div',
+							{ className: 'sppcfw-flex sppcfw-items-center sppcfw-justify-between' },
+							h('label', { className: 'sppcfw-text-xs sppcfw-text-gray-200 sppcfw-font-medium' }, 'Border Type'),
+							h(
+								'select',
+								{
+									className: 'sppcfw-bg-[#111827] sppcfw-border sppcfw-border-[#374151] sppcfw-rounded sppcfw-px-2.5 sppcfw-py-1 sppcfw-text-xs sppcfw-text-white sppcfw-w-36',
+									value: getStyle('border_type') || 'None',
+									onChange: e => handleStyleChange('border_type', e.target.value),
+								},
+								['None', 'Solid', 'Double', 'Dotted', 'Dashed'].map(bt => h('option', { key: bt, value: bt }, bt))
+							)
+						),
+						(getStyle('border_type') && getStyle('border_type') !== 'None') &&
+							h(
+								'div',
+								{ className: 'sppcfw-space-y-3' },
+								renderControlHeader('Border Width', true, widthUnit, setWidthUnit, ['px']),
+								renderSliderInput(getStyle('border_width') || '1px', v => handleStyleChange('border_width', v), 1, 20, 1, 'px'),
+								renderColorPicker('Border Color', getStyle('border_color'), v => handleStyleChange('border_color', v), '#374151')
+							),
+						h(
+							'div',
+							{ className: 'sppcfw-space-y-1.5' },
+						renderControlHeader('Border Radius', true, radiusUnit, setRadiusUnit, ['px', '%']),
+						renderFourBoxInput(getStyle, 'border_radius', handleMultiStyleChange, radiusUnit, isRadiusLinked, setIsRadiusLinked)
+						)
+					)
+				)
+			);
+		}
+
+		// 2b. Typography & Text Style Section (Product Title, Heading, Text Editor, Short Desc, Meta)
+		function renderTypographyStyle() {
+			return h(
+				'div',
+				{ className: 'sppcfw-space-y-4' },
+				renderAccordion(
+					'typography',
+					'Typography',
+					h(
+						'div',
+						{ className: 'sppcfw-space-y-3.5' },
+						renderColorPicker('Text Color', getStyle('text_color'), v => handleStyleChange('text_color', v), '#111827'),
+						h(
+							'div',
+							{ className: 'sppcfw-space-y-1.5' },
+						renderControlHeader('Font Size', true, widthUnit, setWidthUnit, ['px', 'rem', 'em']),
+						renderSliderInput(getStyle('font_size') || '16px', v => handleStyleChange('font_size', v), 10, 80, 1, widthUnit, '16')
+						),
+						h(
+							'div',
+							{ className: 'sppcfw-flex sppcfw-items-center sppcfw-justify-between' },
+						h('label', { className: 'sppcfw-text-xs sppcfw-text-gray-200 sppcfw-font-medium' }, 'Font Family'),
+							h(
+								'select',
+								{
+									className: 'sppcfw-bg-[#111827] sppcfw-border sppcfw-border-[#374151] sppcfw-rounded sppcfw-px-2.5 sppcfw-py-1.5 sppcfw-text-xs sppcfw-text-white sppcfw-w-44',
+									value: getStyle('font_family') || 'Inherit',
+									onChange: e => handleStyleChange('font_family', e.target.value),
+								},
+								['Inherit', 'Inter', 'Roboto', 'Outfit', 'Poppins', 'Montserrat', 'JetBrains Mono', 'Georgia', 'Arial'].map(f => h('option', { key: f, value: f }, f))
+							)
+						),
+						h(
+							'div',
+							{ className: 'sppcfw-flex sppcfw-items-center sppcfw-justify-between' },
+						h('label', { className: 'sppcfw-text-xs sppcfw-text-gray-200 sppcfw-font-medium' }, 'Font Weight'),
+							h(
+								'select',
+								{
+									className: 'sppcfw-bg-[#111827] sppcfw-border sppcfw-border-[#374151] sppcfw-rounded sppcfw-px-2.5 sppcfw-py-1.5 sppcfw-text-xs sppcfw-text-white sppcfw-w-44',
+									value: getStyle('font_weight') || 'Default',
+									onChange: e => handleStyleChange('font_weight', e.target.value),
+								},
+								[
+									{ val: 'Default', label: 'Default' },
+									{ val: '400', label: 'Normal (400)' },
+									{ val: '500', label: 'Medium (500)' },
+									{ val: '600', label: 'Semi-Bold (600)' },
+									{ val: '700', label: 'Bold (700)' },
+									{ val: '800', label: 'Extra-Bold (800)' },
+								].map(fw => h('option', { key: fw.val, value: fw.val }, fw.label))
+							)
+						),
+						h(
+							'div',
+							{ className: 'sppcfw-space-y-1.5' },
+						renderControlHeader('Line Height', true, heightUnit, setHeightUnit, ['px', 'em']),
+						renderSliderInput(getStyle('line_height') || '', v => handleStyleChange('line_height', v), 12, 100, 1, heightUnit, 'Normal')
+						),
+						h(
+							'div',
+							{ className: 'sppcfw-space-y-1.5' },
+						renderControlHeader('Alignment', true),
+						renderButtonGroup(
+							[
+								{ value: 'left', icon: 'format_align_left', title: 'Left' },
+								{ value: 'center', icon: 'format_align_center', title: 'Center' },
+								{ value: 'right', icon: 'format_align_right', title: 'Right' },
+								{ value: 'justify', icon: 'format_align_justify', title: 'Justify' },
+							],
+							getStyle('alignment') || 'left',
+							v => handleStyleChange('alignment', v)
+						)
+						)
+					)
+				),
+				renderAccordion(
+					'background',
+					'Background & Spacing',
+					h(
+						'div',
+						{ className: 'sppcfw-space-y-3.5' },
+						renderColorPicker('Background Color', getStyle('bg_color'), v => handleStyleChange('bg_color', v), 'transparent'),
+						h(
+							'div',
+							{ className: 'sppcfw-space-y-1.5' },
+						renderControlHeader('Padding', true, paddingUnit, setPaddingUnit, ['px', '%']),
+						renderFourBoxInput(getStyle, 'padding', handleMultiStyleChange, paddingUnit, isPaddingLinked, setIsPaddingLinked)
+						),
+						h(
+							'div',
+							{ className: 'sppcfw-space-y-1.5' },
+						renderControlHeader('Border Radius', true, radiusUnit, setRadiusUnit, ['px', '%']),
+						renderFourBoxInput(getStyle, 'border_radius', handleMultiStyleChange, radiusUnit, isRadiusLinked, setIsRadiusLinked)
+						)
+					)
+				)
+			);
+		}
+
+		// 2c. Price Style Panel (Product Price)
+		function renderPriceStyle() {
+			return h(
+				'div',
+				{ className: 'sppcfw-space-y-4' },
+				renderAccordion(
+					'colors',
+					'Price Colors & Sizing',
+					h(
+						'div',
+						{ className: 'sppcfw-space-y-3.5' },
+						renderColorPicker('Price Color', getStyle('text_color') || getStyle('price_color'), v => {
+							handleStyleChange('text_color', v);
+							handleStyleChange('price_color', v);
+						}, '#9333ea'),
+						renderColorPicker('Sale Price Color', getStyle('sale_price_color'), v => handleStyleChange('sale_price_color', v), '#ef4444'),
+						h(
+							'div',
+							{ className: 'sppcfw-space-y-1.5' },
+						renderControlHeader('Price Font Size', true, widthUnit, setWidthUnit, ['px', 'rem', 'em']),
+						renderSliderInput(getStyle('font_size') || '24px', v => handleStyleChange('font_size', v), 12, 60, 1, widthUnit, '24')
+						),
+						h(
+							'div',
+							{ className: 'sppcfw-flex sppcfw-items-center sppcfw-justify-between' },
+						h('label', { className: 'sppcfw-text-xs sppcfw-text-gray-200 sppcfw-font-medium' }, 'Font Weight'),
+							h(
+								'select',
+								{
+									className: 'sppcfw-bg-[#111827] sppcfw-border sppcfw-border-[#374151] sppcfw-rounded sppcfw-px-2.5 sppcfw-py-1.5 sppcfw-text-xs sppcfw-text-white sppcfw-w-44',
+									value: getStyle('font_weight') || '800',
+									onChange: e => handleStyleChange('font_weight', e.target.value),
+								},
+								['400', '500', '600', '700', '800'].map(fw => h('option', { key: fw, value: fw }, fw))
+							)
+						),
+						h(
+							'div',
+							{ className: 'sppcfw-space-y-1.5' },
+						renderControlHeader('Alignment', true),
+						renderButtonGroup(
+							[
+								{ value: 'left', icon: 'format_align_left', title: 'Left' },
+								{ value: 'center', icon: 'format_align_center', title: 'Center' },
+								{ value: 'right', icon: 'format_align_right', title: 'Right' },
+							],
+							getStyle('alignment') || 'left',
+							v => handleStyleChange('alignment', v)
+						)
+						)
+					)
+				)
+			);
+		}
+
+		// 2d. Add to Cart Style Panel
+		function renderAddToCartStyle() {
+			return h(
+				'div',
+				{ className: 'sppcfw-space-y-4' },
+				renderAccordion(
+					'button',
+					'Button Styles',
+					h(
+						'div',
+						{ className: 'sppcfw-space-y-3.5' },
+						renderColorPicker('Button Background', getStyle('btn_bg_color') || getStyle('bg_color'), v => {
+							handleStyleChange('btn_bg_color', v);
+							handleStyleChange('bg_color', v);
+						}, '#9333ea'),
+						renderColorPicker('Button Text Color', getStyle('btn_text_color') || getStyle('text_color'), v => {
+							handleStyleChange('btn_text_color', v);
+							handleStyleChange('text_color', v);
+						}, '#ffffff'),
+						h(
+							'div',
+							{ className: 'sppcfw-space-y-1.5' },
+						renderControlHeader('Button Font Size', true, widthUnit, setWidthUnit, ['px', 'rem']),
+						renderSliderInput(getStyle('font_size') || '14px', v => handleStyleChange('font_size', v), 10, 30, 1, widthUnit, '14')
+						),
+						h(
+							'div',
+							{ className: 'sppcfw-space-y-1.5' },
+						renderControlHeader('Button Padding', true, paddingUnit, setPaddingUnit, ['px']),
+						renderFourBoxInput(getStyle, 'btn_padding', handleMultiStyleChange, paddingUnit, isPaddingLinked, setIsPaddingLinked)
+						),
+						h(
+							'div',
+							{ className: 'sppcfw-space-y-1.5' },
+						renderControlHeader('Border Radius', true, radiusUnit, setRadiusUnit, ['px', '%']),
+						renderFourBoxInput(getStyle, 'btn_border_radius', handleMultiStyleChange, radiusUnit, isRadiusLinked, setIsRadiusLinked)
+						),
+						h(
+							'div',
+							{ className: 'sppcfw-space-y-1.5' },
+						renderControlHeader('Alignment', true),
+						renderButtonGroup(
+							[
+								{ value: 'left', icon: 'format_align_left', title: 'Left' },
+								{ value: 'center', icon: 'format_align_center', title: 'Center' },
+								{ value: 'right', icon: 'format_align_right', title: 'Right' },
+							],
+							getStyle('alignment') || 'left',
+							v => handleStyleChange('alignment', v)
+						)
+						)
+					)
+				)
+			);
+		}
+
+		// 2e. Rating Stars Style Panel
+		function renderRatingStyle() {
+			return h(
+				'div',
+				{ className: 'sppcfw-space-y-4' },
+				renderAccordion(
+					'rating',
+					'Star Rating Appearance',
+					h(
+						'div',
+						{ className: 'sppcfw-space-y-3.5' },
+						renderColorPicker('Star Color', getStyle('star_color') || getStyle('text_color'), v => {
+							handleStyleChange('star_color', v);
+							handleStyleChange('text_color', v);
+						}, '#f59e0b'),
+						renderColorPicker('Review Count Color', getStyle('review_count_color'), v => handleStyleChange('review_count_color', v), '#6b7280'),
+						h(
+							'div',
+							{ className: 'sppcfw-space-y-1.5' },
+						renderControlHeader('Star Size', true, widthUnit, setWidthUnit, ['px']),
+						renderSliderInput(getStyle('star_size') || '18px', v => handleStyleChange('star_size', v), 10, 40, 1, widthUnit, '18')
+						),
+						h(
+							'div',
+							{ className: 'sppcfw-space-y-1.5' },
+						renderControlHeader('Alignment', true),
+						renderButtonGroup(
+							[
+								{ value: 'left', icon: 'format_align_left', title: 'Left' },
+								{ value: 'center', icon: 'format_align_center', title: 'Center' },
+								{ value: 'right', icon: 'format_align_right', title: 'Right' },
+							],
+							getStyle('alignment') || 'left',
+							v => handleStyleChange('alignment', v)
+						)
+						)
+					)
+				)
+			);
+		}
+
+		// 2f. Image & Product Gallery Style Panel
+		function renderImageStyle() {
+			return h(
+				'div',
+				{ className: 'sppcfw-space-y-4' },
+				renderAccordion(
+					'image',
+					'Image Sizing & Alignment',
+					h(
+						'div',
+						{ className: 'sppcfw-space-y-3.5' },
+						h(
+							'div',
+							{ className: 'sppcfw-space-y-1.5' },
+						renderControlHeader('Alignment', true),
+						renderButtonGroup(
+							[
+								{ value: 'left', icon: 'format_align_left', title: 'Left' },
+								{ value: 'center', icon: 'format_align_center', title: 'Center' },
+								{ value: 'right', icon: 'format_align_right', title: 'Right' },
+							],
+							getStyle('alignment') || 'center',
+							v => handleStyleChange('alignment', v)
+						)
+						),
+						h(
+							'div',
+							{ className: 'sppcfw-space-y-1.5' },
+						renderControlHeader('Width', true, imgWidthUnit, setImgWidthUnit, ['%', 'px', 'vw']),
+						renderSliderInput(getStyle('width') || '100%', v => handleStyleChange('width', v), 0, 100, 1, imgWidthUnit)
+						),
+						h(
+							'div',
+							{ className: 'sppcfw-space-y-1.5' },
+						renderControlHeader('Max Width', true, maxImgWidthUnit, setMaxImgWidthUnit, ['%', 'px', 'vw']),
+						renderSliderInput(getStyle('max_width') || '100%', v => handleStyleChange('max_width', v), 0, 100, 1, maxImgWidthUnit)
+						),
+						h(
+							'div',
+							{ className: 'sppcfw-space-y-1.5' },
+						renderControlHeader('Height', true, imgHeightUnit, setImgHeightUnit, ['px', 'vh', '%']),
+						renderSliderInput(getStyle('height') || '', v => handleStyleChange('height', v), 0, 800, 1, imgHeightUnit, 'Auto')
+						),
+						h(
+							'div',
+							{ className: 'sppcfw-space-y-1.5' },
+						renderControlHeader('Opacity', false),
+						renderSliderInput(getStyle('opacity') || '1', v => handleStyleChange('opacity', v), 0, 1, 0.05, '')
+						)
+					)
+				),
+				renderAccordion(
+					'border',
+					'Border & Box Shadow',
+					h(
+						'div',
+						{ className: 'sppcfw-space-y-3.5' },
+						h(
+							'div',
+							{ className: 'sppcfw-flex sppcfw-items-center sppcfw-justify-between' },
+						h('label', { className: 'sppcfw-text-xs sppcfw-text-gray-200 sppcfw-font-medium' }, 'Border Type'),
+							h(
+								'select',
+								{
+									className: 'sppcfw-bg-[#111827] sppcfw-border sppcfw-border-[#374151] sppcfw-rounded sppcfw-px-2.5 sppcfw-py-1 sppcfw-text-xs sppcfw-text-white sppcfw-w-36',
+									value: getStyle('border_type') || 'Default',
+									onChange: e => handleStyleChange('border_type', e.target.value),
+								},
+								['Default', 'None', 'Solid', 'Double', 'Dotted', 'Dashed'].map(bt => h('option', { key: bt, value: bt }, bt))
+							)
+						),
+						h(
+							'div',
+							{ className: 'sppcfw-space-y-1.5' },
+						renderControlHeader('Border Radius', true, radiusUnit, setRadiusUnit, ['px', '%']),
+						renderFourBoxInput(getStyle, 'border_radius', handleMultiStyleChange, radiusUnit, isRadiusLinked, setIsRadiusLinked)
+						)
+					)
+				)
+			);
+		}
+
+		// 2g. Product Description & Tabs Style Panel
+		function renderProductDescriptionStyle() {
+			return h(
+				'div',
+				{ className: 'sppcfw-space-y-4' },
+				renderAccordion(
+					'typography',
+					'Tabs Appearance',
+					h(
+						'div',
+						{ className: 'sppcfw-space-y-3.5' },
+						renderColorPicker('Tab Heading Color', getStyle('text_color'), v => handleStyleChange('text_color', v), '#111827'),
+						renderColorPicker('Active Tab Highlight', getStyle('active_tab_color'), v => handleStyleChange('active_tab_color', v), '#9333ea'),
+						renderColorPicker('Panel Background', getStyle('bg_color'), v => handleStyleChange('bg_color', v), '#f9fafb'),
+						h(
+							'div',
+							{ className: 'sppcfw-space-y-1.5' },
+						renderControlHeader('Content Padding', true, paddingUnit, setPaddingUnit, ['px']),
+						renderFourBoxInput(getStyle, 'padding', handleMultiStyleChange, paddingUnit, isPaddingLinked, setIsPaddingLinked)
+						),
+						h(
+							'div',
+							{ className: 'sppcfw-space-y-1.5' },
+						renderControlHeader('Border Radius', true, radiusUnit, setRadiusUnit, ['px']),
+						renderFourBoxInput(getStyle, 'border_radius', handleMultiStyleChange, radiusUnit, isRadiusLinked, setIsRadiusLinked)
+						)
+					)
+				)
+			);
+		}
+
+		// 2h. Product Meta Style Panel
+		function renderProductMetaStyle() {
+			return h(
+				'div',
+				{ className: 'sppcfw-space-y-4' },
+				renderAccordion(
+					'typography',
+					'Meta Text Styles',
+					h(
+						'div',
+						{ className: 'sppcfw-space-y-3.5' },
+						renderColorPicker('Label Color', getStyle('label_color'), v => handleStyleChange('label_color', v), '#111827'),
+						renderColorPicker('Value / Link Color', getStyle('text_color'), v => handleStyleChange('text_color', v), '#6b7280'),
+						h(
+							'div',
+							{ className: 'sppcfw-space-y-1.5' },
+						renderControlHeader('Font Size', true, widthUnit, setWidthUnit, ['px']),
+						renderSliderInput(getStyle('font_size') || '13px', v => handleStyleChange('font_size', v), 10, 24, 1, widthUnit, '13')
+						),
+						h(
+							'div',
+							{ className: 'sppcfw-space-y-1.5' },
+						renderControlHeader('Item Gap', true, gapsUnit, setGapsUnit, ['px']),
+						renderSliderInput(getStyle('gap') || '6px', v => handleStyleChange('gap', v), 0, 30, 1, gapsUnit, '6')
+						)
+					)
+				)
+			);
+		}
+
+		// 2i. Custom Message Banner Style Panel
+		function renderCustomMessageStyle() {
+			return h(
+				'div',
+				{ className: 'sppcfw-space-y-4' },
+				renderAccordion(
+					'colors',
+					'Banner Colors & Border',
+					h(
+						'div',
+						{ className: 'sppcfw-space-y-3.5' },
+						renderColorPicker('Background Color', getStyle('bg_color'), v => handleStyleChange('bg_color', v), '#faf5ff'),
+						renderColorPicker('Text Color', getStyle('text_color'), v => handleStyleChange('text_color', v), '#7e22ce'),
+						renderColorPicker('Accent Border Color', getStyle('border_color'), v => handleStyleChange('border_color', v), '#9333ea'),
+						h(
+							'div',
+							{ className: 'sppcfw-space-y-1.5' },
+						renderControlHeader('Padding', true, paddingUnit, setPaddingUnit, ['px']),
+						renderFourBoxInput(getStyle, 'padding', handleMultiStyleChange, paddingUnit, isPaddingLinked, setIsPaddingLinked)
+						),
+						h(
+							'div',
+							{ className: 'sppcfw-space-y-1.5' },
+						renderControlHeader('Border Radius', true, radiusUnit, setRadiusUnit, ['px']),
+						renderFourBoxInput(getStyle, 'border_radius', handleMultiStyleChange, radiusUnit, isRadiusLinked, setIsRadiusLinked)
+						)
+					)
+				)
+			);
+		}
+
+		// 2j. Plus/Minus Stepper Style Panel
+		function renderPlusMinusStepperStyle() {
+			return h(
+				'div',
+				{ className: 'sppcfw-space-y-4' },
+				renderAccordion(
+					'button',
+					'Stepper Buttons & Input',
+					h(
+						'div',
+						{ className: 'sppcfw-space-y-3.5' },
+						renderColorPicker('Button Background', getStyle('btn_bg_color') || getStyle('bg_color'), v => {
+							handleStyleChange('btn_bg_color', v);
+							handleStyleChange('bg_color', v);
+						}, '#f3f4f6'),
+						renderColorPicker('Button Text Color', getStyle('btn_text_color') || getStyle('text_color'), v => {
+							handleStyleChange('btn_text_color', v);
+							handleStyleChange('text_color', v);
+						}, '#111827'),
+						renderColorPicker('Border Color', getStyle('border_color'), v => handleStyleChange('border_color', v), '#d1d5db'),
+						h(
+							'div',
+							{ className: 'sppcfw-space-y-1.5' },
+						renderControlHeader('Border Radius', true, radiusUnit, setRadiusUnit, ['px']),
+						renderFourBoxInput(getStyle, 'border_radius', handleMultiStyleChange, radiusUnit, isRadiusLinked, setIsRadiusLinked)
+						)
+					)
+				)
+			);
+		}
+
+		// 2k. Generic Product Style Panel (Related, Upsell, Swatches, etc.)
+		function renderGenericProductStyle() {
+			return h(
+				'div',
+				{ className: 'sppcfw-space-y-4' },
+				renderAccordion(
+					'typography',
+					'Style & Colors',
+					h(
+						'div',
+						{ className: 'sppcfw-space-y-3.5' },
+						renderColorPicker('Primary Color', getStyle('text_color'), v => handleStyleChange('text_color', v), '#111827'),
+						renderColorPicker('Background Color', getStyle('bg_color'), v => handleStyleChange('bg_color', v), 'transparent'),
+						renderColorPicker('Border Color', getStyle('border_color'), v => handleStyleChange('border_color', v), '#e5e7eb'),
+						h(
+							'div',
+							{ className: 'sppcfw-space-y-1.5' },
+						renderControlHeader('Padding', true, paddingUnit, setPaddingUnit, ['px']),
+						renderFourBoxInput(getStyle, 'padding', handleMultiStyleChange, paddingUnit, isPaddingLinked, setIsPaddingLinked)
+						),
+						h(
+							'div',
+							{ className: 'sppcfw-space-y-1.5' },
+						renderControlHeader('Border Radius', true, radiusUnit, setRadiusUnit, ['px']),
+						renderFourBoxInput(getStyle, 'border_radius', handleMultiStyleChange, radiusUnit, isRadiusLinked, setIsRadiusLinked)
+						),
+						h(
+							'div',
+							{ className: 'sppcfw-space-y-1.5' },
+						renderControlHeader('Alignment', true),
+						renderButtonGroup(
+							[
+								{ value: 'left', icon: 'format_align_left', title: 'Left' },
+								{ value: 'center', icon: 'format_align_center', title: 'Center' },
+								{ value: 'right', icon: 'format_align_right', title: 'Right' },
+							],
+							getStyle('alignment') || 'left',
+							v => handleStyleChange('alignment', v)
+						)
+						)
+					)
+				)
+			);
+		}
+
+		// Dispatcher for Style Panel based on element type
+		function renderElementStylePanel() {
+			if (isContainer || isColumn) {
+				return renderContainerStyle();
+			}
+			if (isImage) {
+				return renderImageStyle();
+			}
+			switch (selectedElement.type) {
+				case 'product_title':
+				case 'heading':
+				case 'text_editor':
+				case 'product_short_desc':
+					return renderTypographyStyle();
+				case 'product_price':
+					return renderPriceStyle();
+				case 'product_add_to_cart':
+					return renderAddToCartStyle();
+				case 'product_rating':
+					return renderRatingStyle();
+				case 'product_description':
+					return renderProductDescriptionStyle();
+				case 'product_meta':
+				case 'product_meta_item':
+					return renderProductMetaStyle();
+				case 'custom_message':
+					return renderCustomMessageStyle();
+				case 'plus_minus_buttons':
+					return renderPlusMinusStepperStyle();
+				default:
+					return renderGenericProductStyle();
+			}
+		}
+
+		// Dispatcher for Content Panel based on element type
+		function renderElementContentPanel() {
+			if (isContainer) {
+				return renderContainerContent();
+			}
+			if (isColumn) {
+				return renderColumnContent();
+			}
+			if (isCustomImage) {
+				return renderImageContent();
+			}
+			if (isProductGallery) {
+				return renderProductGalleryContent();
+			}
+			if (selectedElement.type === 'product_title') {
+				return renderProductTitleContent();
+			}
+			if (isHeading) {
+				return renderHeadingContent();
+			}
+			if (isTextEditor) {
+				return renderTextEditorContent();
+			}
+			// All other Product Elements have dedicated Dynamic Info Card
+			return renderProductElementDynamicCard();
+		}
+
+		// ==========================================
+		// 3. ADVANCED PANEL
+		// ==========================================
+		function renderElementAdvancedPanel() {
+			return h(
+				'div',
+				{ className: 'sppcfw-space-y-4' },
+				renderAccordion(
+					'spacing',
+					'Layout & Spacing',
+					h(
+						'div',
+						{ className: 'sppcfw-space-y-4' },
+						h(
+							'div',
+							{ className: 'sppcfw-space-y-1.5' },
+							renderControlHeader('Margin', true, marginUnit, setMarginUnit, ['px', '%', 'em']),
+							renderFourBoxInput(getAdvanced, 'margin', handleMultiAdvancedChange, marginUnit, isMarginLinked, setIsMarginLinked)
+						),
+						h(
+							'div',
+							{ className: 'sppcfw-space-y-1.5' },
+						renderControlHeader('Padding', true, paddingUnit, setPaddingUnit, ['px', '%', 'em']),
+						renderFourBoxInput(getAdvanced, 'padding', handleMultiAdvancedChange, paddingUnit, isPaddingLinked, setIsPaddingLinked)
+						),
+						h(
+							'div',
+							{ className: 'sppcfw-flex sppcfw-items-center sppcfw-justify-between' },
+							renderControlHeader('Width Mode', true),
+							h(
+								'select',
+								{
+									className: 'sppcfw-bg-[#111827] sppcfw-border sppcfw-border-[#374151] sppcfw-rounded sppcfw-px-2.5 sppcfw-py-1 sppcfw-text-xs sppcfw-text-white focus:sppcfw-outline-none focus:sppcfw-border-[#9333ea] sppcfw-w-36',
+									value: getAdvanced('width_mode') || 'Default',
+									onChange: e => handleAdvancedChange('width_mode', e.target.value),
+								},
+								h('option', { value: 'Default' }, 'Default'),
+								h('option', { value: 'Full Width (100%)' }, 'Full Width (100%)'),
+								h('option', { value: 'Inline (auto)' }, 'Inline (auto)'),
+								h('option', { value: 'Custom' }, 'Custom')
+							)
+						),
+						h('hr', { className: 'sppcfw-border-[#374151] sppcfw-my-2' }),
+						h(
+							'div',
+							{ className: 'sppcfw-space-y-1' },
+							renderControlHeader('Align Self', true),
+						renderButtonGroup(
+							[
+								{ value: 'flex-start', title: 'Start', label: 'Start' },
+								{ value: 'center', title: 'Center', label: 'Center' },
+								{ value: 'flex-end', title: 'End', label: 'End' },
+								{ value: 'stretch', title: 'Stretch', label: 'Stretch' },
+							],
+							getAdvanced('align_self') || '',
+							v => handleAdvancedChange('align_self', v)
+						)
+						),
+						h(
+							'div',
+							{ className: 'sppcfw-space-y-1' },
+							renderControlHeader('Order', true),
+						renderButtonGroup(
+							[
+								{ value: 'start', title: 'Start', label: 'First' },
+								{ value: 'end', title: 'End', label: 'Last' },
+								{ value: 'custom', title: 'Custom', label: 'Custom' },
+							],
+							getAdvanced('order') || '',
+							v => handleAdvancedChange('order', v)
+						)
+						)
+					)
+				),
+				renderAccordion(
+					'position',
+					'Position & Attributes',
+					h(
+						'div',
+						{ className: 'sppcfw-space-y-3.5' },
+						h(
+							'div',
+							{ className: 'sppcfw-flex sppcfw-items-center sppcfw-justify-between' },
+						h('label', { className: 'sppcfw-text-xs sppcfw-text-gray-200 sppcfw-font-medium' }, 'Position'),
+							h(
+								'select',
+								{
+									className: 'sppcfw-bg-[#111827] sppcfw-border sppcfw-border-[#374151] sppcfw-rounded sppcfw-px-2.5 sppcfw-py-1 sppcfw-text-xs sppcfw-text-white sppcfw-w-36',
+									value: getAdvanced('position') || 'Default',
+									onChange: e => handleAdvancedChange('position', e.target.value),
+								},
+								h('option', { value: 'Default' }, 'Default'),
+								h('option', { value: 'Absolute' }, 'Absolute'),
+								h('option', { value: 'Fixed' }, 'Fixed')
+							)
+						),
+						h(
+							'div',
+							{ className: 'sppcfw-flex sppcfw-items-center sppcfw-justify-between' },
+							renderControlHeader('Z-Index', true),
+							h('input', {
+								type: 'number',
+								className: 'sppcfw-w-24 sppcfw-bg-[#111827] sppcfw-border sppcfw-border-[#374151] sppcfw-rounded sppcfw-px-2.5 sppcfw-py-1 sppcfw-text-xs sppcfw-text-center sppcfw-text-white focus:sppcfw-outline-none',
+								value: getAdvanced('z_index') || '',
+								onChange: e => handleAdvancedChange('z_index', e.target.value),
+							})
+						),
+						h(
+							'div',
+							{ className: 'sppcfw-space-y-1.5' },
+							h('label', { className: 'sppcfw-text-xs sppcfw-text-gray-200 sppcfw-font-medium sppcfw-block' }, 'CSS ID'),
+							h('input', {
+								type: 'text',
+								className: 'sppcfw-w-full sppcfw-bg-[#111827] sppcfw-border sppcfw-border-[#374151] sppcfw-rounded sppcfw-px-2.5 sppcfw-py-1.5 sppcfw-text-xs sppcfw-text-white focus:sppcfw-outline-none',
+								value: getAdvanced('css_id') || '',
+								placeholder: 'e.g. my-custom-id',
+								onChange: e => handleAdvancedChange('css_id', e.target.value),
+							})
+						),
+						h(
+							'div',
+							{ className: 'sppcfw-space-y-1.5' },
+							h('label', { className: 'sppcfw-text-xs sppcfw-text-gray-200 sppcfw-font-medium sppcfw-block' }, 'CSS Classes'),
+							h('input', {
+								type: 'text',
+								className: 'sppcfw-w-full sppcfw-bg-[#111827] sppcfw-border sppcfw-border-[#374151] sppcfw-rounded sppcfw-px-2.5 sppcfw-py-1.5 sppcfw-text-xs sppcfw-text-white focus:sppcfw-outline-none',
+								value: getAdvanced('css_classes') || (getAdvanced('custom_class') || ''),
+								placeholder: 'e.g. custom-class-1 custom-class-2',
+								onChange: e => {
+									handleAdvancedChange('css_classes', e.target.value);
+									handleAdvancedChange('custom_class', e.target.value);
+								},
+							})
+						)
+					)
+				),
+				renderAccordion(
+					'responsive',
+					'Responsive Visibility',
+					h(
+						'div',
+						{ className: 'sppcfw-space-y-3' },
+						[
+							{ key: 'hide_on_desktop', label: 'Hide On Desktop' },
+							{ key: 'hide_on_tablet', label: 'Hide On Tablet' },
+							{ key: 'hide_on_mobile', label: 'Hide On Mobile' },
+						].map(res =>
+							h(
+								'div',
+								{ key: res.key, className: 'sppcfw-flex sppcfw-items-center sppcfw-justify-between' },
+							h('label', { className: 'sppcfw-text-xs sppcfw-text-[#d1d5db] sppcfw-font-medium' }, res.label),
+								h('input', {
+									type: 'checkbox',
+									className: 'sppcfw-accent-[#9333ea] sppcfw-w-4 sppcfw-h-4 sppcfw-cursor-pointer',
+									checked: !!getAdvanced(res.key),
+									onChange: e => handleAdvancedChange(res.key, e.target.checked),
+								})
+							)
+						)
+					)
+				)
+			);
+		}
+
+		// Render Main Inspector Sidebar Shell
 		return h(
 			'aside',
 			{ className: 'sppcfw-w-[340px] sppcfw-bg-[#1f2937] sppcfw-border-r sppcfw-border-[#374151] sppcfw-flex sppcfw-flex-col sppcfw-ml-[64px] sppcfw-z-30 sppcfw-h-full sppcfw-overflow-hidden sppcfw-shadow-xl sppcfw-select-none' },
 
-			// Inspector Header: "Edit Container" (Images 2 & 3 Header)
+			// Inspector Header
 			h(
 				'div',
 				{ className: 'sppcfw-border-b sppcfw-border-[#374151] sppcfw-bg-[#121c2a]' },
@@ -2448,7 +4210,7 @@
 					)
 				),
 
-				// 3 Tabs Header: Layout | Style | Advanced (Images 2 & 3)
+				// 3 Tabs Header: Layout/Content | Style | Advanced
 				h(
 					'div',
 					{ className: 'sppcfw-flex sppcfw-text-xs sppcfw-font-semibold sppcfw-bg-[#16202e] sppcfw-border-b sppcfw-border-[#374151]' },
@@ -2492,1691 +4254,9 @@
 			h(
 				'div',
 				{ className: 'sppcfw-p-4 sppcfw-overflow-y-auto custom-scrollbar sppcfw-space-y-4 sppcfw-flex-1 sppcfw-text-xs' },
-
-				// --- 1. CONTENT / LAYOUT TAB ---
-				(activeTab === 'layout' || activeTab === 'content') &&
-					h(
-						'div',
-						{ className: 'sppcfw-space-y-4' },
-
-						// Accordion: Container (Matching reference image)
-						isContainer &&
-							h(
-								'div',
-								{ className: 'sppcfw-space-y-4' },
-
-								// Accordion Header
-								h(
-									'div',
-									{
-										className: 'sppcfw-flex sppcfw-items-center sppcfw-justify-between sppcfw-cursor-pointer sppcfw-select-none sppcfw-pb-1',
-										onClick: () => setIsContainerOpen(!isContainerOpen),
-									},
-									h(
-										'h4',
-										{ className: 'sppcfw-text-xs sppcfw-font-bold sppcfw-text-white sppcfw-flex sppcfw-items-center sppcfw-gap-1.5' },
-										h('span', { className: 'sppcfw-text-[10px] sppcfw-text-gray-300' }, isContainerOpen ? '▾' : '▸'),
-										'Container'
-									)
-								),
-
-								isContainerOpen &&
-									h(
-										'div',
-										{ className: 'sppcfw-space-y-4' },
-
-										// 1. Container Layout (Flexbox / Grid)
-										h(
-											'div',
-											{ className: 'sppcfw-flex sppcfw-items-center sppcfw-justify-between' },
-											h('label', { className: 'sppcfw-text-xs sppcfw-text-[#d1d5db] sppcfw-font-medium' }, 'Container Layout'),
-											h(
-												'div',
-												{ className: 'sppcfw-relative sppcfw-w-44' },
-												h(
-													'select',
-													{
-														className: 'sppcfw-w-full sppcfw-bg-[#111827] sppcfw-border sppcfw-border-[#374151] sppcfw-rounded sppcfw-px-2.5 sppcfw-py-1.5 sppcfw-pr-6 sppcfw-text-xs sppcfw-text-white sppcfw-appearance-none focus:sppcfw-outline-none focus:sppcfw-border-[#9333ea] sppcfw-cursor-pointer',
-														value: getSetting('flex_direction') === 'grid' ? 'Grid' : 'Flexbox',
-														onChange: e => handleSettingChange('flex_direction', e.target.value === 'Grid' ? 'grid' : 'row'),
-													},
-													h('option', { value: 'Flexbox' }, 'Flexbox'),
-													h('option', { value: 'Grid' }, 'Grid')
-												),
-											)
-										),
-
-										// Separator Divider
-										h('hr', { className: 'sppcfw-border-[#374151]/60' }),
-
-										// 2. Content Width (Boxed / Full Width)
-										h(
-											'div',
-											{ className: 'sppcfw-flex sppcfw-items-center sppcfw-justify-between' },
-											h('label', { className: 'sppcfw-text-xs sppcfw-text-[#d1d5db] sppcfw-font-medium' }, 'Content Width'),
-											h(
-												'div',
-												{ className: 'sppcfw-relative sppcfw-w-44' },
-												h(
-													'select',
-													{
-														className: 'sppcfw-w-full sppcfw-bg-[#111827] sppcfw-border sppcfw-border-[#374151] sppcfw-rounded sppcfw-px-2.5 sppcfw-py-1.5 sppcfw-pr-6 sppcfw-text-xs sppcfw-text-white sppcfw-appearance-none focus:sppcfw-outline-none focus:sppcfw-border-[#9333ea] sppcfw-cursor-pointer',
-														value: getSetting('width_mode') === 'full' ? 'Full Width' : 'Boxed',
-														onChange: e => handleSettingChange('width_mode', e.target.value === 'Full Width' ? 'full' : 'boxed'),
-													},
-													h('option', { value: 'Boxed' }, 'Boxed'),
-													h('option', { value: 'Full Width' }, 'Full Width')
-												),
-											)
-										),
-
-										// 3. Width Control
-										h(
-											'div',
-											{ className: 'sppcfw-space-y-1.5' },
-											renderControlHeader('Width', true, widthUnit, setWidthUnit, ['px', '%', 'vw']),
-											renderSliderInput(getSetting('boxed_width') || '1140px', v => handleSettingChange('boxed_width', v), 100, 2000, 1, widthUnit, '1140')
-										),
-
-										// 4. Min Height Control
-										h(
-											'div',
-											{ className: 'sppcfw-space-y-1.5' },
-											renderControlHeader('Min Height', true, heightUnit, setHeightUnit, ['px', 'vh', 'em']),
-											renderSliderInput(getSetting('min_height') || '', v => handleSettingChange('min_height', v), 0, 1000, 1, heightUnit, ''),
-											h('p', { className: 'sppcfw-text-[11px] sppcfw-text-gray-400 sppcfw-italic sppcfw-pt-0.5' }, 'To achieve full height Container use 100vh.')
-										),
-
-										// Separator Divider
-										h('hr', { className: 'sppcfw-border-[#374151]/60' }),
-
-										// 5. Items Section Subtitle
-										h('h4', { className: 'sppcfw-text-xs sppcfw-font-bold sppcfw-text-white sppcfw-pt-1' }, 'Items'),
-
-										// 6. Direction (Row, Col, Row-Reverse, Col-Reverse)
-										h(
-											'div',
-											{ className: 'sppcfw-flex sppcfw-items-center sppcfw-justify-between' },
-											h(
-												'div',
-												{ className: 'sppcfw-flex sppcfw-items-center sppcfw-gap-1.5 sppcfw-text-xs sppcfw-text-[#e5e7eb] sppcfw-font-medium' },
-												'Direction',
-												h('span', { className: 'material-symbols-outlined sppcfw-text-[13px] sppcfw-text-gray-400', title: deviceView }, 'desktop_windows')
-											),
-											h(
-												'div',
-												{ className: 'sppcfw-flex sppcfw-border sppcfw-border-[#374151] sppcfw-rounded sppcfw-bg-[#111827] sppcfw-overflow-hidden' },
-												[
-													{ val: 'row', title: 'Row - Horizontal', icon: h('svg', { width: 14, height: 14, viewBox: '0 0 16 16', fill: 'none', stroke: 'currentColor', strokeWidth: 2, strokeLinecap: 'round', strokeLinejoin: 'round' }, h('path', { d: 'M3 8h10M9 4l4 4-4 4' })) },
-													{ val: 'column', title: 'Column - Vertical', icon: h('svg', { width: 14, height: 14, viewBox: '0 0 16 16', fill: 'none', stroke: 'currentColor', strokeWidth: 2, strokeLinecap: 'round', strokeLinejoin: 'round' }, h('path', { d: 'M8 3v10M4 9l4 4 4-4' })) },
-													{ val: 'row-reverse', title: 'Row Reverse', icon: h('svg', { width: 14, height: 14, viewBox: '0 0 16 16', fill: 'none', stroke: 'currentColor', strokeWidth: 2, strokeLinecap: 'round', strokeLinejoin: 'round' }, h('path', { d: 'M13 8H3M7 4L3 8l4 4' })) },
-													{ val: 'column-reverse', title: 'Column Reverse', icon: h('svg', { width: 14, height: 14, viewBox: '0 0 16 16', fill: 'none', stroke: 'currentColor', strokeWidth: 2, strokeLinecap: 'round', strokeLinejoin: 'round' }, h('path', { d: 'M8 13V3M4 7l4-4 4 4' })) },
-												].map(dirOpt => {
-													const isAct = (getSetting('flex_direction') || 'row') === dirOpt.val;
-													return h(
-														'button',
-														{
-															key: dirOpt.val,
-															type: 'button',
-															className: `sppcfw-p-2 sppcfw-flex sppcfw-items-center sppcfw-justify-center sppcfw-transition-colors sppcfw-cursor-pointer ${
-																isAct ? 'sppcfw-bg-[#374151] sppcfw-text-white' : 'sppcfw-text-gray-400 hover:sppcfw-text-white hover:sppcfw-bg-[#1f2937]'
-															}`,
-															onClick: () => handleSettingChange('flex_direction', dirOpt.val),
-															title: dirOpt.title,
-														},
-														dirOpt.icon
-													);
-												})
-											)
-										),
-
-										// 7. Justify Content (Full Width 6 Icons)
-										h(
-											'div',
-											{ className: 'sppcfw-space-y-1.5' },
-											h(
-												'div',
-												{ className: 'sppcfw-flex sppcfw-items-center sppcfw-gap-1.5 sppcfw-text-xs sppcfw-text-[#e5e7eb] sppcfw-font-medium' },
-												'Justify Content',
-												h('span', { className: 'material-symbols-outlined sppcfw-text-[13px] sppcfw-text-gray-400', title: deviceView }, 'desktop_windows')
-											),
-											h(
-												'div',
-												{ className: 'sppcfw-flex sppcfw-border sppcfw-border-[#374151] sppcfw-rounded sppcfw-bg-[#111827] sppcfw-overflow-hidden' },
-												[
-													{ val: 'flex-start', title: 'Start', icon: h('svg', { width: 14, height: 14, viewBox: '0 0 16 16', fill: 'currentColor' }, h('rect', { x: 1.5, y: 1.5, width: 1.5, height: 13, rx: 0.5 }), h('rect', { x: 4.5, y: 4, width: 3, height: 8, rx: 0.5 }), h('rect', { x: 9, y: 4, width: 3, height: 8, rx: 0.5 })) },
-													{ val: 'center', title: 'Center', icon: h('svg', { width: 14, height: 14, viewBox: '0 0 16 16', fill: 'currentColor' }, h('rect', { x: 4, y: 4, width: 3.5, height: 8, rx: 0.5 }), h('rect', { x: 8.5, y: 4, width: 3.5, height: 8, rx: 0.5 })) },
-													{ val: 'flex-end', title: 'End', icon: h('svg', { width: 14, height: 14, viewBox: '0 0 16 16', fill: 'currentColor' }, h('rect', { x: 13, y: 1.5, width: 1.5, height: 13, rx: 0.5 }), h('rect', { x: 4, y: 4, width: 3, height: 8, rx: 0.5 }), h('rect', { x: 8.5, y: 4, width: 3, height: 8, rx: 0.5 })) },
-													{ val: 'space-between', title: 'Space Between', icon: h('svg', { width: 14, height: 14, viewBox: '0 0 16 16', fill: 'currentColor' }, h('rect', { x: 1.5, y: 1.5, width: 1.5, height: 13, rx: 0.5 }), h('rect', { x: 13, y: 1.5, width: 1.5, height: 13, rx: 0.5 }), h('rect', { x: 4.5, y: 4, width: 2.5, height: 8, rx: 0.5 }), h('rect', { x: 9, y: 4, width: 2.5, height: 8, rx: 0.5 })) },
-													{ val: 'space-around', title: 'Space Around', icon: h('svg', { width: 14, height: 14, viewBox: '0 0 16 16', fill: 'currentColor' }, h('rect', { x: 2.5, y: 4, width: 3, height: 8, rx: 0.5 }), h('rect', { x: 7, y: 2, width: 1.5, height: 12, rx: 0.5, opacity: 0.35 }), h('rect', { x: 10.5, y: 4, width: 3, height: 8, rx: 0.5 })) },
-													{ val: 'space-evenly', title: 'Space Evenly', icon: h('svg', { width: 14, height: 14, viewBox: '0 0 16 16', fill: 'currentColor' }, h('rect', { x: 2, y: 4, width: 2.5, height: 8, rx: 0.5 }), h('rect', { x: 6.75, y: 4, width: 2.5, height: 8, rx: 0.5 }), h('rect', { x: 11.5, y: 4, width: 2.5, height: 8, rx: 0.5 })) },
-												].map(jcOpt => {
-													const isAct = (getSetting('justify_content') || 'flex-start') === jcOpt.val;
-													return h(
-														'button',
-														{
-															key: jcOpt.val,
-															type: 'button',
-															className: `sppcfw-flex-1 sppcfw-py-2 sppcfw-flex sppcfw-items-center sppcfw-justify-center sppcfw-transition-colors sppcfw-cursor-pointer ${
-																isAct ? 'sppcfw-bg-[#374151] sppcfw-text-white' : 'sppcfw-text-gray-400 hover:sppcfw-text-white hover:sppcfw-bg-[#1f2937]'
-															}`,
-															onClick: () => handleSettingChange('justify_content', jcOpt.val),
-															title: jcOpt.title,
-														},
-														jcOpt.icon
-													);
-												})
-											)
-										),
-
-										// 8. Align Items (4 Icons)
-										h(
-											'div',
-											{ className: 'sppcfw-flex sppcfw-items-center sppcfw-justify-between' },
-											h(
-												'div',
-												{ className: 'sppcfw-flex sppcfw-items-center sppcfw-gap-1.5 sppcfw-text-xs sppcfw-text-[#e5e7eb] sppcfw-font-medium' },
-												'Align Items',
-												h('span', { className: 'material-symbols-outlined sppcfw-text-[13px] sppcfw-text-gray-400', title: deviceView }, 'desktop_windows')
-											),
-											h(
-												'div',
-												{ className: 'sppcfw-flex sppcfw-border sppcfw-border-[#374151] sppcfw-rounded sppcfw-bg-[#111827] sppcfw-overflow-hidden' },
-												[
-													{ val: 'flex-start', title: 'Start', icon: h('svg', { width: 14, height: 14, viewBox: '0 0 16 16', fill: 'currentColor' }, h('rect', { x: 1.5, y: 1.5, width: 13, height: 1.5, rx: 0.5 }), h('rect', { x: 6, y: 4.5, width: 4, height: 9, rx: 0.5 })) },
-													{ val: 'center', title: 'Center', icon: h('svg', { width: 14, height: 14, viewBox: '0 0 16 16', fill: 'currentColor' }, h('rect', { x: 1.5, y: 7.25, width: 13, height: 1.5, rx: 0.5 }), h('rect', { x: 6, y: 2.5, width: 4, height: 11, rx: 0.5 })) },
-													{ val: 'flex-end', title: 'End', icon: h('svg', { width: 14, height: 14, viewBox: '0 0 16 16', fill: 'currentColor' }, h('rect', { x: 1.5, y: 13, width: 13, height: 1.5, rx: 0.5 }), h('rect', { x: 6, y: 2.5, width: 4, height: 9, rx: 0.5 })) },
-													{ val: 'stretch', title: 'Stretch', icon: h('svg', { width: 14, height: 14, viewBox: '0 0 16 16', fill: 'currentColor' }, h('rect', { x: 1.5, y: 1.5, width: 13, height: 1.5, rx: 0.5 }), h('rect', { x: 1.5, y: 13, width: 13, height: 1.5, rx: 0.5 }), h('rect', { x: 6, y: 4, width: 4, height: 8, rx: 0.5 })) },
-												].map(aiOpt => {
-													const isAct = (getSetting('align_items') || 'stretch') === aiOpt.val;
-													return h(
-														'button',
-														{
-															key: aiOpt.val,
-															type: 'button',
-															className: `sppcfw-p-2 sppcfw-flex sppcfw-items-center sppcfw-justify-center sppcfw-transition-colors sppcfw-cursor-pointer ${
-																isAct ? 'sppcfw-bg-[#374151] sppcfw-text-white' : 'sppcfw-text-gray-400 hover:sppcfw-text-white hover:sppcfw-bg-[#1f2937]'
-															}`,
-															onClick: () => handleSettingChange('align_items', aiOpt.val),
-															title: aiOpt.title,
-														},
-														aiOpt.icon
-													);
-												})
-											)
-										),
-
-										// 9. Gaps (Dual Column & Row inputs with Link button)
-										h(
-											'div',
-											{ className: 'sppcfw-space-y-1.5' },
-											renderControlHeader('Gaps', true, gapsUnit, setGapsUnit, ['px', 'em', '%']),
-											h(
-												'div',
-												{ className: 'sppcfw-flex sppcfw-items-start sppcfw-gap-1.5' },
-												h(
-													'div',
-													{ className: 'sppcfw-flex-1 sppcfw-grid sppcfw-grid-cols-2 sppcfw-border sppcfw-border-[#374151] sppcfw-rounded sppcfw-bg-[#111827] sppcfw-overflow-hidden' },
-													h(
-														'div',
-														{ className: 'sppcfw-border-r sppcfw-border-[#374151]' },
-														h('input', {
-															type: 'number',
-															className: 'sppcfw-w-full sppcfw-bg-transparent sppcfw-px-2 sppcfw-py-1.5 sppcfw-text-xs sppcfw-text-center sppcfw-text-white focus:sppcfw-outline-none',
-															value: parseInt(getSetting('column_gap') || getSetting('gap') || '20', 10),
-															onChange: e => {
-																const v = e.target.value ? e.target.value + gapsUnit : '0px';
-																if (isGapsLinked) {
-																	handleSettingChange('gap', v);
-																	handleSettingChange('column_gap', v);
-																	handleSettingChange('row_gap', v);
-																} else {
-																	handleSettingChange('column_gap', v);
-																}
-															},
-														})
-													),
-													h(
-														'div',
-														null,
-														h('input', {
-															type: 'number',
-															className: 'sppcfw-w-full sppcfw-bg-transparent sppcfw-px-2 sppcfw-py-1.5 sppcfw-text-xs sppcfw-text-center sppcfw-text-white focus:sppcfw-outline-none',
-															value: parseInt(getSetting('row_gap') || getSetting('gap') || '20', 10),
-															onChange: e => {
-																const v = e.target.value ? e.target.value + gapsUnit : '0px';
-																if (isGapsLinked) {
-																	handleSettingChange('gap', v);
-																	handleSettingChange('column_gap', v);
-																	handleSettingChange('row_gap', v);
-																} else {
-																	handleSettingChange('row_gap', v);
-																}
-															},
-														})
-													)
-												),
-												h(
-													'button',
-													{
-														type: 'button',
-														className: `sppcfw-p-2 sppcfw-rounded sppcfw-border sppcfw-transition-colors sppcfw-cursor-pointer ${
-															isGapsLinked
-																? 'sppcfw-bg-[#374151] sppcfw-border-[#4b5563] sppcfw-text-white'
-																: 'sppcfw-bg-[#111827] sppcfw-border-[#374151] sppcfw-text-gray-400 hover:sppcfw-text-white'
-														}`,
-														onClick: () => setIsGapsLinked(!isGapsLinked),
-														title: isGapsLinked ? 'Unlink values' : 'Link values',
-													},
-													h('span', { className: 'material-symbols-outlined sppcfw-text-xs' }, isGapsLinked ? 'link' : 'link_off')
-												)
-											),
-											h(
-												'div',
-												{ className: 'sppcfw-flex sppcfw-text-[10px] sppcfw-text-gray-400 sppcfw-pr-9' },
-												h('span', { className: 'sppcfw-flex-1 sppcfw-text-center' }, 'Column'),
-												h('span', { className: 'sppcfw-flex-1 sppcfw-text-center' }, 'Row')
-											)
-										),
-
-										// 10. Wrap (No Wrap / Wrap)
-										h(
-											'div',
-											{ className: 'sppcfw-flex sppcfw-items-center sppcfw-justify-between' },
-											h(
-												'div',
-												{ className: 'sppcfw-flex sppcfw-items-center sppcfw-gap-1.5 sppcfw-text-xs sppcfw-text-[#e5e7eb] sppcfw-font-medium' },
-												'Wrap',
-												h('span', { className: 'material-symbols-outlined sppcfw-text-[13px] sppcfw-text-gray-400', title: deviceView }, 'desktop_windows')
-											),
-											h(
-												'div',
-												{ className: 'sppcfw-flex sppcfw-border sppcfw-border-[#374151] sppcfw-rounded sppcfw-bg-[#111827] sppcfw-overflow-hidden' },
-												[
-													{ val: 'nowrap', title: 'No Wrap', icon: h('svg', { width: 14, height: 14, viewBox: '0 0 16 16', fill: 'none', stroke: 'currentColor', strokeWidth: 1.75, strokeLinecap: 'round', strokeLinejoin: 'round' }, h('path', { d: 'M2 3v10M5 8h8M9.5 4.5L13 8l-3.5 3.5' })) },
-													{ val: 'wrap', title: 'Wrap', icon: h('svg', { width: 14, height: 14, viewBox: '0 0 16 16', fill: 'none', stroke: 'currentColor', strokeWidth: 1.75, strokeLinecap: 'round', strokeLinejoin: 'round' }, h('path', { d: 'M3 5.5h7a3 3 0 0 1 3 3v0a3 3 0 0 1-3 3H4M7 8.5L4 11.5l3 3' })) },
-												].map(wrapOpt => {
-													const isAct = (getSetting('flex_wrap') || 'nowrap') === wrapOpt.val;
-													return h(
-														'button',
-														{
-															key: wrapOpt.val,
-															type: 'button',
-															className: `sppcfw-p-2 sppcfw-flex sppcfw-items-center sppcfw-justify-center sppcfw-transition-colors sppcfw-cursor-pointer ${
-																isAct ? 'sppcfw-bg-[#374151] sppcfw-text-white' : 'sppcfw-text-gray-400 hover:sppcfw-text-white hover:sppcfw-bg-[#1f2937]'
-															}`,
-															onClick: () => handleSettingChange('flex_wrap', wrapOpt.val),
-															title: wrapOpt.title,
-														},
-														wrapOpt.icon
-													);
-												})
-											)
-										)
-									)
-							),
-
-						// COLUMN LAYOUT CONTROLS (WHEN A COLUMN IS SELECTED)
-						isColumn &&
-							h(
-								'div',
-								{ className: 'sppcfw-space-y-4' },
-
-								// Column Structure Accordion
-								h(
-									'div',
-									{ className: 'sppcfw-border-b sppcfw-border-[#374151] sppcfw-pb-4 sppcfw-space-y-3' },
-									h(
-										'div',
-										{
-											className: 'sppcfw-flex sppcfw-items-center sppcfw-justify-between sppcfw-cursor-pointer sppcfw-select-none',
-											onClick: () => setIsContainerOpen(!isContainerOpen),
-										},
-										h('h4', { className: 'sppcfw-text-xs sppcfw-font-bold sppcfw-text-white sppcfw-flex sppcfw-items-center sppcfw-gap-1.5' }, h('span', { className: 'sppcfw-text-[10px]' }, isContainerOpen ? '▼' : '▶'), 'Column Width & Size')
-									),
-
-									isContainerOpen &&
-										h(
-											'div',
-											{ className: 'sppcfw-space-y-3.5 sppcfw-pt-1' },
-
-											// Preset Width Buttons (100%, 50%, 33%, 25%, 67%, 75%)
-											h(
-												'div',
-												{ className: 'sppcfw-space-y-1.5' },
-												h('label', { className: 'sppcfw-text-xs sppcfw-text-gray-200 sppcfw-font-medium sppcfw-block' }, 'Quick Width Presets'),
-												h(
-													'div',
-													{ className: 'sppcfw-grid sppcfw-grid-cols-4 sppcfw-gap-1.5' },
-													['100%', '50%', '33.33%', '25%', '66.66%', '75%', '20%'].map(w =>
-														h(
-															'button',
-															{
-																key: w,
-																className: `sppcfw-py-1 sppcfw-text-[11px] sppcfw-font-semibold sppcfw-rounded sppcfw-border sppcfw-transition-all ${
-																	(getSetting('sppcfw-flex_width') || 'sppcfw-100%') === w
-																		? 'sppcfw-bg-[#9333ea] sppcfw-border-[#9333ea] sppcfw-text-white sppcfw-shadow'
-																		: 'sppcfw-bg-[#111827] sppcfw-border-[#374151] sppcfw-text-gray-300 hover:sppcfw-border-[#9333ea] hover:sppcfw-text-white'
-																}`,
-																onClick: () => {
-																	handleSettingChange('flex_width', w);
-																	const targetKey = getDeviceKey('flex_width', deviceView);
-																	updateElementProperties({ ...selectedElement, label: 'Column (' + w + ')', settings: { ...selectedElement.settings, [targetKey]: w } });
-																},
-															},
-															w
-														)
-													)
-												)
-											),
-
-											// Width Slider & Input
-											h(
-												'div',
-												{ className: 'sppcfw-space-y-1.5' },
-												h(
-													'div',
-													{ className: 'sppcfw-flex sppcfw-items-center sppcfw-justify-between' },
-													h('div', { className: 'sppcfw-flex sppcfw-items-center sppcfw-gap-1.5 sppcfw-text-gray-200 sppcfw-font-medium' }, 'Flex Width'),
-													h('span', { className: 'sppcfw-text-[10px] sppcfw-text-gray-300 font-mono' }, getSetting('flex_width') || '100%')
-												),
-												h(
-													'div',
-													{ className: 'sppcfw-flex sppcfw-items-center sppcfw-gap-3' },
-													h('input', {
-														type: 'range',
-														min: 5,
-														max: 100,
-														step: 1,
-														className: 'sppcfw-flex-1 sppcfw-accent-[#9333ea] sppcfw-bg-[#111827] sppcfw-h-1.5 sppcfw-rounded sppcfw-cursor-pointer',
-														value: parseFloat(getSetting('flex_width') || '100') || 100,
-														onChange: e => {
-															const val = e.target.value + '%';
-															handleSettingChange('flex_width', val);
-															const targetKey = getDeviceKey('flex_width', deviceView);
-															updateElementProperties({ ...selectedElement, label: 'Column (' + val + ')', settings: { ...selectedElement.settings, [targetKey]: val } });
-														},
-													}),
-													h('input', {
-														type: 'number',
-														min: 5,
-														max: 100,
-														className: 'sppcfw-w-16 sppcfw-bg-[#111827] sppcfw-border sppcfw-border-[#374151] sppcfw-rounded sppcfw-px-2 sppcfw-py-1 sppcfw-text-xs sppcfw-text-center sppcfw-text-white focus:sppcfw-outline-none focus:sppcfw-border-[#9333ea]',
-														value: parseFloat(getSetting('flex_width') || '100') || 100,
-														onChange: e => {
-															const val = (e.target.value || 100) + '%';
-															handleSettingChange('flex_width', val);
-															const targetKey = getDeviceKey('flex_width', deviceView);
-															updateElementProperties({ ...selectedElement, label: 'Column (' + val + ')', settings: { ...selectedElement.settings, [targetKey]: val } });
-														},
-													})
-												)
-											),
-
-											// Min Height Control
-											h(
-												'div',
-												{ className: 'sppcfw-space-y-1.5' },
-												h(
-													'div',
-													{ className: 'sppcfw-flex sppcfw-items-center sppcfw-justify-between' },
-													h('div', { className: 'sppcfw-flex sppcfw-items-center sppcfw-gap-1.5 sppcfw-text-gray-200 sppcfw-font-medium' }, 'Min Height'),
-													h(
-														'select',
-														{
-															className: 'sppcfw-bg-[#111827] sppcfw-border sppcfw-border-[#374151] sppcfw-text-[10px] sppcfw-text-gray-300 sppcfw-px-1 sppcfw-py-0.5 sppcfw-rounded focus:sppcfw-outline-none',
-															value: heightUnit,
-															onChange: e => setHeightUnit(e.target.value),
-														},
-														h('option', { value: 'px' }, 'px'),
-														h('option', { value: 'vh' }, 'vh')
-													)
-												),
-												h(
-													'div',
-													{ className: 'sppcfw-flex sppcfw-items-center sppcfw-gap-3' },
-													h('input', {
-														type: 'range',
-														min: 0,
-														max: 800,
-														className: 'sppcfw-flex-1 sppcfw-accent-[#9333ea] sppcfw-bg-[#111827] sppcfw-h-1.5 sppcfw-rounded sppcfw-cursor-pointer',
-														value: parseInt(getSetting('min_height') || '0', 10) || 0,
-														onChange: e => handleSettingChange('min_height', e.target.value + heightUnit),
-													}),
-													h('input', {
-														type: 'number',
-														className: 'sppcfw-w-16 sppcfw-bg-[#111827] sppcfw-border sppcfw-border-[#374151] sppcfw-rounded sppcfw-px-2 sppcfw-py-1 sppcfw-text-xs sppcfw-text-center sppcfw-text-white focus:sppcfw-outline-none focus:sppcfw-border-[#9333ea]',
-														value: parseInt(getSetting('min_height') || '0', 10) || '',
-														onChange: e => handleSettingChange('min_height', e.target.value + heightUnit),
-													})
-												)
-											)
-										)
-								),
-
-								// Column Content Layout (Items inside Column)
-								h(
-									'div',
-									{ className: 'sppcfw-border-b sppcfw-border-[#374151] sppcfw-pb-4 sppcfw-space-y-3.5' },
-									h('h4', { className: 'sppcfw-text-xs sppcfw-font-bold sppcfw-text-white' }, 'Column Items Layout'),
-
-									// Direction
-									h(
-										'div',
-										{ className: 'sppcfw-flex sppcfw-items-center sppcfw-justify-between' },
-										h('div', { className: 'sppcfw-flex sppcfw-items-center sppcfw-gap-1.5 sppcfw-text-gray-200 sppcfw-font-medium' }, 'Direction'),
-										h(
-											'div',
-											{ className: 'sppcfw-flex sppcfw-border sppcfw-border-[#374151] sppcfw-rounded sppcfw-bg-[#111827] sppcfw-overflow-hidden' },
-											h('button', { className: `sppcfw-p-1.5 sppcfw-text-xs sppcfw-text-white hover:sppcfw-bg-[#1f2937] ${getSetting('flex_direction') === 'row' ? 'sppcfw-bg-[#374151]' : ''}`, onClick: () => handleSettingChange('flex_direction', 'row'), title: 'Row' }, '→'),
-											h('button', { className: `sppcfw-p-1.5 sppcfw-text-xs sppcfw-text-white hover:sppcfw-bg-[#1f2937] ${getSetting('flex_direction') === 'column' || !getSetting('flex_direction') ? 'sppcfw-bg-[#374151]' : ''}`, onClick: () => handleSettingChange('flex_direction', 'column'), title: 'Column' }, '↓')
-										)
-									),
-
-									// Justify Content
-									h(
-										'div',
-										{ className: 'sppcfw-flex sppcfw-items-center sppcfw-justify-between' },
-										h('div', { className: 'sppcfw-flex sppcfw-items-center sppcfw-gap-1.5 sppcfw-text-gray-200 sppcfw-font-medium' }, 'Justify Content'),
-										h(
-											'div',
-											{ className: 'sppcfw-flex sppcfw-border sppcfw-border-[#374151] sppcfw-rounded sppcfw-bg-[#111827] sppcfw-overflow-hidden' },
-											h('button', { className: `sppcfw-p-1.5 sppcfw-text-xs sppcfw-text-white hover:sppcfw-bg-[#1f2937] ${getSetting('justify_content') === 'flex-start' || !getSetting('justify_content') ? 'sppcfw-bg-[#374151]' : ''}`, onClick: () => handleSettingChange('justify_content', 'flex-start'), title: 'Start' }, '┬'),
-											h('button', { className: `sppcfw-p-1.5 sppcfw-text-xs sppcfw-text-white hover:sppcfw-bg-[#1f2937] ${getSetting('justify_content') === 'center' ? 'sppcfw-bg-[#374151]' : ''}`, onClick: () => handleSettingChange('justify_content', 'center'), title: 'Center' }, '┼'),
-											h('button', { className: `sppcfw-p-1.5 sppcfw-text-xs sppcfw-text-white hover:sppcfw-bg-[#1f2937] ${getSetting('justify_content') === 'flex-end' ? 'sppcfw-bg-[#374151]' : ''}`, onClick: () => handleSettingChange('justify_content', 'flex-end'), title: 'End' }, '┴'),
-										)
-									),
-
-									// Align Items
-									h(
-										'div',
-										{ className: 'sppcfw-flex sppcfw-items-center sppcfw-justify-between' },
-										h('div', { className: 'sppcfw-flex sppcfw-items-center sppcfw-gap-1.5 sppcfw-text-gray-200 sppcfw-font-medium' }, 'Align Items'),
-										h(
-											'div',
-											{ className: 'sppcfw-flex sppcfw-border sppcfw-border-[#374151] sppcfw-rounded sppcfw-bg-[#111827] sppcfw-overflow-hidden' },
-											h('button', { className: `sppcfw-p-1.5 sppcfw-text-xs sppcfw-text-white hover:sppcfw-bg-[#1f2937] ${getSetting('align_items') === 'flex-start' ? 'sppcfw-bg-[#374151]' : ''}`, onClick: () => handleSettingChange('align_items', 'flex-start'), title: 'Start' }, '├─'),
-											h('button', { className: `sppcfw-p-1.5 sppcfw-text-xs sppcfw-text-white hover:sppcfw-bg-[#1f2937] ${getSetting('align_items') === 'center' ? 'sppcfw-bg-[#374151]' : ''}`, onClick: () => handleSettingChange('align_items', 'center'),title: 'Center' }, '─┼─'),
-											h('button', { className: `sppcfw-p-1.5 sppcfw-text-xs sppcfw-text-white hover:sppcfw-bg-[#1f2937] ${getSetting('align_items') === 'flex-end' ? 'sppcfw-bg-[#374151]' : ''}`, onClick: () => handleSettingChange('align_items', 'flex-end'), title: 'End' }, '─┤'),
-											h('button', { className: `sppcfw-p-1.5 sppcfw-text-xs sppcfw-text-white hover:sppcfw-bg-[#1f2937] ${getSetting('align_items') === 'stretch' || !getSetting('align_items') ? 'sppcfw-bg-[#374151]' : ''}`, onClick: () => handleSettingChange('align_items', 'stretch'), title: 'Stretch' }, '↕')
-										)
-									),
-
-									// Widget Gap
-									h(
-										'div',
-										{ className: 'sppcfw-space-y-1.5' },
-										h('label', { className: 'sppcfw-text-xs sppcfw-text-gray-200 sppcfw-font-medium sppcfw-block' }, 'Widget Gap (px)'),
-										h('input', {
-											type: 'number',
-											className: 'sppcfw-w-full sppcfw-bg-[#111827] sppcfw-border sppcfw-border-[#374151] sppcfw-rounded sppcfw-px-2.5 sppcfw-py-1 sppcfw-text-xs sppcfw-text-white focus:sppcfw-outline-none focus:sppcfw-border-[#9333ea]',
-											value: parseInt(getSetting('gap') || '12', 10) || 12,
-											onChange: e => handleSettingChange('gap', e.target.value + 'px'),
-										})
-									)
-								),
-
-								// Column Actions Accordion
-								isColumn &&
-									h(
-										'div',
-										{ className: 'sppcfw-space-y-2 sppcfw-pt-2' },
-										h('h4', { className: 'sppcfw-text-xs sppcfw-font-bold sppcfw-text-white sppcfw-mb-2' }, 'Column Actions'),
-										h(
-											'button',
-											{
-												className: 'sppcfw-w-full sppcfw-py-2 sppcfw-bg-[#9333ea] hover:sppcfw-bg-[#7e22ce] sppcfw-text-white sppcfw-rounded sppcfw-font-bold sppcfw-flex sppcfw-items-center sppcfw-justify-center sppcfw-gap-1.5 sppcfw-transition-colors sppcfw-shadow sppcfw-text-xs sppcfw-cursor-pointer',
-												onClick: () => addColumnToContainer && addColumnToContainer(selectedElement.id),
-											},
-											h('span', { className: 'material-symbols-outlined sppcfw-text-sm' }, 'add'),
-											'Add New Column To Container'
-										),
-										h(
-											'div',
-											{ className: 'sppcfw-flex sppcfw-gap-2' },
-											h(
-												'button',
-												{
-													className: 'sppcfw-flex-1 sppcfw-py-1.5 sppcfw-bg-[#374151] hover:sppcfw-bg-[#4b5563] sppcfw-text-white sppcfw-rounded sppcfw-font-semibold sppcfw-flex sppcfw-items-center sppcfw-justify-center sppcfw-gap-1 sppcfw-transition-colors sppcfw-text-xs sppcfw-cursor-pointer',
-													onClick: () => duplicateColumn && duplicateColumn(selectedElement.id),
-												},
-												h('span', { className: 'material-symbols-outlined sppcfw-text-xs' }, 'content_copy'),
-												'Duplicate'
-											),
-											h(
-												'button',
-												{
-													className: 'sppcfw-flex-1 sppcfw-py-1.5 sppcfw-bg-red-900/40 hover:sppcfw-bg-red-800/60 sppcfw-border sppcfw-border-red-700/50 sppcfw-text-red-200 sppcfw-rounded sppcfw-font-semibold sppcfw-flex sppcfw-items-center sppcfw-justify-center sppcfw-gap-1 sppcfw-transition-colors sppcfw-text-xs sppcfw-cursor-pointer',
-													onClick: () => removeElement && removeElement(selectedElement.id),
-												},
-												h('span', { className: 'material-symbols-outlined sppcfw-text-xs' }, 'delete'),
-												'Delete'
-											)
-										)
-									)
-							),
-
-						// 1. PRODUCT GALLERY CONTENT CONTROLS (Dedicated WooCommerce Product Gallery)
-						isProductGallery &&
-							h(
-								'div',
-								{ className: 'sppcfw-space-y-4' },
-
-								// Info Banner
-								h(
-									'div',
-									{ className: 'sppcfw-bg-[#16202e] sppcfw-border sppcfw-border-[#3b4b62] sppcfw-rounded-lg sppcfw-p-3.5 sppcfw-space-y-1.5' },
-									h(
-										'div',
-										{ className: 'sppcfw-flex sppcfw-items-center sppcfw-gap-1.5 sppcfw-text-xs sppcfw-font-bold sppcfw-text-[#92ccff]' },
-										h('span', { className: 'material-symbols-outlined sppcfw-text-base' }, 'collections'),
-										'WooCommerce Product Images'
-									),
-									h(
-										'p',
-										{ className: 'sppcfw-text-[11px] sppcfw-text-[#9ca3af] sppcfw-leading-relaxed' },
-										'This widget dynamically displays the WooCommerce featured image and gallery thumbnails. For variable products, the main image automatically switches when a variation is selected.'
-									)
-								),
-
-								// Gallery Features Accordion
-								h(
-									'div',
-									{ className: 'sppcfw-border-b sppcfw-border-[#374151] sppcfw-pb-4 sppcfw-space-y-3.5' },
-									h(
-										'div',
-										{
-											className: 'sppcfw-flex sppcfw-items-center sppcfw-justify-between sppcfw-cursor-pointer sppcfw-select-none',
-											onClick: () => setIsImageOpen(!isImageOpen),
-										},
-										h(
-											'h4',
-											{ className: 'sppcfw-text-xs sppcfw-font-bold sppcfw-text-white sppcfw-flex sppcfw-items-center sppcfw-gap-1.5' },
-											h('span', { className: 'sppcfw-text-[10px] sppcfw-text-gray-300' }, isImageOpen ? '▾' : '▸'),
-											'Gallery Display Options'
-										)
-									),
-
-									isImageOpen &&
-										h(
-											'div',
-											{ className: 'sppcfw-space-y-3.5 sppcfw-pt-1' },
-
-											// Show Thumbnails Toggle
-											h(
-												'div',
-												{ className: 'sppcfw-flex sppcfw-items-center sppcfw-justify-between' },
-												h('label', { className: 'sppcfw-text-xs sppcfw-text-[#d1d5db] sppcfw-font-medium' }, 'Show Gallery Thumbnails'),
-												h('input', {
-													type: 'checkbox',
-													className: 'sppcfw-accent-[#9333ea] sppcfw-cursor-pointer sppcfw-w-4 sppcfw-h-4',
-													checked: getSetting('show_thumbnails') !== false,
-													onChange: e => handleSettingChange('show_thumbnails', e.target.checked),
-												})
-											),
-
-											// Thumbnails Columns
-											getSetting('show_thumbnails') !== false &&
-												h(
-													'div',
-													{ className: 'sppcfw-flex sppcfw-items-center sppcfw-justify-between' },
-													h('label', { className: 'sppcfw-text-xs sppcfw-text-[#d1d5db] sppcfw-font-medium' }, 'Thumbnail Columns'),
-													h(
-														'select',
-														{
-															className: 'sppcfw-bg-[#111827] sppcfw-border sppcfw-border-[#374151] sppcfw-rounded sppcfw-px-2.5 sppcfw-py-1.5 sppcfw-text-xs sppcfw-text-white focus:sppcfw-outline-none focus:sppcfw-border-[#9333ea] sppcfw-w-36',
-															value: getSetting('gallery_columns') || '4',
-															onChange: e => handleSettingChange('gallery_columns', e.target.value),
-														},
-														h('option', { value: '3' }, '3 Columns'),
-														h('option', { value: '4' }, '4 Columns'),
-														h('option', { value: '5' }, '5 Columns'),
-														h('option', { value: '6' }, '6 Columns')
-													)
-												),
-
-											// Lightbox Popup
-											h(
-												'div',
-												{ className: 'sppcfw-flex sppcfw-items-center sppcfw-justify-between' },
-												h('label', { className: 'sppcfw-text-xs sppcfw-text-[#d1d5db] sppcfw-font-medium' }, 'Lightbox Popup'),
-												h('input', {
-													type: 'checkbox',
-													className: 'sppcfw-accent-[#9333ea] sppcfw-cursor-pointer sppcfw-w-4 sppcfw-h-4',
-													checked: getSetting('enable_lightbox') !== false,
-													onChange: e => handleSettingChange('enable_lightbox', e.target.checked),
-												})
-											),
-
-											// Image Zoom
-											h(
-												'div',
-												{ className: 'sppcfw-flex sppcfw-items-center sppcfw-justify-between' },
-												h('label', { className: 'sppcfw-text-xs sppcfw-text-[#d1d5db] sppcfw-font-medium' }, 'Image Zoom On Hover'),
-												h('input', {
-													type: 'checkbox',
-													className: 'sppcfw-accent-[#9333ea] sppcfw-cursor-pointer sppcfw-w-4 sppcfw-h-4',
-													checked: getSetting('enable_zoom') !== false,
-													onChange: e => handleSettingChange('enable_zoom', e.target.checked),
-												})
-											),
-
-											// Gallery Alignment
-											h(
-												'div',
-												{ className: 'sppcfw-space-y-1.5 sppcfw-pt-1' },
-												renderControlHeader('Gallery Alignment', true),
-												renderButtonGroup(
-													[
-														{ value: 'left', icon: 'format_align_left', title: 'Left' },
-														{ value: 'center', icon: 'format_align_center', title: 'Center' },
-														{ value: 'right', icon: 'format_align_right', title: 'Right' },
-													],
-													getStyle('alignment') || 'center',
-													v => handleStyleChange('alignment', v)
-												)
-											)
-										)
-								)
-							),
-
-						// 2. CUSTOM IMAGE CONTENT CONTROLS (Manual Image Insertion Outside/Inside Product)
-						isCustomImage &&
-							h(
-								'div',
-								{ className: 'sppcfw-space-y-4' },
-
-								// Accordion: Custom Image
-								h(
-									'div',
-									{ className: 'sppcfw-border-b sppcfw-border-[#374151] sppcfw-pb-4 sppcfw-space-y-3.5' },
-									h(
-										'div',
-										{
-											className: 'sppcfw-flex sppcfw-items-center sppcfw-justify-between sppcfw-cursor-pointer sppcfw-select-none',
-											onClick: () => setIsImageOpen(!isImageOpen),
-										},
-										h(
-											'h4',
-											{ className: 'sppcfw-text-xs sppcfw-font-bold sppcfw-text-white sppcfw-flex sppcfw-items-center sppcfw-gap-1.5' },
-											h('span', { className: 'sppcfw-text-[10px] sppcfw-text-gray-300' }, isImageOpen ? '▾' : '▸'),
-											'Custom Image'
-										)
-									),
-
-									isImageOpen &&
-										h(
-											'div',
-											{ className: 'sppcfw-space-y-4 sppcfw-pt-1' },
-
-											// Choose Image Box / Preview
-											h(
-												'div',
-												{ className: 'sppcfw-space-y-2' },
-												h('label', { className: 'sppcfw-text-xs sppcfw-text-[#d1d5db] sppcfw-font-medium sppcfw-block' }, 'Choose Image'),
-												h(
-													'div',
-													{
-														className: 'sppcfw-border-2 sppcfw-border-dashed sppcfw-border-[#374151] hover:sppcfw-border-[#9333ea] sppcfw-rounded-lg sppcfw-p-3 sppcfw-bg-[#111827] sppcfw-text-center sppcfw-cursor-pointer sppcfw-transition-colors sppcfw-relative group',
-														onClick: () => {
-															if (typeof wp !== 'undefined' && wp.media) {
-																const frame = wp.media({
-																	title: 'Select Image',
-																	button: { text: 'Insert Image' },
-																	multiple: false,
-																});
-																frame.on('select', () => {
-																	const attachment = frame.state().get('selection').first().toJSON();
-																	if (attachment && attachment.url) {
-																		handleSettingChange('custom_image_url', attachment.url);
-																		if (attachment.alt && !getSetting('alt_text')) {
-																			handleSettingChange('alt_text', attachment.alt);
-																		}
-																	}
-																});
-																frame.open();
-															} else {
-																const url = prompt('Enter Image URL:', getSetting('custom_image_url') || '');
-																if (url !== null && url.trim() !== '') {
-																	handleSettingChange('custom_image_url', url.trim());
-																}
-															}
-														},
-													},
-													getSetting('custom_image_url')
-														? h(
-																'div',
-																{ className: 'sppcfw-space-y-2' },
-																h('img', {
-																	src: getSetting('custom_image_url'),
-																	alt: getSetting('alt_text') || 'Selected Custom Preview',
-																	className: 'sppcfw-h-32 sppcfw-w-full sppcfw-object-contain sppcfw-rounded sppcfw-bg-[#091421]/60 sppcfw-p-1',
-																}),
-																h('div', { className: 'sppcfw-text-[11px] sppcfw-text-[#ddb8ff] sppcfw-font-semibold' }, 'Click to Change Image')
-														  )
-														: h(
-																'div',
-																{ className: 'sppcfw-py-6 sppcfw-space-y-2' },
-																h('span', { className: 'material-symbols-outlined sppcfw-text-3xl sppcfw-text-gray-400 group-hover:sppcfw-text-[#ddb8ff] sppcfw-transition-colors' }, 'add_photo_alternate'),
-																h('div', { className: 'sppcfw-text-xs sppcfw-font-semibold sppcfw-text-gray-200' }, 'Choose Image from Media Library'),
-																h('div', { className: 'sppcfw-text-[10px] sppcfw-text-gray-400' }, 'Insert any custom image outside of this product')
-														  )
-												),
-												getSetting('custom_image_url') &&
-													h(
-														'div',
-														{ className: 'sppcfw-flex sppcfw-items-center sppcfw-justify-between sppcfw-pt-1' },
-														h(
-															'button',
-															{
-																type: 'button',
-																className: 'sppcfw-text-[11px] sppcfw-text-red-400 hover:sppcfw-text-red-300 sppcfw-underline sppcfw-cursor-pointer',
-																onClick: () => handleSettingChange('custom_image_url', ''),
-															},
-															'Remove Image'
-														),
-														h(
-															'span',
-															{ className: 'sppcfw-text-[10px] sppcfw-text-gray-400' },
-															'Custom Image Set'
-														)
-													)
-											),
-
-											// Direct Image URL Field
-											h(
-												'div',
-												{ className: 'sppcfw-space-y-1' },
-												h('label', { className: 'sppcfw-text-xs sppcfw-text-[#d1d5db] sppcfw-font-medium' }, 'Image URL (Direct)'),
-												h('input', {
-													type: 'text',
-													className: 'sppcfw-w-full sppcfw-bg-[#111827] sppcfw-border sppcfw-border-[#374151] sppcfw-rounded sppcfw-px-2.5 sppcfw-py-1.5 sppcfw-text-xs sppcfw-text-white focus:sppcfw-outline-none focus:sppcfw-border-[#9333ea]',
-													value: getSetting('custom_image_url') || '',
-													placeholder: 'https://example.com/image.jpg',
-													onChange: e => handleSettingChange('custom_image_url', e.target.value),
-												})
-											),
-
-											// Alt Text
-											h(
-												'div',
-												{ className: 'sppcfw-space-y-1' },
-												h('label', { className: 'sppcfw-text-xs sppcfw-text-[#d1d5db] sppcfw-font-medium' }, 'Alt Text'),
-												h('input', {
-													type: 'text',
-													className: 'sppcfw-w-full sppcfw-bg-[#111827] sppcfw-border sppcfw-border-[#374151] sppcfw-rounded sppcfw-px-2.5 sppcfw-py-1.5 sppcfw-text-xs sppcfw-text-white focus:sppcfw-outline-none focus:sppcfw-border-[#9333ea]',
-													value: getSetting('alt_text') || '',
-													placeholder: 'Descriptive alt text for image',
-													onChange: e => handleSettingChange('alt_text', e.target.value),
-												})
-											),
-
-											// Image Resolution (Size)
-											h(
-												'div',
-												{ className: 'sppcfw-flex sppcfw-items-center sppcfw-justify-between' },
-												h('label', { className: 'sppcfw-text-xs sppcfw-text-[#d1d5db] sppcfw-font-medium' }, 'Image Resolution'),
-												h(
-													'div',
-													{ className: 'sppcfw-relative sppcfw-w-44' },
-													h(
-														'select',
-														{
-															className: 'sppcfw-w-full sppcfw-bg-[#111827] sppcfw-border sppcfw-border-[#374151] sppcfw-rounded sppcfw-px-2.5 sppcfw-py-1.5 sppcfw-pr-6 sppcfw-text-xs sppcfw-text-white sppcfw-appearance-none focus:sppcfw-outline-none focus:sppcfw-border-[#9333ea] sppcfw-cursor-pointer',
-															value: getSetting('image_size') || 'large',
-															onChange: e => handleSettingChange('image_size', e.target.value),
-														},
-														h('option', { value: 'thumbnail' }, 'Thumbnail (150x150)'),
-														h('option', { value: 'medium' }, 'Medium (300x300)'),
-														h('option', { value: 'large' }, 'Large (1024x1024)'),
-														h('option', { value: 'full' }, 'Full Size')
-													)
-												)
-											),
-
-											// Alignment
-											h(
-												'div',
-												{ className: 'sppcfw-space-y-1.5' },
-												renderControlHeader('Alignment', true),
-												renderButtonGroup(
-													[
-														{ value: 'left', icon: 'format_align_left', title: 'Left' },
-														{ value: 'center', icon: 'format_align_center', title: 'Center' },
-														{ value: 'right', icon: 'format_align_right', title: 'Right' },
-													],
-													getStyle('alignment') || 'center',
-													v => handleStyleChange('alignment', v)
-												)
-											),
-
-											// Caption
-											h(
-												'div',
-												{ className: 'sppcfw-flex sppcfw-items-center sppcfw-justify-between' },
-												h('label', { className: 'sppcfw-text-xs sppcfw-text-[#d1d5db] sppcfw-font-medium' }, 'Caption'),
-												h(
-													'div',
-													{ className: 'sppcfw-relative sppcfw-w-44' },
-													h(
-														'select',
-														{
-															className: 'sppcfw-w-full sppcfw-bg-[#111827] sppcfw-border sppcfw-border-[#374151] sppcfw-rounded sppcfw-px-2.5 sppcfw-py-1.5 sppcfw-pr-6 sppcfw-text-xs sppcfw-text-white sppcfw-appearance-none focus:sppcfw-outline-none focus:sppcfw-border-[#9333ea] sppcfw-cursor-pointer',
-															value: getSetting('caption_type') || 'none',
-															onChange: e => handleSettingChange('caption_type', e.target.value),
-														},
-														h('option', { value: 'none' }, 'None'),
-														h('option', { value: 'custom' }, 'Custom Caption')
-													)
-												)
-											),
-											getSetting('caption_type') === 'custom' &&
-												h(
-													'div',
-													{ className: 'sppcfw-space-y-1' },
-													h('label', { className: 'sppcfw-text-xs sppcfw-text-[#d1d5db] sppcfw-font-medium' }, 'Custom Caption Text'),
-													h('input', {
-														type: 'text',
-														className: 'sppcfw-w-full sppcfw-bg-[#111827] sppcfw-border sppcfw-border-[#374151] sppcfw-rounded sppcfw-px-2.5 sppcfw-py-1.5 sppcfw-text-xs sppcfw-text-white focus:sppcfw-outline-none focus:sppcfw-border-[#9333ea]',
-														value: getSetting('custom_caption') || '',
-														placeholder: 'Enter image caption...',
-														onChange: e => handleSettingChange('custom_caption', e.target.value),
-													})
-												),
-
-											// Link
-											h(
-												'div',
-												{ className: 'sppcfw-flex sppcfw-items-center sppcfw-justify-between' },
-												h('label', { className: 'sppcfw-text-xs sppcfw-text-[#d1d5db] sppcfw-font-medium' }, 'Link'),
-												h(
-													'div',
-													{ className: 'sppcfw-relative sppcfw-w-44' },
-													h(
-														'select',
-														{
-															className: 'sppcfw-w-full sppcfw-bg-[#111827] sppcfw-border sppcfw-border-[#374151] sppcfw-rounded sppcfw-px-2.5 sppcfw-py-1.5 sppcfw-pr-6 sppcfw-text-xs sppcfw-text-white sppcfw-appearance-none focus:sppcfw-outline-none focus:sppcfw-border-[#9333ea] sppcfw-cursor-pointer',
-															value: getSetting('link_to') || 'none',
-															onChange: e => handleSettingChange('link_to', e.target.value),
-														},
-														h('option', { value: 'none' }, 'None'),
-														h('option', { value: 'file' }, 'Media File'),
-														h('option', { value: 'custom' }, 'Custom URL')
-													)
-												)
-											),
-											getSetting('link_to') === 'custom' &&
-												h(
-													'div',
-													{ className: 'sppcfw-space-y-2' },
-													h('label', { className: 'sppcfw-text-xs sppcfw-text-[#d1d5db] sppcfw-font-medium' }, 'Custom Link URL'),
-													h('input', {
-														type: 'text',
-														className: 'sppcfw-w-full sppcfw-bg-[#111827] sppcfw-border sppcfw-border-[#374151] sppcfw-rounded sppcfw-px-2.5 sppcfw-py-1.5 sppcfw-text-xs sppcfw-text-white focus:sppcfw-outline-none focus:sppcfw-border-[#9333ea]',
-														value: getSetting('custom_link') || '',
-														placeholder: 'https://...',
-														onChange: e => handleSettingChange('custom_link', e.target.value),
-													}),
-													h(
-														'div',
-														{ className: 'sppcfw-flex sppcfw-items-center sppcfw-gap-2 sppcfw-pt-1' },
-														h('input', {
-															type: 'checkbox',
-															id: 'img-link-blank',
-															className: 'sppcfw-accent-[#9333ea] sppcfw-cursor-pointer',
-															checked: !!getSetting('link_target_blank'),
-															onChange: e => handleSettingChange('link_target_blank', e.target.checked),
-														}),
-														h('label', { htmlFor: 'img-link-blank', className: 'sppcfw-text-xs sppcfw-text-gray-300 sppcfw-cursor-pointer' }, 'Open in new window')
-													),
-													h(
-														'div',
-														{ className: 'sppcfw-flex sppcfw-items-center sppcfw-gap-2' },
-														h('input', {
-															type: 'checkbox',
-															id: 'img-link-nofollow',
-															className: 'sppcfw-accent-[#9333ea] sppcfw-cursor-pointer',
-															checked: !!getSetting('link_rel_nofollow'),
-															onChange: e => handleSettingChange('link_rel_nofollow', e.target.checked),
-														}),
-														h('label', { htmlFor: 'img-link-nofollow', className: 'sppcfw-text-xs sppcfw-text-gray-300 sppcfw-cursor-pointer' }, 'Add rel="nofollow"')
-													)
-												)
-										)
-								)
-							),
-
-						// OTHER PRODUCT WIDGET CONTENT PANELS (WHEN TITLE, PRICE, BUTTON, ETC IS SELECTED)
-						!isContainer && !isColumn && !isImage &&
-							h(
-								'div',
-								{ className: 'sppcfw-space-y-4' },
-
-								// General Widget Content Accordion
-								h(
-									'div',
-									{ className: 'sppcfw-border-b sppcfw-border-[#374151] sppcfw-pb-4 sppcfw-space-y-3.5' },
-									h(
-										'div',
-										{
-											className: 'sppcfw-flex sppcfw-items-center sppcfw-justify-between sppcfw-cursor-pointer sppcfw-select-none',
-											onClick: () => setIsImageOpen(!isImageOpen),
-										},
-										h(
-											'h4',
-											{ className: 'sppcfw-text-xs sppcfw-font-bold sppcfw-text-white sppcfw-flex sppcfw-items-center sppcfw-gap-1.5' },
-											h('span', { className: 'sppcfw-text-[10px] sppcfw-text-gray-300' }, isImageOpen ? '▾' : '▸'),
-											selectedElement.label || 'Widget Content'
-										)
-									),
-
-									isImageOpen &&
-										h(
-											'div',
-											{ className: 'sppcfw-space-y-3.5 sppcfw-pt-1' },
-
-											// Product Title Settings (Pure WooCommerce Dynamic Title)
-											selectedElement.type === 'product_title' &&
-												h(
-													'div',
-													{ className: 'sppcfw-space-y-3' },
-													h(
-														'div',
-														{ className: 'sppcfw-bg-[#16202e] sppcfw-border sppcfw-border-[#3b4b62] sppcfw-rounded-lg sppcfw-p-3 sppcfw-space-y-1' },
-														h(
-															'div',
-															{ className: 'sppcfw-flex sppcfw-items-center sppcfw-gap-1.5 sppcfw-text-xs sppcfw-font-bold sppcfw-text-[#92ccff]' },
-															h('span', { className: 'material-symbols-outlined sppcfw-text-sm' }, 'title'),
-															'WooCommerce Product Title'
-														),
-														h(
-															'p',
-															{ className: 'sppcfw-text-[11px] sppcfw-text-[#9ca3af] sppcfw-leading-relaxed' },
-															'This widget dynamically displays the title of the current WooCommerce product directly from your catalog.'
-														)
-													),
-													h(
-														'div',
-														{ className: 'sppcfw-flex sppcfw-items-center sppcfw-justify-between' },
-														h('label', { className: 'sppcfw-text-xs sppcfw-text-[#d1d5db] sppcfw-font-medium' }, 'HTML Tag'),
-														h(
-															'select',
-															{
-																className: 'sppcfw-bg-[#111827] sppcfw-border sppcfw-border-[#374151] sppcfw-rounded sppcfw-px-2 sppcfw-py-1 sppcfw-text-xs sppcfw-text-white focus:sppcfw-outline-none',
-																value: getSetting('html_tag') || 'h1',
-																onChange: e => handleSettingChange('html_tag', e.target.value),
-															},
-															['h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'div', 'span', 'p'].map(tag => h('option', { key: tag, value: tag }, tag.toUpperCase()))
-														)
-													),
-													h(
-														'div',
-														{ className: 'sppcfw-space-y-1.5' },
-														renderControlHeader('Alignment', true),
-														renderButtonGroup(
-															[
-																{ value: 'left', icon: 'format_align_left', title: 'Left' },
-																{ value: 'center', icon: 'format_align_center', title: 'Center' },
-																{ value: 'right', icon: 'format_align_right', title: 'Right' },
-															],
-															getStyle('alignment') || 'left',
-															v => handleStyleChange('alignment', v)
-														)
-													)
-												),
-
-											// Heading / Title Settings (Manual Custom Heading)
-											selectedElement.type === 'heading' &&
-												h(
-													'div',
-													{ className: 'sppcfw-space-y-3' },
-													h(
-														'div',
-														{ className: 'sppcfw-space-y-1' },
-														h('label', { className: 'sppcfw-text-xs sppcfw-text-[#d1d5db] sppcfw-font-medium' }, 'Heading Text'),
-														h('input', {
-															type: 'text',
-															className: 'sppcfw-w-full sppcfw-bg-[#111827] sppcfw-border sppcfw-border-[#374151] sppcfw-rounded sppcfw-px-2.5 sppcfw-py-1.5 sppcfw-text-xs sppcfw-text-white focus:sppcfw-outline-none focus:sppcfw-border-[#9333ea]',
-															value: getSetting('text') !== undefined ? getSetting('text') : 'Add Your Heading Text Here',
-															placeholder: 'Enter heading text...',
-															onChange: e => handleSettingChange('text', e.target.value),
-														})
-													),
-													h(
-														'div',
-														{ className: 'sppcfw-flex sppcfw-items-center sppcfw-justify-between' },
-														h('label', { className: 'sppcfw-text-xs sppcfw-text-[#d1d5db] sppcfw-font-medium' }, 'HTML Tag'),
-														h(
-															'select',
-															{
-																className: 'sppcfw-bg-[#111827] sppcfw-border sppcfw-border-[#374151] sppcfw-rounded sppcfw-px-2 sppcfw-py-1 sppcfw-text-xs sppcfw-text-white focus:sppcfw-outline-none',
-																value: getSetting('html_tag') || 'h2',
-																onChange: e => handleSettingChange('html_tag', e.target.value),
-															},
-															['h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'div', 'span', 'p'].map(tag => h('option', { key: tag, value: tag }, tag.toUpperCase()))
-														)
-													),
-													h(
-														'div',
-														{ className: 'sppcfw-space-y-1' },
-														h('label', { className: 'sppcfw-text-xs sppcfw-text-[#d1d5db] sppcfw-font-medium' }, 'Link URL (optional)'),
-														h('input', {
-															type: 'text',
-															className: 'sppcfw-w-full sppcfw-bg-[#111827] sppcfw-border sppcfw-border-[#374151] sppcfw-rounded sppcfw-px-2.5 sppcfw-py-1.5 sppcfw-text-xs sppcfw-text-white focus:sppcfw-outline-none focus:sppcfw-border-[#9333ea]',
-															value: getSetting('link_url') || '',
-															placeholder: 'https://...',
-															onChange: e => handleSettingChange('link_url', e.target.value),
-														})
-													),
-													h(
-														'div',
-														{ className: 'sppcfw-space-y-1.5' },
-														renderControlHeader('Alignment', true),
-														renderButtonGroup(
-															[
-																{ value: 'left', icon: 'format_align_left', title: 'Left' },
-																{ value: 'center', icon: 'format_align_center', title: 'Center' },
-																{ value: 'right', icon: 'format_align_right', title: 'Right' },
-															],
-															getStyle('alignment') || 'left',
-															v => handleStyleChange('alignment', v)
-														)
-													)
-												),
-
-											// Text Editor Settings (Manual Custom Description / Paragraphs)
-											selectedElement.type === 'text_editor' &&
-												h(
-													'div',
-													{ className: 'sppcfw-space-y-3' },
-													h(
-														'div',
-														{ className: 'sppcfw-space-y-1' },
-														h('label', { className: 'sppcfw-text-xs sppcfw-text-[#d1d5db] sppcfw-font-medium' }, 'Text Content'),
-														h('textarea', {
-															rows: 5,
-															className: 'sppcfw-w-full sppcfw-bg-[#111827] sppcfw-border sppcfw-border-[#374151] sppcfw-rounded sppcfw-p-2.5 sppcfw-text-xs sppcfw-text-white focus:sppcfw-outline-none focus:sppcfw-border-[#9333ea]',
-															value: getSetting('text_content') !== undefined ? getSetting('text_content') : 'Add your custom description or paragraph content here...',
-															placeholder: 'Enter custom text or description...',
-															onChange: e => handleSettingChange('text_content', e.target.value),
-														})
-													),
-													h(
-														'div',
-														{ className: 'sppcfw-flex sppcfw-items-center sppcfw-justify-between' },
-														h('label', { className: 'sppcfw-text-xs sppcfw-text-[#d1d5db] sppcfw-font-medium' }, 'HTML Tag'),
-														h(
-															'select',
-															{
-																className: 'sppcfw-bg-[#111827] sppcfw-border sppcfw-border-[#374151] sppcfw-rounded sppcfw-px-2 sppcfw-py-1 sppcfw-text-xs sppcfw-text-white focus:sppcfw-outline-none',
-																value: getSetting('html_tag') || 'div',
-																onChange: e => handleSettingChange('html_tag', e.target.value),
-															},
-															['div', 'p', 'span'].map(tag => h('option', { key: tag, value: tag }, tag.toUpperCase()))
-														)
-													),
-													h(
-														'div',
-														{ className: 'sppcfw-space-y-1.5' },
-														renderControlHeader('Alignment', true),
-														renderButtonGroup(
-															[
-																{ value: 'left', icon: 'format_align_left', title: 'Left' },
-																{ value: 'center', icon: 'format_align_center', title: 'Center' },
-																{ value: 'right', icon: 'format_align_right', title: 'Right' },
-															],
-															getStyle('alignment') || 'left',
-															v => handleStyleChange('alignment', v)
-														)
-													)
-												),
-
-											// Product Price Settings
-											selectedElement.type === 'product_price' &&
-												h(
-													'div',
-													{ className: 'sppcfw-space-y-3' },
-													h(
-														'div',
-														{ className: 'sppcfw-space-y-1.5' },
-														renderControlHeader('Alignment', true),
-														renderButtonGroup(
-															[
-																{ value: 'left', icon: 'format_align_left', title: 'Left' },
-																{ value: 'center', icon: 'format_align_center', title: 'Center' },
-																{ value: 'right', icon: 'format_align_right', title: 'Right' },
-															],
-															getStyle('alignment') || 'left',
-															v => handleStyleChange('alignment', v)
-														)
-													)
-												),
-
-											// Product Add to Cart Settings
-											selectedElement.type === 'product_add_to_cart' &&
-												h(
-													'div',
-													{ className: 'sppcfw-space-y-3' },
-													h(
-														'div',
-														{ className: 'sppcfw-space-y-1' },
-														h('label', { className: 'sppcfw-text-xs sppcfw-text-[#d1d5db] sppcfw-font-medium' }, 'Button Text'),
-														h('input', {
-															type: 'text',
-															className: 'sppcfw-w-full sppcfw-bg-[#111827] sppcfw-border sppcfw-border-[#374151] sppcfw-rounded sppcfw-px-2.5 sppcfw-py-1.5 sppcfw-text-xs sppcfw-text-white focus:sppcfw-outline-none focus:sppcfw-border-[#9333ea]',
-															value: getSetting('button_text') || 'Add to cart',
-															onChange: e => handleSettingChange('button_text', e.target.value),
-														})
-													),
-													h(
-														'div',
-														{ className: 'sppcfw-space-y-1.5' },
-														renderControlHeader('Alignment', true),
-														renderButtonGroup(
-															[
-																{ value: 'left', icon: 'format_align_left', title: 'Left' },
-																{ value: 'center', icon: 'format_align_center', title: 'Center' },
-																{ value: 'right', icon: 'format_align_right', title: 'Right' },
-															],
-															getStyle('alignment') || 'left',
-															v => handleStyleChange('alignment', v)
-														)
-													)
-												),
-
-											// Product Short Description Settings (Dynamic WooCommerce Excerpt)
-											selectedElement.type === 'product_short_desc' &&
-												h(
-													'div',
-													{ className: 'sppcfw-space-y-3' },
-													h(
-														'div',
-														{ className: 'sppcfw-bg-[#16202e] sppcfw-border sppcfw-border-[#3b4b62] sppcfw-rounded-lg sppcfw-p-3 sppcfw-space-y-1' },
-														h(
-															'div',
-															{ className: 'sppcfw-flex sppcfw-items-center sppcfw-gap-1.5 sppcfw-text-xs sppcfw-font-bold sppcfw-text-[#92ccff]' },
-															h('span', { className: 'material-symbols-outlined sppcfw-text-sm' }, 'description'),
-															'WooCommerce Short Description'
-														),
-														h(
-															'p',
-															{ className: 'sppcfw-text-[11px] sppcfw-text-[#9ca3af] sppcfw-leading-relaxed' },
-															'This widget dynamically outputs the short description / excerpt of the current WooCommerce product.'
-														)
-													),
-													h(
-														'div',
-														{ className: 'sppcfw-space-y-1.5' },
-														renderControlHeader('Alignment', true),
-														renderButtonGroup(
-															[
-																{ value: 'left', icon: 'format_align_left', title: 'Left' },
-																{ value: 'center', icon: 'format_align_center', title: 'Center' },
-																{ value: 'right', icon: 'format_align_right', title: 'Right' },
-															],
-															getStyle('alignment') || 'left',
-															v => handleStyleChange('alignment', v)
-														)
-													)
-												),
-
-											// Product Full Description & Tabs Settings (Dynamic WooCommerce Tabs)
-											selectedElement.type === 'product_description' &&
-												h(
-													'div',
-													{ className: 'sppcfw-space-y-3' },
-													h(
-														'div',
-														{ className: 'sppcfw-bg-[#16202e] sppcfw-border sppcfw-border-[#3b4b62] sppcfw-rounded-lg sppcfw-p-3 sppcfw-space-y-1' },
-														h(
-															'div',
-															{ className: 'sppcfw-flex sppcfw-items-center sppcfw-gap-1.5 sppcfw-text-xs sppcfw-font-bold sppcfw-text-[#92ccff]' },
-															h('span', { className: 'material-symbols-outlined sppcfw-text-sm' }, 'toc'),
-															'WooCommerce Full Description & Tabs'
-														),
-														h(
-															'p',
-															{ className: 'sppcfw-text-[11px] sppcfw-text-[#9ca3af] sppcfw-leading-relaxed' },
-															'This widget dynamically outputs the full description, reviews, and additional information tabs from WooCommerce.'
-														)
-													),
-													h(
-														'div',
-														{ className: 'sppcfw-space-y-1.5' },
-														renderControlHeader('Alignment', true),
-														renderButtonGroup(
-															[
-																{ value: 'left', icon: 'format_align_left', title: 'Left' },
-																{ value: 'center', icon: 'format_align_center', title: 'Center' },
-																{ value: 'right', icon: 'format_align_right', title: 'Right' },
-															],
-															getStyle('alignment') || 'left',
-															v => handleStyleChange('alignment', v)
-														)
-													)
-												),
-
-											// Generic Widget Settings
-											selectedElement.type !== 'product_title' &&
-												selectedElement.type !== 'heading' &&
-												selectedElement.type !== 'text_editor' &&
-												selectedElement.type !== 'product_price' &&
-												selectedElement.type !== 'product_add_to_cart' &&
-												selectedElement.type !== 'product_short_desc' &&
-												selectedElement.type !== 'product_description' &&
-												h(
-													'div',
-													{ className: 'sppcfw-space-y-3' },
-													h(
-														'div',
-														{ className: 'sppcfw-space-y-1.5' },
-														renderControlHeader('Alignment', true),
-														renderButtonGroup(
-															[
-																{ value: 'left', icon: 'format_align_left', title: 'Left' },
-																{ value: 'center', icon: 'format_align_center', title: 'Center' },
-																{ value: 'right', icon: 'format_align_right', title: 'Right' },
-															],
-															getStyle('alignment') || 'left',
-															v => handleStyleChange('alignment', v)
-														)
-													)
-												)
-										)
-								)
-							)
-					),
-
-				// --- 2. STYLE TAB (Matching Screenshot 2) ---
-				activeTab === 'style' &&
-					h(
-						'div',
-						{ className: 'sppcfw-space-y-4' },
-
-						// Product Gallery / Image Style Accordion (Screenshot 2)
-						isImage &&
-							h(
-								'div',
-								{ className: 'sppcfw-border-b sppcfw-border-[#374151] sppcfw-pb-4 sppcfw-space-y-3.5' },
-								h(
-									'div',
-									{
-										className: 'sppcfw-flex sppcfw-items-center sppcfw-justify-between sppcfw-cursor-pointer sppcfw-select-none',
-										onClick: () => setIsImageOpen(!isImageOpen),
-									},
-									h('h4', { className: 'sppcfw-text-xs sppcfw-font-bold sppcfw-text-white sppcfw-flex sppcfw-items-center sppcfw-gap-1.5' }, h('span', { className: 'sppcfw-text-[10px]' }, isImageOpen ? '▼' : '▶'), 'Image')
-								),
-
-								isImageOpen &&
-									h(
-										'div',
-										{ className: 'sppcfw-space-y-4 sppcfw-pt-1' },
-
-										// Alignment (Screenshot 2)
-										h(
-											'div',
-											{ className: 'sppcfw-space-y-1.5' },
-											renderControlHeader('Alignment', true),
-											renderButtonGroup(
-												[
-													{ value: 'left', icon: 'format_align_left', title: 'Left' },
-													{ value: 'center', icon: 'format_align_center', title: 'Center' },
-													{ value: 'right', icon: 'format_align_right', title: 'Right' },
-												],
-												getStyle('alignment') || 'center',
-												v => handleStyleChange('alignment', v)
-											)
-										),
-
-										// Width (Screenshot 2)
-										h(
-											'div',
-											{ className: 'sppcfw-space-y-1.5' },
-											renderControlHeader('Width', true, imgWidthUnit, setImgWidthUnit, ['%', 'px', 'vw']),
-											renderSliderInput(getStyle('width') || '100%', v => handleStyleChange('width', v), 0, 100, 1, imgWidthUnit)
-										),
-
-										// Max Width (Screenshot 2)
-										h(
-											'div',
-											{ className: 'sppcfw-space-y-1.5' },
-											renderControlHeader('Max Width', true, maxImgWidthUnit, setMaxImgWidthUnit, ['%', 'px', 'vw']),
-											renderSliderInput(getStyle('max_width') || '100%', v => handleStyleChange('max_width', v), 0, 100, 1, maxImgWidthUnit)
-										),
-
-										// Height (Screenshot 2)
-										h(
-											'div',
-											{ className: 'sppcfw-space-y-1.5' },
-											renderControlHeader('Height', true, imgHeightUnit, setImgHeightUnit, ['px', 'vh', '%']),
-											renderSliderInput(getStyle('height') || '', v => handleStyleChange('height', v), 0, 800, 1, imgHeightUnit, 'Auto')
-										),
-
-										h('hr', { className: 'sppcfw-border-[#374151] sppcfw-my-2' }),
-
-										// Normal / Hover Mode Switcher (Screenshot 2)
-										h(
-											'div',
-											{ className: 'sppcfw-flex sppcfw-bg-[#111827] sppcfw-border sppcfw-border-[#374151] sppcfw-rounded sppcfw-overflow-hidden sppcfw-p-0.5' },
-											h(
-												'button',
-												{
-													type: 'button',
-													className: `sppcfw-flex-1 sppcfw-py-1 sppcfw-text-center sppcfw-rounded sppcfw-text-xs sppcfw-font-semibold sppcfw-transition-colors sppcfw-cursor-pointer ${
-														styleMode === 'normal' ? 'sppcfw-bg-[#374151] sppcfw-text-white' : 'sppcfw-text-gray-400 hover:sppcfw-text-white'
-													}`,
-													onClick: () => setStyleMode('normal'),
-												},
-												'Normal'
-											),
-											h(
-												'button',
-												{
-													type: 'button',
-													className: `sppcfw-flex-1 sppcfw-py-1 sppcfw-text-center sppcfw-rounded sppcfw-text-xs sppcfw-font-semibold sppcfw-transition-colors sppcfw-cursor-pointer ${
-														styleMode === 'hover' ? 'sppcfw-bg-[#374151] sppcfw-text-white' : 'sppcfw-text-gray-400 hover:sppcfw-text-white'
-													}`,
-													onClick: () => setStyleMode('hover'),
-												},
-												'Hover'
-											)
-										),
-
-										// Opacity (Screenshot 2)
-										h(
-											'div',
-											{ className: 'sppcfw-space-y-1.5' },
-											renderControlHeader('Opacity', false),
-											renderSliderInput(getStyle('opacity') || '1', v => handleStyleChange('opacity', v), 0, 1, 0.05, '')
-										),
-
-										// CSS Filters (Screenshot 2)
-										h(
-											'div',
-											{ className: 'sppcfw-flex sppcfw-items-center sppcfw-justify-between sppcfw-pt-1' },
-											h('label', { className: 'sppcfw-text-xs sppcfw-text-gray-200 sppcfw-font-medium' }, 'CSS Filters'),
-											h(
-												'button',
-												{
-													type: 'button',
-													className: 'sppcfw-p-1.5 sppcfw-bg-[#111827] sppcfw-border sppcfw-border-[#374151] sppcfw-rounded sppcfw-text-gray-300 hover:sppcfw-text-white sppcfw-cursor-pointer',
-													title: 'Edit CSS Filters',
-												},
-												h('span', { className: 'material-symbols-outlined sppcfw-text-xs' }, 'edit')
-											)
-										),
-
-										h('hr', { className: 'sppcfw-border-[#374151] sppcfw-my-2' }),
-
-										// Border Type (Screenshot 2)
-										h(
-											'div',
-											{ className: 'sppcfw-flex sppcfw-items-center sppcfw-justify-between' },
-											h('label', { className: 'sppcfw-text-xs sppcfw-text-gray-200 sppcfw-font-medium' }, 'Border Type'),
-											h(
-												'select',
-												{
-													className: 'sppcfw-bg-[#111827] sppcfw-border sppcfw-border-[#374151] sppcfw-rounded sppcfw-px-2.5 sppcfw-py-1 sppcfw-text-xs sppcfw-text-white focus:sppcfw-outline-none focus:sppcfw-border-[#9333ea] sppcfw-w-36',
-													value: getStyle('border_type') || 'Default',
-													onChange: e => handleStyleChange('border_type', e.target.value),
-												},
-												h('option', { value: 'Default' }, 'Default'),
-												h('option', { value: 'None' }, 'None'),
-												h('option', { value: 'Solid' }, 'Solid'),
-												h('option', { value: 'Double' }, 'Double'),
-												h('option', { value: 'Dotted' }, 'Dotted'),
-												h('option', { value: 'Dashed' }, 'Dashed'),
-												h('option', { value: 'Groove' }, 'Groove')
-											)
-										),
-
-										// Border Radius (Screenshot 2: 4-box linked inputs)
-										h(
-											'div',
-											{ className: 'sppcfw-space-y-1.5' },
-											renderControlHeader('Border Radius', true, radiusUnit, setRadiusUnit, ['px', '%']),
-											renderFourBoxInput(selectedElement.styles, 'border_radius', handleMultiStyleChange, radiusUnit, isRadiusLinked, setIsRadiusLinked)
-										),
-
-										// Box Shadow (Screenshot 2)
-										h(
-											'div',
-											{ className: 'sppcfw-flex sppcfw-items-center sppcfw-justify-between sppcfw-pt-1' },
-											h('label', { className: 'sppcfw-text-xs sppcfw-text-gray-200 sppcfw-font-medium' }, 'Box Shadow'),
-											h(
-												'button',
-												{
-													type: 'button',
-													className: 'sppcfw-p-1.5 sppcfw-bg-[#111827] sppcfw-border sppcfw-border-[#374151] sppcfw-rounded sppcfw-text-gray-300 hover:sppcfw-text-white sppcfw-cursor-pointer',
-													title: 'Edit Box Shadow',
-												},
-												h('span', { className: 'material-symbols-outlined sppcfw-text-xs' }, 'edit')
-											)
-										)
-									)
-							),
-
-						// Non-image Background Accordion
-						!isImage &&
-							h(
-								'div',
-								{ className: 'sppcfw-border-b sppcfw-border-[#374151] sppcfw-pb-4 sppcfw-space-y-3' },
-								h(
-									'div',
-									{
-										className: 'sppcfw-flex sppcfw-items-center sppcfw-justify-between sppcfw-cursor-pointer sppcfw-select-none',
-										onClick: () => setIsBgOpen(!isBgOpen),
-									},
-									h('h4', { className: 'sppcfw-text-xs sppcfw-font-bold sppcfw-text-white sppcfw-flex sppcfw-items-center sppcfw-gap-1.5' }, h('span', { className: 'sppcfw-text-[10px]' }, isBgOpen ? '▼' : '▶'), 'Background')
-								),
-
-								isBgOpen &&
-									h(
-										'div',
-										{ className: 'sppcfw-space-y-3.5 sppcfw-pt-1' },
-
-										// Color Field
-										h(
-											'div',
-											{ className: 'sppcfw-flex sppcfw-items-center sppcfw-justify-between' },
-											h('label', { className: 'sppcfw-text-xs sppcfw-text-gray-200 sppcfw-font-medium' }, 'Color'),
-											h('input', {
-												type: 'color',
-												className: 'sppcfw-w-7 sppcfw-h-7 sppcfw-bg-[#111827] sppcfw-border sppcfw-border-[#374151] sppcfw-rounded sppcfw-cursor-pointer sppcfw-p-0.5',
-												value: getStyle('bg_color') || '#ffffff',
-												onChange: e => handleStyleChange('bg_color', e.target.value),
-											})
-										)
-									)
-							)
-					),
-
-				// --- 3. ADVANCED TAB (Matching Screenshot 3) ---
-				activeTab === 'advanced' &&
-					h(
-						'div',
-						{ className: 'sppcfw-space-y-4' },
-
-						// Layout Accordion (Screenshot 3)
-						h(
-							'div',
-							{ className: 'sppcfw-border-b sppcfw-border-[#374151] sppcfw-pb-4 sppcfw-space-y-3.5' },
-							h(
-								'div',
-								{
-									className: 'sppcfw-flex sppcfw-items-center sppcfw-justify-between sppcfw-cursor-pointer sppcfw-select-none',
-									onClick: () => setIsLayoutAdvOpen(!isLayoutAdvOpen),
-								},
-								h('h4', { className: 'sppcfw-text-xs sppcfw-font-bold sppcfw-text-white sppcfw-flex sppcfw-items-center sppcfw-gap-1.5' }, h('span', { className: 'sppcfw-text-[10px]' }, isLayoutAdvOpen ? '▼' : '▶'), 'Layout')
-							),
-
-							isLayoutAdvOpen &&
-								h(
-									'div',
-									{ className: 'sppcfw-space-y-4 sppcfw-pt-1' },
-
-									// Margin (Screenshot 3: 4-box linked inputs)
-									h(
-										'div',
-										{ className: 'sppcfw-space-y-1.5' },
-										renderControlHeader('Margin', true, marginUnit, setMarginUnit, ['px', '%', 'em']),
-										renderFourBoxInput(selectedElement.advanced, 'margin', handleMultiAdvancedChange, marginUnit, isMarginLinked, setIsMarginLinked)
-									),
-
-									// Padding (Screenshot 3: 4-box linked inputs)
-									h(
-										'div',
-										{ className: 'sppcfw-space-y-1.5' },
-										renderControlHeader('Padding', true, paddingUnit, setPaddingUnit, ['px', '%', 'em']),
-										renderFourBoxInput(selectedElement.advanced, 'padding', handleMultiAdvancedChange, paddingUnit, isPaddingLinked, setIsPaddingLinked)
-									),
-
-									// Width Dropdown (Screenshot 3)
-									h(
-										'div',
-										{ className: 'sppcfw-flex sppcfw-items-center sppcfw-justify-between' },
-										renderControlHeader('Width', true),
-										h(
-											'select',
-											{
-												className: 'sppcfw-bg-[#111827] sppcfw-border sppcfw-border-[#374151] sppcfw-rounded sppcfw-px-2.5 sppcfw-py-1 sppcfw-text-xs sppcfw-text-white focus:sppcfw-outline-none focus:sppcfw-border-[#9333ea] sppcfw-w-36',
-												value: getAdvanced('width_mode') || 'Default',
-												onChange: e => handleAdvancedChange('width_mode', e.target.value),
-											},
-											h('option', { value: 'Default' }, 'Default'),
-											h('option', { value: 'Full Width (100%)' }, 'Full Width (100%)'),
-											h('option', { value: 'Inline (auto)' }, 'Inline (auto)'),
-											h('option', { value: 'Custom' }, 'Custom')
-										)
-									),
-
-									h('hr', { className: 'sppcfw-border-[#374151] sppcfw-my-2' }),
-
-									// Align Self (Screenshot 3)
-									h(
-										'div',
-										{ className: 'sppcfw-space-y-1' },
-										renderControlHeader('Align Self', true),
-										renderButtonGroup(
-											[
-												{ value: 'flex-start', icon: 'align_flex_start', title: 'Start' },
-												{ value: 'center', icon: 'align_center', title: 'Center' },
-												{ value: 'flex-end', icon: 'align_flex_end', title: 'End' },
-												{ value: 'stretch', icon: 'align_stretch', title: 'Stretch' },
-											],
-											getAdvanced('align_self') || '',
-											v => handleAdvancedChange('align_self', v)
-										),
-										h('p', { className: 'sppcfw-text-[10px] sppcfw-text-gray-400 sppcfw-italic sppcfw-pt-0.5' }, 'This control will affect contained elements only.')
-									),
-
-									// Order (Screenshot 3)
-									h(
-										'div',
-										{ className: 'sppcfw-space-y-1' },
-										renderControlHeader('Order', true),
-										renderButtonGroup(
-											[
-												{ value: 'start', icon: 'vertical_align_top', title: 'Start' },
-												{ value: 'end', icon: 'vertical_align_bottom', title: 'End' },
-												{ value: 'custom', icon: 'more_vert', title: 'Custom' },
-											],
-											getAdvanced('order') || '',
-											v => handleAdvancedChange('order', v)
-										),
-										h('p', { className: 'sppcfw-text-[10px] sppcfw-text-gray-400 sppcfw-italic sppcfw-pt-0.5' }, 'This control will affect contained elements only.')
-									),
-
-									// Size (Screenshot 3)
-									h(
-										'div',
-										{ className: 'sppcfw-space-y-1.5' },
-										renderControlHeader('Size', true),
-										renderButtonGroup(
-											[
-												{ value: 'none', icon: 'block', title: 'None' },
-												{ value: 'grow', icon: 'aspect_ratio', title: 'Grow' },
-												{ value: 'shrink', icon: 'fit_screen', title: 'Shrink' },
-											],
-											getAdvanced('size') || '',
-											v => handleAdvancedChange('size', v)
-										)
-									),
-
-									h('hr', { className: 'sppcfw-border-[#374151] sppcfw-my-2' }),
-
-									// Position (Screenshot 3)
-									h(
-										'div',
-										{ className: 'sppcfw-flex sppcfw-items-center sppcfw-justify-between' },
-										h('label', { className: 'sppcfw-text-xs sppcfw-text-gray-200 sppcfw-font-medium' }, 'Position'),
-										h(
-											'select',
-											{
-												className: 'sppcfw-bg-[#111827] sppcfw-border sppcfw-border-[#374151] sppcfw-rounded sppcfw-px-2.5 sppcfw-py-1 sppcfw-text-xs sppcfw-text-white focus:sppcfw-outline-none focus:sppcfw-border-[#9333ea] sppcfw-w-36',
-												value: getAdvanced('position') || 'Default',
-												onChange: e => handleAdvancedChange('position', e.target.value),
-											},
-											h('option', { value: 'Default' }, 'Default'),
-											h('option', { value: 'Absolute' }, 'Absolute'),
-											h('option', { value: 'Fixed' }, 'Fixed')
-										)
-									),
-
-									// Z-Index (Screenshot 3)
-									h(
-										'div',
-										{ className: 'sppcfw-flex sppcfw-items-center sppcfw-justify-between' },
-										renderControlHeader('Z-Index', true),
-										h('input', {
-											type: 'number',
-											className: 'sppcfw-w-24 sppcfw-bg-[#111827] sppcfw-border sppcfw-border-[#374151] sppcfw-rounded sppcfw-px-2.5 sppcfw-py-1 sppcfw-text-xs sppcfw-text-center sppcfw-text-white focus:sppcfw-outline-none focus:sppcfw-border-[#9333ea]',
-											value: getAdvanced('z_index') || '',
-											onChange: e => handleAdvancedChange('z_index', e.target.value),
-										})
-									),
-
-									// CSS ID (Screenshot 3)
-									h(
-										'div',
-										{ className: 'sppcfw-space-y-1.5' },
-										h('label', { className: 'sppcfw-text-xs sppcfw-text-gray-200 sppcfw-font-medium sppcfw-block' }, 'CSS ID'),
-										h(
-											'div',
-											{ className: 'sppcfw-flex sppcfw-items-center sppcfw-gap-1.5' },
-											h('input', {
-												type: 'text',
-												className: 'sppcfw-flex-1 sppcfw-bg-[#111827] sppcfw-border sppcfw-border-[#374151] sppcfw-rounded sppcfw-px-2.5 sppcfw-py-1.5 sppcfw-text-xs sppcfw-text-white sppcfw-placeholder-gray-500 focus:sppcfw-outline-none focus:sppcfw-border-[#9333ea]',
-												value: getAdvanced('css_id') || '',
-												onChange: e => handleAdvancedChange('css_id', e.target.value),
-											}),
-											h('button', { type: 'button', className: 'sppcfw-p-1.5 sppcfw-bg-[#111827] sppcfw-border sppcfw-border-[#374151] sppcfw-rounded sppcfw-text-gray-400 hover:sppcfw-text-white', title: 'Dynamic Tag' }, h('span', { className: 'material-symbols-outlined sppcfw-text-xs' }, 'storage'))
-										)
-									),
-
-									// CSS Classes (Screenshot 3)
-									h(
-										'div',
-										{ className: 'sppcfw-space-y-1.5' },
-										h('label', { className: 'sppcfw-text-xs sppcfw-text-gray-200 sppcfw-font-medium sppcfw-block' }, 'CSS Classes'),
-										h(
-											'div',
-											{ className: 'sppcfw-flex sppcfw-items-center sppcfw-gap-1.5' },
-											h('input', {
-												type: 'text',
-												className: 'sppcfw-flex-1 sppcfw-bg-[#111827] sppcfw-border sppcfw-border-[#374151] sppcfw-rounded sppcfw-px-2.5 sppcfw-py-1.5 sppcfw-text-xs sppcfw-text-white sppcfw-placeholder-gray-500 focus:sppcfw-outline-none focus:sppcfw-border-[#9333ea]',
-												value: getAdvanced('css_classes') || (getAdvanced('custom_class') || ''),
-												onChange: e => {
-													handleAdvancedChange('css_classes', e.target.value);
-													handleAdvancedChange('custom_class', e.target.value);
-												},
-											}),
-											h('button', { type: 'button', className: 'sppcfw-p-1.5 sppcfw-bg-[#111827] sppcfw-border sppcfw-border-[#374151] sppcfw-rounded sppcfw-text-gray-400 hover:sppcfw-text-white', title: 'Dynamic Tag' }, h('span', { className: 'material-symbols-outlined sppcfw-text-xs' }, 'storage'))
-										)
-									)
-								)
-						)
-					)
+				(activeTab === 'layout' || activeTab === 'content') && renderElementContentPanel(),
+				activeTab === 'style' && renderElementStylePanel(),
+				activeTab === 'advanced' && renderElementAdvancedPanel()
 			)
 		);
 	}
@@ -4960,9 +5040,9 @@
 				} ${widget.advanced && widget.advanced.custom_class ? widget.advanced.custom_class : ''}`,
 				style: {
 					color: getResponsiveProp(widget.styles, 'text_color', deviceView) || 'inherit',
-					fontFamily: getResponsiveProp(widget.styles, 'font_family', deviceView) || 'inherit',
+					fontFamily: (getResponsiveProp(widget.styles, 'font_family', deviceView) && getResponsiveProp(widget.styles, 'font_family', deviceView) !== 'Inherit') ? getResponsiveProp(widget.styles, 'font_family', deviceView) : 'inherit',
 					fontSize: getResponsiveProp(widget.styles, 'font_size', deviceView) || 'inherit',
-					fontWeight: getResponsiveProp(widget.styles, 'font_weight', deviceView) || 'inherit',
+					fontWeight: (getResponsiveProp(widget.styles, 'font_weight', deviceView) && getResponsiveProp(widget.styles, 'font_weight', deviceView) !== 'Default') ? getResponsiveProp(widget.styles, 'font_weight', deviceView) : 'inherit',
 					lineHeight: getResponsiveProp(widget.styles, 'line_height', deviceView) || 'inherit',
 					backgroundColor: getResponsiveProp(widget.styles, 'bg_color', deviceView) || 'transparent',
 					borderColor: getResponsiveProp(widget.styles, 'border_color', deviceView) || 'transparent',
@@ -4998,58 +5078,122 @@
 					)
 				),
 
-			renderLiveWidgetContent(widget, sampleData, pageSettings)
+			renderLiveWidgetContent(widget, sampleData, pageSettings, deviceView)
 		);
 	}
 
-	// Live Content Rendering for Canvas
-	function renderLiveWidgetContent(el, sample, pageSettings) {
+	// Live Content Rendering for Canvas with Real-time Style Preview
+	function renderLiveWidgetContent(el, sample, pageSettings, deviceView = 'desktop') {
 		const staticFallback = typeof CANVAS_STATIC_DATA !== 'undefined' ? CANVAS_STATIC_DATA : {};
 		const safeSample = sample || staticFallback;
+		const styles = el.styles || {};
+		const settings = el.settings || {};
+
+		const alignment = getResponsiveProp(styles, 'alignment', deviceView) || getResponsiveProp(settings, 'alignment', deviceView) || 'left';
+		const alignClass = alignment === 'center' ? 'sppcfw-text-center sppcfw-justify-center' : alignment === 'right' ? 'sppcfw-text-right sppcfw-justify-end' : 'sppcfw-text-left sppcfw-justify-start';
 
 		switch (el.type) {
 			case 'product_title': {
-				const titleTag = (el.settings && el.settings.html_tag) || 'h1';
+				const titleTag = (settings && settings.html_tag) || 'h1';
 				const titleText = safeSample.title || staticFallback.title || 'Product Title';
-				return h(titleTag, { className: 'sppcfw-text-2xl sppcfw-font-bold sppcfw-text-[#111827]' }, titleText);
+				const fwVal = getResponsiveProp(styles, 'font_weight', deviceView);
+				const resolvedFontWeight = (fwVal && fwVal !== 'Default') ? fwVal : undefined;
+				const linkToProduct = !!settings.link_to_product;
+				const innerText = linkToProduct
+					? h('a', { href: '#', className: 'hover:sppcfw-underline sppcfw-text-inherit' }, titleText)
+					: titleText;
+				return h(
+					titleTag,
+					{
+						className: `sppcfw-text-2xl sppcfw-transition-all ${alignClass}`,
+						style: {
+							color: getResponsiveProp(styles, 'text_color', deviceView) || '#111827',
+							fontSize: getResponsiveProp(styles, 'font_size', deviceView) || undefined,
+							fontFamily: (getResponsiveProp(styles, 'font_family', deviceView) && getResponsiveProp(styles, 'font_family', deviceView) !== 'Inherit') ? getResponsiveProp(styles, 'font_family', deviceView) : undefined,
+							fontWeight: resolvedFontWeight,
+							lineHeight: getResponsiveProp(styles, 'line_height', deviceView) || undefined,
+						},
+					},
+					innerText
+				);
 			}
 			case 'heading': {
-				const headingTag = (el.settings && el.settings.html_tag) || 'h2';
-				const headingText = (el.settings && el.settings.text !== undefined && el.settings.text !== '') ? el.settings.text : 'Add Your Heading Text Here';
-				const linkUrl = el.settings && el.settings.link_url;
+				const headingTag = (settings && settings.html_tag) || 'h2';
+				const headingText = (settings && settings.text !== undefined && settings.text !== '') ? settings.text : 'Add Your Heading Text Here';
+				const linkUrl = settings && settings.link_url;
+				const fwVal = getResponsiveProp(styles, 'font_weight', deviceView);
+				const resolvedFontWeight = (fwVal && fwVal !== 'Default') ? fwVal : undefined;
 				const inner = linkUrl
 					? h('a', { href: linkUrl, className: 'hover:sppcfw-underline sppcfw-text-inherit' }, headingText)
 					: headingText;
-				return h(headingTag, { className: 'sppcfw-text-xl sppcfw-font-bold sppcfw-text-[#111827]' }, inner);
+				return h(
+					headingTag,
+					{
+						className: `sppcfw-text-xl sppcfw-transition-all ${alignClass}`,
+						style: {
+							color: getResponsiveProp(styles, 'text_color', deviceView) || '#111827',
+							fontSize: getResponsiveProp(styles, 'font_size', deviceView) || undefined,
+							fontFamily: (getResponsiveProp(styles, 'font_family', deviceView) && getResponsiveProp(styles, 'font_family', deviceView) !== 'Inherit') ? getResponsiveProp(styles, 'font_family', deviceView) : undefined,
+							fontWeight: resolvedFontWeight,
+							lineHeight: getResponsiveProp(styles, 'line_height', deviceView) || undefined,
+						},
+					},
+					inner
+				);
 			}
 			case 'text_editor': {
-				const textTag = (el.settings && el.settings.html_tag) || 'div';
-				const textContent = (el.settings && el.settings.text_content !== undefined && el.settings.text_content !== '') ? el.settings.text_content : 'Add your custom description or paragraph content here...';
-				return h(textTag, { className: 'sppcfw-text-sm sppcfw-text-[#4b5563] sppcfw-leading-relaxed', style: { whiteSpace: 'pre-line' } }, textContent);
+				const textTag = (settings && settings.html_tag) || 'div';
+				const textContent = (settings && settings.text_content !== undefined && settings.text_content !== '') ? settings.text_content : 'Add your custom description or paragraph content here...';
+				return h(
+					textTag,
+					{
+						className: `sppcfw-text-sm sppcfw-leading-relaxed sppcfw-transition-all ${alignClass}`,
+						style: {
+							color: getResponsiveProp(styles, 'text_color', deviceView) || '#4b5563',
+							fontSize: getResponsiveProp(styles, 'font_size', deviceView) || undefined,
+							fontFamily: getResponsiveProp(styles, 'font_family', deviceView) !== 'Inherit' ? getResponsiveProp(styles, 'font_family', deviceView) : undefined,
+							lineHeight: getResponsiveProp(styles, 'line_height', deviceView) || undefined,
+							whiteSpace: 'pre-line',
+						},
+					},
+					textContent
+				);
 			}
-			case 'product_price':
+			case 'product_price': {
 				const displayPrice = safeSample.price || staticFallback.price || '$49.99';
 				const isOnSale = safeSample.on_sale || (safeSample.sale_price && safeSample.regular_price && safeSample.sale_price !== safeSample.regular_price);
+				const priceColor = getResponsiveProp(styles, 'price_color', deviceView) || getResponsiveProp(styles, 'text_color', deviceView) || '#9333ea';
+				const salePriceColor = getResponsiveProp(styles, 'sale_price_color', deviceView) || '#ef4444';
+				const fontSize = getResponsiveProp(styles, 'font_size', deviceView) || '24px';
+				const fontWeight = getResponsiveProp(styles, 'font_weight', deviceView) || '800';
+
 				return h(
 					'div',
-					{ className: 'sppcfw-flex sppcfw-items-center sppcfw-gap-3' },
-					h('span', { className: 'sppcfw-text-2xl sppcfw-font-extrabold sppcfw-text-[#9333ea]', dangerouslySetInnerHTML: { __html: displayPrice } }),
-					isOnSale && h('span', { className: 'sppcfw-bg-[#ef4444] sppcfw-text-white sppcfw-text-xs sppcfw-px-2 sppcfw-py-1 sppcfw-rounded sppcfw-font-bold sppcfw-uppercase' }, 'Sale')
+					{ className: `sppcfw-flex sppcfw-items-center sppcfw-gap-3 ${alignClass}` },
+					h('span', {
+						className: 'sppcfw-font-extrabold sppcfw-transition-all',
+						style: { color: priceColor, fontSize: fontSize, fontWeight: fontWeight },
+						dangerouslySetInnerHTML: { __html: displayPrice }
+					}),
+					isOnSale && h('span', {
+						className: 'sppcfw-text-white sppcfw-text-xs sppcfw-px-2 sppcfw-py-1 sppcfw-rounded sppcfw-font-bold sppcfw-uppercase',
+						style: { backgroundColor: salePriceColor }
+					}, 'Sale')
 				);
+			}
 			case 'product_gallery': {
 				const imgStyles = el.styles || {};
 				const imgSettings = el.settings || {};
-				const imgWidth = imgStyles.width || '100%';
-				const imgMaxWidth = imgStyles.max_width || '100%';
-				const imgHeight = imgStyles.height && imgStyles.height !== 'auto' ? imgStyles.height : 'auto';
-				const imgOpacity = imgStyles.opacity !== undefined ? imgStyles.opacity : '1';
-				const alignVal = imgStyles.alignment || imgSettings.alignment || 'center';
+				const imgWidth = getResponsiveProp(imgStyles, 'width', deviceView) || '100%';
+				const imgMaxWidth = getResponsiveProp(imgStyles, 'max_width', deviceView) || '100%';
+				const imgOpacity = getResponsiveProp(imgStyles, 'opacity', deviceView) !== undefined ? getResponsiveProp(imgStyles, 'opacity', deviceView) : '1';
+				const alignVal = getResponsiveProp(imgStyles, 'alignment', deviceView) || getResponsiveProp(imgSettings, 'alignment', deviceView) || 'center';
 				const flexAlign = alignVal === 'left' ? 'justify-start items-start' : alignVal === 'right' ? 'justify-end items-end' : 'justify-center items-center';
 
-				const radTop = imgStyles.border_radius_top || imgStyles.border_radius || '6px';
-				const radRight = imgStyles.border_radius_right || imgStyles.border_radius || '6px';
-				const radBottom = imgStyles.border_radius_bottom || imgStyles.border_radius || '6px';
-				const radLeft = imgStyles.border_radius_left || imgStyles.border_radius || '6px';
+				const radTop = getResponsiveProp(imgStyles, 'border_radius_top', deviceView) || getResponsiveProp(imgStyles, 'border_radius', deviceView) || '6px';
+				const radRight = getResponsiveProp(imgStyles, 'border_radius_right', deviceView) || getResponsiveProp(imgStyles, 'border_radius', deviceView) || '6px';
+				const radBottom = getResponsiveProp(imgStyles, 'border_radius_bottom', deviceView) || getResponsiveProp(imgStyles, 'border_radius', deviceView) || '6px';
+				const radLeft = getResponsiveProp(imgStyles, 'border_radius_left', deviceView) || getResponsiveProp(imgStyles, 'border_radius', deviceView) || '6px';
 				const borderRadiusCss = `${radTop} ${radRight} ${radBottom} ${radLeft}`;
 
 				const customImgStyle = {
@@ -5059,8 +5203,8 @@
 					opacity: parseFloat(imgOpacity),
 					borderRadius: borderRadiusCss,
 					borderStyle: imgStyles.border_type && imgStyles.border_type !== 'Default' ? imgStyles.border_type.toLowerCase() : 'none',
-					borderWidth: imgStyles.border_width || '0px',
-					borderColor: imgStyles.border_color || 'transparent',
+					borderWidth: getResponsiveProp(imgStyles, 'border_width', deviceView) || '0px',
+					borderColor: getResponsiveProp(imgStyles, 'border_color', deviceView) || 'transparent',
 					objectFit: imgStyles.object_fit || 'contain',
 				};
 
@@ -5123,50 +5267,104 @@
 									)
 							)
 					),
-					// Thumbnails Row (if enabled and multiple gallery images exist)
+					// Thumbnails Row (Grid or Carousel)
 					showThumbs && galleryUrls.length > 1 &&
-						h(
-							'div',
-							{
-								className: 'sppcfw-grid sppcfw-gap-2 sppcfw-w-full sppcfw-mt-1',
-								style: {
-									maxWidth: imgMaxWidth,
-									gridTemplateColumns: `repeat(${cols}, minmax(0, 1fr))`
-								}
-							},
-							galleryUrls.map((gUrl, gIdx) =>
-								h(
+						(imgSettings.thumbs_layout === 'carousel'
+							? h(
 									'div',
 									{
-										key: 'g-thumb-' + gIdx,
-										className: `sppcfw-border sppcfw-rounded sppcfw-overflow-hidden sppcfw-cursor-pointer sppcfw-transition-all sppcfw-p-1 sppcfw-flex sppcfw-items-center sppcfw-justify-center ${
-											gIdx === 0 ? 'sppcfw-border-[#9333ea] sppcfw-ring-1 sppcfw-ring-[#9333ea]' : 'sppcfw-border-[#e5e7eb] hover:sppcfw-border-[#9333ea]'
-										}`
+										className: 'sppcfw-relative sppcfw-w-full sppcfw-mt-2 sppcfw-flex sppcfw-items-center sppcfw-gap-1.5 sppcfw-select-none',
+										style: { maxWidth: imgMaxWidth }
 									},
-									h('img', {
-										src: gUrl,
-										alt: `Gallery thumbnail ${gIdx + 1}`,
-										className: 'sppcfw-max-h-16 sppcfw-w-full sppcfw-object-contain sppcfw-rounded-sm'
-									})
-								)
-							)
+									imgSettings.show_carousel_arrows !== false &&
+										h(
+											'button',
+											{
+												type: 'button',
+												className: 'sppcfw-w-7 sppcfw-h-7 sppcfw-rounded-full sppcfw-bg-white sppcfw-border sppcfw-border-gray-200 sppcfw-shadow-sm sppcfw-flex sppcfw-items-center sppcfw-justify-center sppcfw-text-gray-700 hover:sppcfw-bg-gray-100 sppcfw-shrink-0 sppcfw-transition-all',
+												title: 'Previous Thumbnails'
+											},
+											h('span', { className: 'material-symbols-outlined sppcfw-text-sm' }, 'chevron_left')
+										),
+									h(
+										'div',
+										{
+											className: 'sppcfw-flex sppcfw-gap-2 sppcfw-overflow-hidden sppcfw-w-full sppcfw-py-1'
+										},
+										galleryUrls.map((gUrl, gIdx) =>
+											h(
+												'div',
+												{
+													key: 'g-thumb-car-' + gIdx,
+													className: `sppcfw-border sppcfw-rounded sppcfw-overflow-hidden sppcfw-cursor-pointer sppcfw-transition-all sppcfw-p-1 sppcfw-flex sppcfw-items-center sppcfw-justify-center sppcfw-shrink-0 ${
+														gIdx === 0 ? 'sppcfw-border-[#9333ea] sppcfw-ring-1 sppcfw-ring-[#9333ea]' : 'sppcfw-border-[#e5e7eb] hover:sppcfw-border-[#9333ea]'
+													}`,
+													style: {
+														width: `calc((100% - (${cols} - 1) * 8px) / ${cols})`,
+														minWidth: '40px'
+													}
+												},
+												h('img', {
+													src: gUrl,
+													alt: `Gallery thumbnail ${gIdx + 1}`,
+													className: 'sppcfw-max-h-16 sppcfw-w-full sppcfw-object-contain sppcfw-rounded-sm'
+												})
+											)
+										)
+									),
+									imgSettings.show_carousel_arrows !== false &&
+										h(
+											'button',
+											{
+												type: 'button',
+												className: 'sppcfw-w-7 sppcfw-h-7 sppcfw-rounded-full sppcfw-bg-white sppcfw-border sppcfw-border-gray-200 sppcfw-shadow-sm sppcfw-flex sppcfw-items-center sppcfw-justify-center sppcfw-text-gray-700 hover:sppcfw-bg-gray-100 sppcfw-shrink-0 sppcfw-transition-all',
+												title: 'Next Thumbnails'
+											},
+											h('span', { className: 'material-symbols-outlined sppcfw-text-sm' }, 'chevron_right')
+										)
+							  )
+							: h(
+									'div',
+									{
+										className: 'sppcfw-grid sppcfw-gap-2 sppcfw-w-full sppcfw-mt-1',
+										style: {
+											maxWidth: imgMaxWidth,
+											gridTemplateColumns: `repeat(${cols}, minmax(0, 1fr))`
+										}
+									},
+									galleryUrls.map((gUrl, gIdx) =>
+										h(
+											'div',
+											{
+												key: 'g-thumb-grid-' + gIdx,
+												className: `sppcfw-border sppcfw-rounded sppcfw-overflow-hidden sppcfw-cursor-pointer sppcfw-transition-all sppcfw-p-1 sppcfw-flex sppcfw-items-center sppcfw-justify-center ${
+													gIdx === 0 ? 'sppcfw-border-[#9333ea] sppcfw-ring-1 sppcfw-ring-[#9333ea]' : 'sppcfw-border-[#e5e7eb] hover:sppcfw-border-[#9333ea]'
+												}`
+											},
+											h('img', {
+												src: gUrl,
+												alt: `Gallery thumbnail ${gIdx + 1}`,
+												className: 'sppcfw-max-h-16 sppcfw-w-full sppcfw-object-contain sppcfw-rounded-sm'
+											})
+										)
+									)
+							  )
 						)
 				);
 			}
 			case 'image': {
 				const imgStyles = el.styles || {};
 				const imgSettings = el.settings || {};
-				const imgWidth = imgStyles.width || '100%';
-				const imgMaxWidth = imgStyles.max_width || '100%';
-				const imgHeight = imgStyles.height && imgStyles.height !== 'auto' ? imgStyles.height : 'auto';
-				const imgOpacity = imgStyles.opacity !== undefined ? imgStyles.opacity : '1';
-				const alignVal = imgStyles.alignment || imgSettings.alignment || 'center';
+				const imgWidth = getResponsiveProp(imgStyles, 'width', deviceView) || '100%';
+				const imgMaxWidth = getResponsiveProp(imgStyles, 'max_width', deviceView) || '100%';
+				const imgOpacity = getResponsiveProp(imgStyles, 'opacity', deviceView) !== undefined ? getResponsiveProp(imgStyles, 'opacity', deviceView) : '1';
+				const alignVal = getResponsiveProp(imgStyles, 'alignment', deviceView) || getResponsiveProp(imgSettings, 'alignment', deviceView) || 'center';
 				const flexAlign = alignVal === 'left' ? 'justify-start text-left' : alignVal === 'right' ? 'justify-end text-right' : 'justify-center text-center';
 
-				const radTop = imgStyles.border_radius_top || imgStyles.border_radius || '0px';
-				const radRight = imgStyles.border_radius_right || imgStyles.border_radius || '0px';
-				const radBottom = imgStyles.border_radius_bottom || imgStyles.border_radius || '0px';
-				const radLeft = imgStyles.border_radius_left || imgStyles.border_radius || '0px';
+				const radTop = getResponsiveProp(imgStyles, 'border_radius_top', deviceView) || getResponsiveProp(imgStyles, 'border_radius', deviceView) || '0px';
+				const radRight = getResponsiveProp(imgStyles, 'border_radius_right', deviceView) || getResponsiveProp(imgStyles, 'border_radius', deviceView) || '0px';
+				const radBottom = getResponsiveProp(imgStyles, 'border_radius_bottom', deviceView) || getResponsiveProp(imgStyles, 'border_radius', deviceView) || '0px';
+				const radLeft = getResponsiveProp(imgStyles, 'border_radius_left', deviceView) || getResponsiveProp(imgStyles, 'border_radius', deviceView) || '0px';
 				const borderRadiusCss = `${radTop} ${radRight} ${radBottom} ${radLeft}`;
 
 				const customImgSrc = imgSettings.custom_image_url || imgSettings.image_url || '';
@@ -5178,8 +5376,8 @@
 					opacity: parseFloat(imgOpacity),
 					borderRadius: borderRadiusCss,
 					borderStyle: imgStyles.border_type && imgStyles.border_type !== 'Default' ? imgStyles.border_type.toLowerCase() : 'none',
-					borderWidth: imgStyles.border_width || '0px',
-					borderColor: imgStyles.border_color || 'transparent',
+					borderWidth: getResponsiveProp(imgStyles, 'border_width', deviceView) || '0px',
+					borderColor: getResponsiveProp(imgStyles, 'border_color', deviceView) || 'transparent',
 					objectFit: imgStyles.object_fit || 'contain',
 				};
 
@@ -5217,38 +5415,82 @@
 						h('div', { className: 'sppcfw-text-xs sppcfw-text-[#6b7280] sppcfw-mt-1.5 sppcfw-italic' }, imgSettings.custom_caption)
 				);
 			}
-			case 'product_add_to_cart':
-				const btnLabel = (el.settings && el.settings.button_text) || 'Add to cart';
+			case 'product_add_to_cart': {
+				const btnLabel = (settings && settings.button_text) || 'Add to cart';
+				const btnBg = getResponsiveProp(styles, 'btn_bg_color', deviceView) || getResponsiveProp(styles, 'bg_color', deviceView) || '#9333ea';
+				const btnColor = getResponsiveProp(styles, 'btn_text_color', deviceView) || getResponsiveProp(styles, 'text_color', deviceView) || '#ffffff';
+				const btnRadius = getResponsiveProp(styles, 'btn_border_radius', deviceView) || getResponsiveProp(styles, 'border_radius', deviceView) || '6px';
+				const btnFontSize = getResponsiveProp(styles, 'font_size', deviceView) || '14px';
+
 				return h(
 					'div',
-					{ className: 'sppcfw-flex sppcfw-items-center sppcfw-gap-3' },
+					{ className: `sppcfw-flex sppcfw-items-center sppcfw-gap-3 ${alignClass}` },
 					h('input', { type: 'number', defaultValue: 1, min: 1, className: 'sppcfw-w-16 sppcfw-p-2 sppcfw-border sppcfw-border-[#d1d5db] sppcfw-rounded sppcfw-text-center sppcfw-font-bold sppcfw-text-[#111827]' }),
-					h('button', { className: 'sppcfw-px-6 sppcfw-py-2.5 sppcfw-bg-[#9333ea] sppcfw-text-white sppcfw-rounded sppcfw-font-bold sppcfw-shadow' }, btnLabel)
+					h('button', {
+						className: 'sppcfw-px-6 sppcfw-py-2.5 sppcfw-font-bold sppcfw-shadow sppcfw-transition-all',
+						style: {
+							backgroundColor: btnBg,
+							color: btnColor,
+							borderRadius: btnRadius,
+							fontSize: btnFontSize,
+						}
+					}, btnLabel)
 				);
-			case 'product_rating':
+			}
+			case 'product_rating': {
 				const rCount = safeSample.rating_count !== undefined ? safeSample.rating_count : 5;
+				const starColor = getResponsiveProp(styles, 'star_color', deviceView) || getResponsiveProp(styles, 'text_color', deviceView) || '#f59e0b';
+				const starSize = getResponsiveProp(styles, 'star_size', deviceView) || '18px';
+				const reviewCountColor = getResponsiveProp(styles, 'review_count_color', deviceView) || '#6b7280';
+
 				return h(
 					'div',
-					{ className: 'sppcfw-flex sppcfw-items-center sppcfw-gap-2 sppcfw-text-[#f59e0b]' },
-					h('span', { className: 'sppcfw-text-lg' }, '★★★★★'),
-					h('span', { className: 'sppcfw-text-xs sppcfw-text-[#6b7280]' }, `(${rCount} reviews)`)
+					{ className: `sppcfw-flex sppcfw-items-center sppcfw-gap-2 ${alignClass}` },
+					h('span', { style: { color: starColor, fontSize: starSize } }, '★★★★★'),
+					h('span', { className: 'sppcfw-text-xs', style: { color: reviewCountColor } }, `(${rCount} reviews)`)
 				);
+			}
 			case 'product_short_desc':
-				return h('p', { className: 'sppcfw-text-sm sppcfw-text-[#4b5563]' }, safeSample.short_description || staticFallback.short_description || 'Product short description placeholder.');
+				return h('p', {
+					className: `sppcfw-text-sm sppcfw-transition-all ${alignClass}`,
+					style: {
+						color: getResponsiveProp(styles, 'text_color', deviceView) || '#4b5563',
+						fontSize: getResponsiveProp(styles, 'font_size', deviceView) || undefined,
+						lineHeight: getResponsiveProp(styles, 'line_height', deviceView) || undefined,
+					}
+				}, safeSample.short_description || staticFallback.short_description || 'Product short description placeholder.');
 			case 'product_description':
+				const activeTabCol = getResponsiveProp(styles, 'active_tab_color', deviceView) || '#9333ea';
+				const descBg = getResponsiveProp(styles, 'bg_color', deviceView) || '#f9fafb';
 				return h(
 					'div',
-					{ className: 'sppcfw-border sppcfw-border-[#e5e7eb] sppcfw-rounded sppcfw-p-4 sppcfw-bg-[#f9fafb]' },
-					h('h3', { className: 'sppcfw-font-bold sppcfw-border-b sppcfw-pb-2 sppcfw-mb-2 sppcfw-text-[#111827]' }, 'Description'),
+					{
+						className: 'sppcfw-border sppcfw-border-[#e5e7eb] sppcfw-rounded sppcfw-p-4',
+						style: { backgroundColor: descBg }
+					},
+					h('h3', {
+						className: 'sppcfw-font-bold sppcfw-border-b sppcfw-pb-2 sppcfw-mb-2',
+						style: {
+							color: getResponsiveProp(styles, 'text_color', deviceView) || '#111827',
+							borderBottomColor: activeTabCol,
+						}
+					}, 'Description'),
 					h('p', { className: 'sppcfw-text-sm sppcfw-text-[#4b5563]' }, safeSample.description || staticFallback.description || 'Full product description placeholder.')
 				);
 			case 'product_meta':
+				const labelColor = getResponsiveProp(styles, 'label_color', deviceView) || '#111827';
+				const metaValColor = getResponsiveProp(styles, 'text_color', deviceView) || '#6b7280';
+				const metaFontSize = getResponsiveProp(styles, 'font_size', deviceView) || '12px';
+				const metaGap = getResponsiveProp(styles, 'gap', deviceView) || '4px';
 				return h(
 					'div',
-					{ className: 'sppcfw-text-xs sppcfw-text-[#6b7280] sppcfw-space-y-1' },
-					h('div', null, h('strong', null, 'SKU: '), safeSample.sku || staticFallback.sku || 'SAMPLE-SKU-123'),
-					h('div', null, h('strong', null, 'Category: '), safeSample.categories || staticFallback.categories || 'Clothing'),
-					safeSample.tags && h('div', null, h('strong', null, 'Tags: '), safeSample.tags || staticFallback.tags)
+					{
+						className: 'sppcfw-text-xs sppcfw-flex sppcfw-flex-col',
+						style: { color: metaValColor, fontSize: metaFontSize, gap: metaGap }
+					},
+					h('div', null, h('strong', { style: { color: labelColor } }, 'SKU: '), safeSample.sku || staticFallback.sku || 'SAMPLE-SKU-123'),
+					h('div', null, h('strong', { style: { color: labelColor } }, 'Category: '), safeSample.categories || staticFallback.categories || 'Clothing'),
+					safeSample.tags && h('div', null, h('strong', { style: { color: labelColor } }, 'Tags: '), safeSample.tags || staticFallback.tags)
 				);
 			case 'product_meta_item':
 				return h(
@@ -5258,18 +5500,30 @@
 					h('span', { className: 'sppcfw-text-[#4b5563] font-mono sppcfw-text-xs' }, el.metaKey || 'Meta Field')
 				);
 			case 'custom_message':
+				const cmBg = getResponsiveProp(styles, 'bg_color', deviceView) || '#faf5ff';
+				const cmText = getResponsiveProp(styles, 'text_color', deviceView) || '#7e22ce';
+				const cmBorder = getResponsiveProp(styles, 'border_color', deviceView) || '#9333ea';
 				return h(
 					'div',
-					{ className: 'sppcfw-p-3 sppcfw-bg-[#faf5ff] sppcfw-border-l-4 sppcfw-border-[#9333ea] sppcfw-rounded-r sppcfw-text-xs sppcfw-text-[#7e22ce] sppcfw-font-medium' },
-					el.settings && el.settings.custom_message ? el.settings.custom_message : '✨ Limited Offer: Free Shipping on orders over $50!'
+					{
+						className: 'sppcfw-p-3 sppcfw-border-l-4 sppcfw-rounded-r sppcfw-text-xs sppcfw-font-medium',
+						style: { backgroundColor: cmBg, color: cmText, borderLeftColor: cmBorder }
+					},
+					settings && settings.custom_message ? settings.custom_message : '✨ Limited Offer: Free Shipping on orders over $50!'
 				);
 			case 'plus_minus_buttons':
+				const pmbBg = getResponsiveProp(styles, 'btn_bg_color', deviceView) || getResponsiveProp(styles, 'bg_color', deviceView) || '#f3f4f6';
+				const pmbColor = getResponsiveProp(styles, 'btn_text_color', deviceView) || getResponsiveProp(styles, 'text_color', deviceView) || '#111827';
+				const pmbBorder = getResponsiveProp(styles, 'border_color', deviceView) || '#d1d5db';
 				return h(
 					'div',
-					{ className: 'sppcfw-inline-flex sppcfw-items-center sppcfw-border sppcfw-border-[#d1d5db] sppcfw-rounded sppcfw-overflow-hidden' },
-					h('button', { className: 'sppcfw-px-3 sppcfw-py-1 sppcfw-bg-[#f3f4f6] sppcfw-font-bold sppcfw-text-[#111827]' }, '-'),
+					{
+						className: 'sppcfw-inline-flex sppcfw-items-center sppcfw-border sppcfw-rounded sppcfw-overflow-hidden',
+						style: { borderColor: pmbBorder }
+					},
+					h('button', { className: 'sppcfw-px-3 sppcfw-py-1 sppcfw-font-bold', style: { backgroundColor: pmbBg, color: pmbColor } }, '-'),
 					h('span', { className: 'sppcfw-px-4 sppcfw-py-1 sppcfw-text-sm sppcfw-font-bold sppcfw-text-[#111827]' }, '1'),
-					h('button', { className: 'sppcfw-px-3 sppcfw-py-1 sppcfw-bg-[#f3f4f6] sppcfw-font-bold sppcfw-text-[#111827]' }, '+')
+					h('button', { className: 'sppcfw-px-3 sppcfw-py-1 sppcfw-font-bold', style: { backgroundColor: pmbBg, color: pmbColor } }, '+')
 				);
 			default:
 				return h('div', { className: 'sppcfw-p-3 sppcfw-border sppcfw-border-dashed sppcfw-text-xs sppcfw-text-[#6b7280]' }, el.label);
