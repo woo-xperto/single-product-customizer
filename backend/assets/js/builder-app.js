@@ -3848,8 +3848,8 @@
 										h(
 											'div',
 											{ className: 'sppcfw-space-y-1.5' },
-											renderControlHeader('Height', true, imgHeightUnit, setImgHeightUnit, ['px', 'vh']),
-											renderSliderInput(getStyle('height') || '', v => handleStyleChange('height', v), 0, 1000, 1, imgHeightUnit)
+											renderControlHeader('Height', true, imgHeightUnit, setImgHeightUnit, ['px', 'vh', '%']),
+											renderSliderInput(getStyle('height') || '', v => handleStyleChange('height', v), 0, 800, 1, imgHeightUnit, 'Auto')
 										),
 
 										h('hr', { className: 'sppcfw-border-[#374151] sppcfw-my-2' }),
@@ -5041,7 +5041,7 @@
 				const imgSettings = el.settings || {};
 				const imgWidth = imgStyles.width || '100%';
 				const imgMaxWidth = imgStyles.max_width || '100%';
-				const imgHeight = imgStyles.height || 'auto';
+				const imgHeight = imgStyles.height && imgStyles.height !== 'auto' ? imgStyles.height : 'auto';
 				const imgOpacity = imgStyles.opacity !== undefined ? imgStyles.opacity : '1';
 				const alignVal = imgStyles.alignment || imgSettings.alignment || 'center';
 				const flexAlign = alignVal === 'left' ? 'justify-start items-start' : alignVal === 'right' ? 'justify-end items-end' : 'justify-center items-center';
@@ -5055,13 +5055,13 @@
 				const customImgStyle = {
 					width: imgWidth,
 					maxWidth: imgMaxWidth,
-					height: imgHeight,
+					height: 'auto',
 					opacity: parseFloat(imgOpacity),
 					borderRadius: borderRadiusCss,
 					borderStyle: imgStyles.border_type && imgStyles.border_type !== 'Default' ? imgStyles.border_type.toLowerCase() : 'none',
 					borderWidth: imgStyles.border_width || '0px',
 					borderColor: imgStyles.border_color || 'transparent',
-					objectFit: 'contain',
+					objectFit: imgStyles.object_fit || 'contain',
 				};
 
 				const mainImgSrc = safeSample.image_url || staticFallback.image_url || '';
@@ -5073,6 +5073,7 @@
 				const showZoom = imgSettings.enable_zoom !== false;
 				const showLightbox = imgSettings.enable_lightbox !== false;
 				const cols = parseInt(imgSettings.gallery_columns, 10) || 4;
+				const isOnSale = safeSample.on_sale || (safeSample.sale_price && safeSample.regular_price && safeSample.sale_price !== safeSample.regular_price);
 
 				return h(
 					'div',
@@ -5081,19 +5082,25 @@
 					h(
 						'div',
 						{
-							className: 'sppcfw-relative sppcfw-w-full sppcfw-overflow-hidden sppcfw-rounded-lg sppcfw-bg-[#f9fafb] sppcfw-border sppcfw-border-[#e5e7eb] sppcfw-flex sppcfw-items-center sppcfw-justify-center sppcfw-p-2 sppcfw-min-h-[260px]',
+							className: 'sppcfw-relative sppcfw-w-full sppcfw-flex sppcfw-items-center sppcfw-justify-center',
 							style: { maxWidth: imgMaxWidth }
 						},
+						isOnSale &&
+							h(
+								'span',
+								{ className: 'sppcfw-absolute sppcfw-top-3 sppcfw-left-3 sppcfw-bg-[#ef4444] sppcfw-text-white sppcfw-text-xs sppcfw-px-2.5 sppcfw-py-1 sppcfw-rounded-full sppcfw-font-bold sppcfw-uppercase sppcfw-z-10 sppcfw-shadow-sm' },
+								'Sale!'
+							),
 						mainImgSrc
 							? h('img', {
 									src: mainImgSrc,
 									alt: safeSample.title || 'Product Featured Image',
 									style: customImgStyle,
-									className: 'sppcfw-max-h-[460px] sppcfw-w-full sppcfw-object-contain sppcfw-transition-all sppcfw-shadow-sm'
+									className: 'sppcfw-w-full sppcfw-h-auto sppcfw-object-contain sppcfw-transition-all'
 							  })
 							: h(
 									'div',
-									{ className: 'sppcfw-py-12 sppcfw-text-center sppcfw-text-gray-400 sppcfw-space-y-1' },
+									{ className: 'sppcfw-py-12 sppcfw-text-center sppcfw-text-gray-400 sppcfw-space-y-1 sppcfw-border sppcfw-border-dashed sppcfw-rounded-lg sppcfw-w-full' },
 									h('span', { className: 'material-symbols-outlined sppcfw-text-4xl' }, 'collections'),
 									h('div', { className: 'sppcfw-text-xs' }, 'No Product Image Available')
 							  ),
@@ -5121,7 +5128,7 @@
 						h(
 							'div',
 							{
-								className: 'sppcfw-grid sppcfw-gap-2 sppcfw-w-full',
+								className: 'sppcfw-grid sppcfw-gap-2 sppcfw-w-full sppcfw-mt-1',
 								style: {
 									maxWidth: imgMaxWidth,
 									gridTemplateColumns: `repeat(${cols}, minmax(0, 1fr))`
@@ -5132,14 +5139,14 @@
 									'div',
 									{
 										key: 'g-thumb-' + gIdx,
-										className: `sppcfw-border sppcfw-rounded sppcfw-overflow-hidden sppcfw-cursor-pointer sppcfw-transition-all sppcfw-bg-white sppcfw-p-1 sppcfw-h-16 sppcfw-flex sppcfw-items-center sppcfw-justify-center ${
+										className: `sppcfw-border sppcfw-rounded sppcfw-overflow-hidden sppcfw-cursor-pointer sppcfw-transition-all sppcfw-p-1 sppcfw-flex sppcfw-items-center sppcfw-justify-center ${
 											gIdx === 0 ? 'sppcfw-border-[#9333ea] sppcfw-ring-1 sppcfw-ring-[#9333ea]' : 'sppcfw-border-[#e5e7eb] hover:sppcfw-border-[#9333ea]'
 										}`
 									},
 									h('img', {
 										src: gUrl,
 										alt: `Gallery thumbnail ${gIdx + 1}`,
-										className: 'sppcfw-max-h-full sppcfw-w-full sppcfw-object-contain sppcfw-rounded-sm'
+										className: 'sppcfw-max-h-16 sppcfw-w-full sppcfw-object-contain sppcfw-rounded-sm'
 									})
 								)
 							)
@@ -5151,7 +5158,7 @@
 				const imgSettings = el.settings || {};
 				const imgWidth = imgStyles.width || '100%';
 				const imgMaxWidth = imgStyles.max_width || '100%';
-				const imgHeight = imgStyles.height || 'auto';
+				const imgHeight = imgStyles.height && imgStyles.height !== 'auto' ? imgStyles.height : 'auto';
 				const imgOpacity = imgStyles.opacity !== undefined ? imgStyles.opacity : '1';
 				const alignVal = imgStyles.alignment || imgSettings.alignment || 'center';
 				const flexAlign = alignVal === 'left' ? 'justify-start text-left' : alignVal === 'right' ? 'justify-end text-right' : 'justify-center text-center';
@@ -5167,7 +5174,7 @@
 				const customImgStyle = {
 					width: imgWidth,
 					maxWidth: imgMaxWidth,
-					height: imgHeight,
+					height: 'auto',
 					opacity: parseFloat(imgOpacity),
 					borderRadius: borderRadiusCss,
 					borderStyle: imgStyles.border_type && imgStyles.border_type !== 'Default' ? imgStyles.border_type.toLowerCase() : 'none',
@@ -5203,7 +5210,7 @@
 							src: customImgSrc,
 							alt: imgSettings.alt_text || 'Custom Image',
 							style: customImgStyle,
-							className: 'sppcfw-max-h-[500px] sppcfw-transition-all sppcfw-shadow-sm inline-block'
+							className: 'sppcfw-w-full sppcfw-h-auto sppcfw-object-contain sppcfw-transition-all inline-block'
 						})
 					),
 					imgSettings.caption_type === 'custom' && imgSettings.custom_caption &&

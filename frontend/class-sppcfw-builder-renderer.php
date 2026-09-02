@@ -67,6 +67,7 @@ if (!class_exists('SPPCFW_Builder_Renderer')) {
 			// Hook into WooCommerce single product summary to render builder layout
 			add_action('woocommerce_before_single_product_summary', array($this, 'sppcfw_render_builder_template'), 5);
 			// Remove default WooCommerce single product hooks to avoid duplication when custom template is active
+			remove_action('woocommerce_before_single_product_summary', 'woocommerce_show_product_sale_flash', 10);
 			remove_action('woocommerce_before_single_product_summary', 'woocommerce_show_product_images', 20);
 			remove_action('woocommerce_single_product_summary', 'woocommerce_template_single_title', 5);
 			remove_action('woocommerce_single_product_summary', 'woocommerce_template_single_rating', 10);
@@ -164,11 +165,94 @@ if (!class_exists('SPPCFW_Builder_Renderer')) {
 			$layout = isset($this->matched_template['layout']) ? $this->matched_template['layout'] : array();
 
 			$custom_css = '
+				.sppcfw-builder-frontend-wrapper { width: 100% !important; max-width: 100% !important; float: none !important; clear: both !important; box-sizing: border-box !important; }
 				.sppcfw-builder-section { width: 100%; box-sizing: border-box; }
 				.sppcfw-container-boxed { margin-left: auto !important; margin-right: auto !important; }
 				.sppcfw-container-full { width: 100% !important; }
-				.sppcfw-flex-row { display: flex; flex-wrap: wrap; }
+				.sppcfw-flex-row { display: flex; flex-wrap: wrap; width: 100%; box-sizing: border-box; }
 				.sppcfw-column { box-sizing: border-box; }
+				.sppcfw-widget-item { width: 100% !important; box-sizing: border-box !important; }
+
+				/* Hide empty summary container from native WooCommerce template */
+				.woocommerce div.product > .summary.entry-summary:empty,
+				.woocommerce-page div.product > .summary.entry-summary:empty,
+				div.product > .summary:empty { display: none !important; width: 0 !important; float: none !important; margin: 0 !important; padding: 0 !important; }
+
+				/* Full width product gallery override matching builder edit canvas */
+				.woocommerce div.product .sppcfw-builder-frontend-wrapper div.images,
+				.woocommerce-page div.product .sppcfw-builder-frontend-wrapper div.images,
+				.woocommerce div.product .sppcfw-builder-frontend-wrapper .woocommerce-product-gallery,
+				.woocommerce-page div.product .sppcfw-builder-frontend-wrapper .woocommerce-product-gallery,
+				.sppcfw-builder-frontend-wrapper .woocommerce-product-gallery,
+				.sppcfw-builder-frontend-wrapper div.product div.images,
+				.sppcfw-builder-frontend-wrapper div.images,
+				.sppcfw-builder-frontend-wrapper .images,
+				.sppcfw-product-gallery-frontend-wrapper,
+				.sppcfw-product-gallery-frontend-wrapper .woocommerce-product-gallery,
+				.sppcfw-product-gallery-frontend-wrapper div.images {
+					float: none !important;
+					width: 100% !important;
+					max-width: 100% !important;
+					margin-left: 0 !important;
+					margin-right: 0 !important;
+					margin-bottom: 0 !important;
+					opacity: 1 !important;
+					box-sizing: border-box !important;
+				}
+
+				.sppcfw-product-gallery-frontend-wrapper {
+					position: relative !important;
+				}
+
+				.sppcfw-product-gallery-frontend-wrapper span.onsale,
+				.sppcfw-product-gallery-frontend-wrapper .onsale {
+					position: absolute !important;
+					top: 10px !important;
+					left: 10px !important;
+					right: auto !important;
+					bottom: auto !important;
+					z-index: 9 !important;
+				}
+
+				.sppcfw-builder-frontend-wrapper .woocommerce-product-gallery .woocommerce-product-gallery__wrapper,
+				.sppcfw-builder-frontend-wrapper .woocommerce-product-gallery .flex-viewport,
+				.sppcfw-builder-frontend-wrapper .woocommerce-product-gallery .woocommerce-product-gallery__image,
+				.sppcfw-builder-frontend-wrapper .woocommerce-product-gallery .woocommerce-product-gallery__image img,
+				.sppcfw-builder-frontend-wrapper .woocommerce-product-gallery img,
+				.sppcfw-product-gallery-frontend-wrapper img {
+					width: 100% !important;
+					max-width: 100% !important;
+					height: auto !important;
+					display: block !important;
+					box-sizing: border-box !important;
+				}
+
+				.sppcfw-builder-frontend-wrapper .woocommerce-product-gallery .flex-control-thumbs,
+				.sppcfw-product-gallery-frontend-wrapper .flex-control-thumbs {
+					display: flex !important;
+					flex-wrap: wrap !important;
+					gap: 8px !important;
+					margin-top: 12px !important;
+					padding: 0 !important;
+					list-style: none !important;
+					width: 100% !important;
+					box-sizing: border-box !important;
+				}
+
+				.sppcfw-builder-frontend-wrapper .woocommerce-product-gallery .flex-control-thumbs li,
+				.sppcfw-product-gallery-frontend-wrapper .flex-control-thumbs li {
+					float: none !important;
+					margin: 0 !important;
+					cursor: pointer !important;
+					box-sizing: border-box !important;
+				}
+
+				.sppcfw-builder-frontend-wrapper .woocommerce-product-gallery .flex-control-thumbs li img,
+				.sppcfw-product-gallery-frontend-wrapper .flex-control-thumbs li img {
+					width: 100% !important;
+					height: auto !important;
+					display: block !important;
+				}
 			';
 
 			if (!empty($layout) && is_array($layout)) {
@@ -336,11 +420,6 @@ if (!class_exists('SPPCFW_Builder_Renderer')) {
 						$css .= 'max-width: ' . esc_attr($max_width) . ' !important;';
 					}
 
-					$height = $this->sppcfw_get_device_prop($styles, 'height', $device, '');
-					if (!empty($height)) {
-						$css .= 'height: ' . esc_attr($height) . ' !important;';
-					}
-
 					$opacity = $this->sppcfw_get_device_prop($styles, 'opacity', $device, '');
 					if ('' !== $opacity && null !== $opacity) {
 						$css .= 'opacity: ' . esc_attr($opacity) . ' !important;';
@@ -495,7 +574,10 @@ if (!class_exists('SPPCFW_Builder_Renderer')) {
 					woocommerce_template_single_price();
 					break;
 				case 'product_gallery':
+					echo '<div class="sppcfw-product-gallery-frontend-wrapper">';
+					woocommerce_show_product_sale_flash();
 					woocommerce_show_product_images();
+					echo '</div>';
 					break;
 				case 'image':
 					$settings = isset($el['settings']) ? $el['settings'] : array();
