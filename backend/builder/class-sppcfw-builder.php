@@ -124,6 +124,7 @@ if (!class_exists('SPPCFW_Builder')) {
 				$sppcfw_basic = get_option('sppcfw_basic', array());
 				$enable_pm = (is_array($sppcfw_basic) && isset($sppcfw_basic['enable_plus_minus_button']) && 'on' === $sppcfw_basic['enable_plus_minus_button']) ? 'on' : '';
 				$btn_text = (is_array($sppcfw_basic) && isset($sppcfw_basic['add_to_cart_button_text'])) ? $sppcfw_basic['add_to_cart_button_text'] : 'Add to cart';
+				$hide_price = (is_array($sppcfw_basic) && isset($sppcfw_basic['hide_product_price']) && 'on' === $sppcfw_basic['hide_product_price']) ? 'on' : '';
 
 				wp_localize_script(
 					'sppcfw-builder-app',
@@ -136,6 +137,7 @@ if (!class_exists('SPPCFW_Builder')) {
 						'basic_settings' => array(
 							'enable_plus_minus_button' => $enable_pm,
 							'add_to_cart_button_text' => $btn_text,
+							'hide_product_price' => $hide_price,
 						),
 					)
 				);
@@ -479,6 +481,15 @@ if (!class_exists('SPPCFW_Builder')) {
 				update_option('sppcfw_basic', $basic);
 			}
 
+			if (isset($_POST['hide_product_price'])) {
+				$basic = get_option('sppcfw_basic', array());
+				if (!is_array($basic)) {
+					$basic = array();
+				}
+				$basic['hide_product_price'] = ('on' === sanitize_text_field($_POST['hide_product_price'])) ? 'on' : '';
+				update_option('sppcfw_basic', $basic);
+			}
+
 			$selected_product_id = isset($_POST['selected_product_id']) ? sanitize_text_field($_POST['selected_product_id']) : (isset($page_settings['selected_product_id']) ? sanitize_text_field($page_settings['selected_product_id']) : '');
 
 			if (empty($template_id) || 'new' === $template_id) {
@@ -541,8 +552,8 @@ if (!class_exists('SPPCFW_Builder')) {
 			$templates = get_option('sppcfw_builder_templates', array());
 			$sppcfw_basic = get_option('sppcfw_basic', array());
 			$enable_pm = (is_array($sppcfw_basic) && isset($sppcfw_basic['enable_plus_minus_button']) && 'on' === $sppcfw_basic['enable_plus_minus_button']) ? 'on' : '';
-
 			$btn_text = (is_array($sppcfw_basic) && isset($sppcfw_basic['add_to_cart_button_text'])) ? $sppcfw_basic['add_to_cart_button_text'] : 'Add to cart';
+			$hide_price = (is_array($sppcfw_basic) && isset($sppcfw_basic['hide_product_price']) && 'on' === $sppcfw_basic['hide_product_price']) ? 'on' : '';
 
 			if (isset($templates[$template_id])) {
 				wp_send_json_success(array(
@@ -550,6 +561,7 @@ if (!class_exists('SPPCFW_Builder')) {
 					'basic_settings' => array(
 						'enable_plus_minus_button' => $enable_pm,
 						'add_to_cart_button_text' => $btn_text,
+						'hide_product_price' => $hide_price,
 					),
 				));
 				return;
@@ -660,6 +672,17 @@ if (!class_exists('SPPCFW_Builder')) {
 				$basic['add_to_cart_button_text'] = sanitize_text_field($value);
 				update_option('sppcfw_basic', $basic);
 				wp_send_json_success(array('message' => __('Basic setting updated', 'single-product-customizer'), 'value' => $basic['add_to_cart_button_text']));
+				return;
+			}
+
+			if ('hide_product_price' === $key) {
+				$basic = get_option('sppcfw_basic', array());
+				if (!is_array($basic)) {
+					$basic = array();
+				}
+				$basic['hide_product_price'] = ('on' === $value) ? 'on' : '';
+				update_option('sppcfw_basic', $basic);
+				wp_send_json_success(array('message' => __('Basic setting updated', 'single-product-customizer'), 'value' => $basic['hide_product_price']));
 				return;
 			}
 

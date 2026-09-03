@@ -32,6 +32,9 @@
 	const CANVAS_STATIC_DATA = {
 		title: 'Single Product Title',
 		price: '$49.99',
+		regular_price: '$59.99',
+		sale_price: '$49.99',
+		on_sale: true,
 		sku: 'SAMPLE-SKU-123',
 		stock_text: 'In Stock',
 		rating_count: 5,
@@ -835,6 +838,21 @@
 		const [addToCartBtnText, setAddToCartBtnText] = useState(() => {
 			return (window.SPPCFWBuilderConfig && window.SPPCFWBuilderConfig.basic_settings && window.SPPCFWBuilderConfig.basic_settings.add_to_cart_button_text) || 'Add to cart';
 		});
+		const [hidePrice, setHidePrice] = useState(() => {
+			return !!(window.SPPCFWBuilderConfig && window.SPPCFWBuilderConfig.basic_settings && window.SPPCFWBuilderConfig.basic_settings.hide_product_price === 'on');
+		});
+
+		function handleToggleHidePrice(val) {
+			const isChecked = !!val;
+			setHidePrice(isChecked);
+			apiPost('sppcfw_update_builder_basic_setting', {
+				key: 'hide_product_price',
+				value: isChecked ? 'on' : '',
+			});
+			if (window.SPPCFWBuilderConfig && window.SPPCFWBuilderConfig.basic_settings) {
+				window.SPPCFWBuilderConfig.basic_settings.hide_product_price = isChecked ? 'on' : '';
+			}
+		}
 
 		const [products, setProducts] = useState([]);
 		const [categories, setCategories] = useState([]);
@@ -916,6 +934,9 @@
 						if (res.data.basic_settings.add_to_cart_button_text !== undefined) {
 							setAddToCartBtnText(res.data.basic_settings.add_to_cart_button_text || 'Add to cart');
 						}
+						if (res.data.basic_settings.hide_product_price !== undefined) {
+							setHidePrice(res.data.basic_settings.hide_product_price === 'on');
+						}
 					}
 					if (window.history && window.history.pushState) {
 						const newUrl = new URL(window.location.href);
@@ -947,6 +968,9 @@
 						}
 						if (res.data.basic_settings.add_to_cart_button_text !== undefined) {
 							setAddToCartBtnText(res.data.basic_settings.add_to_cart_button_text || 'Add to cart');
+						}
+						if (res.data.basic_settings.hide_product_price !== undefined) {
+							setHidePrice(res.data.basic_settings.hide_product_price === 'on');
 						}
 					}
 				} else {
@@ -1185,6 +1209,7 @@
 				selected_product_id: selectedProductId || '',
 				enable_plus_minus_button: enablePlusMinus ? 'on' : '',
 				add_to_cart_button_text: addToCartBtnText || '',
+				hide_product_price: hidePrice ? 'on' : '',
 				page_settings: JSON.stringify(updatedPageSettings),
 				layout: JSON.stringify(elements),
 				conditions: JSON.stringify(displayConditions),
@@ -1250,6 +1275,8 @@
 				status: currentStatus,
 				selected_product_id: selectedProductId || '',
 				enable_plus_minus_button: enablePlusMinus ? 'on' : '',
+				add_to_cart_button_text: addToCartBtnText || '',
+				hide_product_price: hidePrice ? 'on' : '',
 				page_settings: JSON.stringify(updatedPageSettings),
 				layout: JSON.stringify(elements),
 				conditions: JSON.stringify(displayConditions),
@@ -1343,6 +1370,9 @@
 					setEnablePlusMinus,
 					addToCartBtnText,
 					setAddToCartBtnText,
+					hidePrice,
+					setHidePrice,
+					handleToggleHidePrice,
 				}),
 
 				// Central Canvas Workspace
@@ -1733,6 +1763,9 @@
 		setEnablePlusMinus,
 		addToCartBtnText,
 		setAddToCartBtnText,
+		hidePrice,
+		setHidePrice,
+		handleToggleHidePrice,
 	}) {
 		// If an element or container is selected, render the LEFT-SIDE "Edit Container" / "Edit Element" Inspector
 		if (selectedElement) {
@@ -1751,6 +1784,9 @@
 				setEnablePlusMinus,
 				addToCartBtnText,
 				setAddToCartBtnText,
+				hidePrice,
+				setHidePrice,
+				handleToggleHidePrice,
 			});
 		}
 
@@ -2227,7 +2263,7 @@
 	}
 
 	// 3b. Left Inspector & Modular Individual Edit Panels System
-	function LeftInspector({ deviceView = 'desktop', selectedElement, updateElementProperties, closeInspector, categories, products, sampleData, addColumnToContainer, duplicateColumn, removeElement, enablePlusMinus, setEnablePlusMinus, addToCartBtnText, setAddToCartBtnText }) {
+	function LeftInspector({ deviceView = 'desktop', selectedElement, updateElementProperties, closeInspector, categories, products, sampleData, addColumnToContainer, duplicateColumn, removeElement, enablePlusMinus, setEnablePlusMinus, addToCartBtnText, setAddToCartBtnText, hidePrice, setHidePrice, handleToggleHidePrice }) {
 		const [activeTab, setActiveTab] = useState('layout'); // 'layout'/'content' | 'style' | 'advanced'
 		const [openAccordions, setOpenAccordions] = useState({
 			general: true,
@@ -3286,6 +3322,113 @@
 			);
 		}
 
+		// 1e-2. Product Price Content Panel
+		function renderProductPriceContent() {
+			const showReg = getSetting('show_regular_price') !== false && getSetting('show_regular_price') !== 'off' && getSetting('show_regular_price') !== '0';
+			const showBadge = getSetting('show_sale_badge') !== false && getSetting('show_sale_badge') !== 'off' && getSetting('show_sale_badge') !== '0';
+
+			return h(
+				'div',
+				{ className: 'sppcfw-space-y-4' },
+				renderAccordion(
+					'price_display',
+					'Price Display Settings',
+					h(
+						'div',
+						{ className: 'sppcfw-space-y-3.5' },
+						// Hide Price Checkbox (sppcfw_basic_hide_price)
+						h(
+							'div',
+							{ className: 'sppcfw-flex sppcfw-items-start sppcfw-gap-3 sppcfw-p-3 sppcfw-bg-[#16202e] sppcfw-border sppcfw-border-[#3b4b62] sppcfw-rounded-lg' },
+							h('input', {
+								type: 'checkbox',
+								id: 'sppcfw_basic_hide_price',
+								className: 'sppcfw_basic_hide_price sppcfw-mt-0.5 sppcfw-w-4 sppcfw-h-4 sppcfw-rounded sppcfw-text-[#9333ea] focus:sppcfw-ring-[#9333ea] sppcfw-cursor-pointer sppcfw-accent-[#9333ea]',
+								checked: !!hidePrice,
+								onChange: e => {
+									const isChecked = e.target.checked;
+									if (typeof setHidePrice === 'function') {
+										setHidePrice(isChecked);
+									}
+									if (typeof handleToggleHidePrice === 'function') {
+										handleToggleHidePrice(isChecked);
+									} else {
+										apiPost('sppcfw_update_builder_basic_setting', {
+											key: 'hide_product_price',
+											value: isChecked ? 'on' : '',
+										});
+										if (window.SPPCFWBuilderConfig && window.SPPCFWBuilderConfig.basic_settings) {
+											window.SPPCFWBuilderConfig.basic_settings.hide_product_price = isChecked ? 'on' : '';
+										}
+									}
+								},
+							}),
+							h(
+								'label',
+								{ htmlFor: 'sppcfw_basic_hide_price', className: 'sppcfw-flex sppcfw-flex-col sppcfw-cursor-pointer' },
+								h('span', { className: 'sppcfw-text-xs sppcfw-font-bold sppcfw-text-[#d9e3f6]' }, 'Hide price'),
+								h('span', { className: 'sppcfw-text-[11px] sppcfw-text-[#9ca3af] sppcfw-mt-0.5' }, 'Hides the price on single product pages. Automatically syncs with Basic Settings.')
+							)
+						),
+
+						// Show Regular Price Checkbox
+						h(
+							'div',
+							{ className: 'sppcfw-flex sppcfw-items-start sppcfw-gap-3 sppcfw-p-3 sppcfw-bg-[#16202e] sppcfw-border sppcfw-border-[#3b4b62] sppcfw-rounded-lg' },
+							h('input', {
+								type: 'checkbox',
+								id: 'sppcfw_show_regular_price',
+								className: 'sppcfw-mt-0.5 sppcfw-w-4 sppcfw-h-4 sppcfw-rounded sppcfw-text-[#9333ea] focus:sppcfw-ring-[#9333ea] sppcfw-cursor-pointer sppcfw-accent-[#9333ea]',
+								checked: showReg,
+								onChange: e => handleSettingChange('show_regular_price', e.target.checked),
+							}),
+							h(
+								'label',
+								{ htmlFor: 'sppcfw_show_regular_price', className: 'sppcfw-flex sppcfw-flex-col sppcfw-cursor-pointer' },
+								h('span', { className: 'sppcfw-text-xs sppcfw-font-bold sppcfw-text-[#d9e3f6]' }, 'Show regular price if on sale'),
+								h('span', { className: 'sppcfw-text-[11px] sppcfw-text-[#9ca3af] sppcfw-mt-0.5' }, 'When both regular and sale price exist, display the crossed-out regular price. If the product only has one price, that single price is always shown.')
+							)
+						),
+
+						// Show Sale Badge Checkbox
+						h(
+							'div',
+							{ className: 'sppcfw-flex sppcfw-items-start sppcfw-gap-3 sppcfw-p-3 sppcfw-bg-[#16202e] sppcfw-border sppcfw-border-[#3b4b62] sppcfw-rounded-lg' },
+							h('input', {
+								type: 'checkbox',
+								id: 'sppcfw_show_sale_badge',
+								className: 'sppcfw-mt-0.5 sppcfw-w-4 sppcfw-h-4 sppcfw-rounded sppcfw-text-[#9333ea] focus:sppcfw-ring-[#9333ea] sppcfw-cursor-pointer sppcfw-accent-[#9333ea]',
+								checked: showBadge,
+								onChange: e => handleSettingChange('show_sale_badge', e.target.checked),
+							}),
+							h(
+								'label',
+								{ htmlFor: 'sppcfw_show_sale_badge', className: 'sppcfw-flex sppcfw-flex-col sppcfw-cursor-pointer' },
+								h('span', { className: 'sppcfw-text-xs sppcfw-font-bold sppcfw-text-[#d9e3f6]' }, 'Show sale badge'),
+								h('span', { className: 'sppcfw-text-[11px] sppcfw-text-[#9ca3af] sppcfw-mt-0.5' }, 'Displays a "Sale" badge when the product is discounted.')
+							)
+						),
+
+						// Alignment
+						h(
+							'div',
+							{ className: 'sppcfw-space-y-1.5' },
+							renderControlHeader('Alignment', true),
+							renderButtonGroup(
+								[
+									{ value: 'left', icon: 'format_align_left', title: 'Left' },
+									{ value: 'center', icon: 'format_align_center', title: 'Center' },
+									{ value: 'right', icon: 'format_align_right', title: 'Right' },
+								],
+								getStyle('alignment') || 'left',
+								v => handleStyleChange('alignment', v)
+							)
+						)
+					)
+				)
+			);
+		}
+
 		// 1f. Heading Content Panel
 		function renderHeadingContent() {
 			return h(
@@ -3635,6 +3778,7 @@
 							handleStyleChange('text_color', v);
 							handleStyleChange('price_color', v);
 						}, '#9333ea'),
+						renderColorPicker('Regular Price Color', getStyle('regular_price_color'), v => handleStyleChange('regular_price_color', v), '#9ca3af'),
 						renderColorPicker('Sale Price Color', getStyle('sale_price_color'), v => handleStyleChange('sale_price_color', v), '#ef4444'),
 						h(
 							'div',
@@ -4072,6 +4216,9 @@
 			}
 			if (selectedElement.type === 'product_title') {
 				return renderProductTitleContent();
+			}
+			if (selectedElement.type === 'product_price') {
+				return renderProductPriceContent();
 			}
 			if (isHeading) {
 				return renderHeadingContent();
@@ -5149,12 +5296,17 @@
 			isSelected &&
 				h(
 					'div',
-					{ className: 'sppcfw-absolute sppcfw--top-3 sppcfw-right-2 sppcfw-bg-[#9333ea] sppcfw-text-white sppcfw-px-2 sppcfw-py-0.5 sppcfw-rounded sppcfw-text-[10px] font-mono sppcfw-z-20 sppcfw-shadow-md sppcfw-flex sppcfw-items-center sppcfw-gap-2 sppcfw-select-none' },
-					h('span', { className: 'sppcfw-font-bold' }, column.label || 'Column'),
+					{
+						className: 'sppcfw-selection-badge sppcfw-absolute sppcfw--top-3 sppcfw-right-2 sppcfw-bg-[#9333ea] sppcfw-text-white sppcfw-px-2 sppcfw-h-5 sppcfw-leading-none sppcfw-rounded sppcfw-text-[10px] font-mono sppcfw-z-20 sppcfw-shadow-md sppcfw-flex sppcfw-items-center sppcfw-gap-2 sppcfw-select-none',
+						style: { height: '20px', lineHeight: '1', fontSize: '10px', boxSizing: 'border-box' }
+					},
+					h('span', { className: 'sppcfw-font-bold sppcfw-leading-none', style: { lineHeight: '1', fontSize: '10px' } }, column.label || 'Column'),
 					h(
 						'button',
 						{
-							className: 'hover:sppcfw-text-black sppcfw-text-xs sppcfw-font-bold sppcfw-transition-colors sppcfw-cursor-pointer sppcfw-px-1',
+							type: 'button',
+							className: 'hover:sppcfw-text-black sppcfw-text-xs sppcfw-font-bold sppcfw-transition-colors sppcfw-cursor-pointer sppcfw-px-1 sppcfw-leading-none sppcfw-p-0 sppcfw-m-0 sppcfw-border-0 sppcfw-bg-transparent sppcfw-flex sppcfw-items-center sppcfw-justify-center',
+							style: { lineHeight: '1', fontSize: '12px', padding: '0 2px', margin: 0, border: 'none', background: 'transparent', color: 'inherit', cursor: 'pointer' },
 							onClick: e => {
 								e.stopPropagation();
 								if (typeof addColumnToContainer === 'function') addColumnToContainer(containerId);
@@ -5166,7 +5318,9 @@
 					h(
 						'button',
 						{
-							className: 'hover:sppcfw-text-black sppcfw-text-xs sppcfw-transition-colors sppcfw-cursor-pointer sppcfw-px-0.5',
+							type: 'button',
+							className: 'hover:sppcfw-text-black sppcfw-text-xs sppcfw-transition-colors sppcfw-cursor-pointer sppcfw-px-0.5 sppcfw-leading-none sppcfw-p-0 sppcfw-m-0 sppcfw-border-0 sppcfw-bg-transparent sppcfw-flex sppcfw-items-center sppcfw-justify-center',
+							style: { lineHeight: '1', fontSize: '11px', padding: '0 2px', margin: 0, border: 'none', background: 'transparent', color: 'inherit', cursor: 'pointer' },
 							onClick: e => {
 								e.stopPropagation();
 								if (typeof duplicateColumn === 'function') duplicateColumn(column.id);
@@ -5178,7 +5332,9 @@
 					h(
 						'button',
 						{
-							className: 'hover:sppcfw-text-red-200 sppcfw-text-xs sppcfw-font-bold sppcfw-transition-colors sppcfw-cursor-pointer sppcfw-px-0.5',
+							type: 'button',
+							className: 'hover:sppcfw-text-red-200 sppcfw-text-xs sppcfw-font-bold sppcfw-transition-colors sppcfw-cursor-pointer sppcfw-px-0.5 sppcfw-leading-none sppcfw-p-0 sppcfw-m-0 sppcfw-border-0 sppcfw-bg-transparent sppcfw-flex sppcfw-items-center sppcfw-justify-center',
+							style: { lineHeight: '1', fontSize: '11px', padding: '0 2px', margin: 0, border: 'none', background: 'transparent', color: 'inherit', cursor: 'pointer' },
 							onClick: e => {
 								e.stopPropagation();
 								if (typeof removeElement === 'function') removeElement(column.id);
@@ -5353,12 +5509,17 @@
 			isSelected &&
 				h(
 					'div',
-					{ className: 'sppcfw-absolute sppcfw--top-3 sppcfw-right-2 sppcfw-bg-[#9333ea] sppcfw-text-white sppcfw-px-2 sppcfw-py-0.5 sppcfw-rounded sppcfw-text-[10px] sppcfw-flex sppcfw-items-center sppcfw-gap-1 sppcfw-z-20 sppcfw-shadow font-mono sppcfw-select-none' },
-					h('span', null, widget.label),
+					{
+						className: 'sppcfw-selection-badge sppcfw-absolute sppcfw--top-3 sppcfw-right-2 sppcfw-bg-[#9333ea] sppcfw-text-white sppcfw-px-2 sppcfw-h-5 sppcfw-leading-none sppcfw-rounded sppcfw-text-[10px] sppcfw-flex sppcfw-items-center sppcfw-gap-1 sppcfw-z-20 sppcfw-shadow font-mono sppcfw-select-none',
+						style: { height: '20px', lineHeight: '1', fontSize: '10px', boxSizing: 'border-box' }
+					},
+					h('span', { className: 'sppcfw-leading-none', style: { lineHeight: '1', fontSize: '10px' } }, widget.label),
 					h(
 						'button',
 						{
-							className: 'hover:sppcfw-text-red-300 sppcfw-font-bold sppcfw-ml-1',
+							type: 'button',
+							className: 'hover:sppcfw-text-red-300 sppcfw-font-bold sppcfw-ml-1 sppcfw-leading-none sppcfw-p-0 sppcfw-m-0 sppcfw-border-0 sppcfw-bg-transparent sppcfw-cursor-pointer sppcfw-flex sppcfw-items-center sppcfw-justify-center',
+							style: { lineHeight: '1', fontSize: '10px', padding: 0, margin: 0, border: 'none', background: 'transparent', color: 'inherit', cursor: 'pointer' },
 							onClick: e => {
 								e.stopPropagation();
 								removeElement(widget.id);
@@ -5395,13 +5556,15 @@
 				return h(
 					titleTag,
 					{
-						className: `sppcfw-text-2xl sppcfw-transition-all ${alignClass}`,
+						className: `sppcfw-text-2xl sppcfw-m-0 sppcfw-p-0 sppcfw-transition-all ${alignClass}`,
 						style: {
 							color: getResponsiveProp(styles, 'text_color', deviceView) || '#111827',
 							fontSize: getResponsiveProp(styles, 'font_size', deviceView) || undefined,
 							fontFamily: (getResponsiveProp(styles, 'font_family', deviceView) && getResponsiveProp(styles, 'font_family', deviceView) !== 'Inherit') ? getResponsiveProp(styles, 'font_family', deviceView) : undefined,
 							fontWeight: resolvedFontWeight,
 							lineHeight: getResponsiveProp(styles, 'line_height', deviceView) || undefined,
+							margin: 0,
+							padding: 0,
 						},
 					},
 					innerText
@@ -5450,25 +5613,79 @@
 				);
 			}
 			case 'product_price': {
-				const displayPrice = safeSample.price || staticFallback.price || '$49.99';
-				const isOnSale = safeSample.on_sale || (safeSample.sale_price && safeSample.regular_price && safeSample.sale_price !== safeSample.regular_price);
+				// Check if Hide Price is enabled in Basic Settings
+				const isPriceHidden =
+					(typeof window !== 'undefined' && window.SPPCFWBuilderConfig && window.SPPCFWBuilderConfig.basic_settings && window.SPPCFWBuilderConfig.basic_settings.hide_product_price === 'on');
+
+				if (isPriceHidden) {
+					return h(
+						'div',
+						{ className: `sppcfw-flex sppcfw-items-center sppcfw-gap-2 sppcfw-py-2 sppcfw-px-3 sppcfw-rounded-lg sppcfw-bg-amber-500/10 sppcfw-border sppcfw-border-amber-500/30 sppcfw-text-amber-400 sppcfw-text-xs ${alignClass}` },
+						h('span', { className: 'material-symbols-outlined sppcfw-text-base' }, 'visibility_off'),
+						h('span', { className: 'sppcfw-font-medium' }, 'Price is hidden by Basic Settings (Hide Price is enabled)')
+					);
+				}
+
 				const priceColor = getResponsiveProp(styles, 'price_color', deviceView) || getResponsiveProp(styles, 'text_color', deviceView) || '#9333ea';
 				const salePriceColor = getResponsiveProp(styles, 'sale_price_color', deviceView) || '#ef4444';
+				const regularPriceColor = getResponsiveProp(styles, 'regular_price_color', deviceView) || '#9ca3af';
 				const fontSize = getResponsiveProp(styles, 'font_size', deviceView) || '24px';
 				const fontWeight = getResponsiveProp(styles, 'font_weight', deviceView) || '800';
 
+				const showRegularPrice = settings.show_regular_price !== false && settings.show_regular_price !== 'off' && settings.show_regular_price !== '0';
+				const showSaleBadge = settings.show_sale_badge !== false && settings.show_sale_badge !== 'off' && settings.show_sale_badge !== '0';
+
+				// Determine if on sale and both prices exist
+				const rawReg = safeSample.regular_price || staticFallback.regular_price || '';
+				const rawSale = safeSample.sale_price || staticFallback.sale_price || '';
+				const hasRegular = !!rawReg;
+				const hasSale = !!rawSale;
+				const isOnSale = (safeSample.on_sale || (hasSale && hasRegular && rawSale !== rawReg)) && hasSale;
+
+				const displaySinglePrice = safeSample.price || rawReg || rawSale || staticFallback.price || '$49.99';
+
 				return h(
 					'div',
-					{ className: `sppcfw-flex sppcfw-items-center sppcfw-gap-3 ${alignClass}` },
-					h('span', {
-						className: 'sppcfw-font-extrabold sppcfw-transition-all',
-						style: { color: priceColor, fontSize: fontSize, fontWeight: fontWeight },
-						dangerouslySetInnerHTML: { __html: displayPrice }
-					}),
-					isOnSale && h('span', {
-						className: 'sppcfw-text-white sppcfw-text-xs sppcfw-px-2 sppcfw-py-1 sppcfw-rounded sppcfw-font-bold sppcfw-uppercase',
-						style: { backgroundColor: salePriceColor }
-					}, 'Sale')
+					{ className: `sppcfw-flex sppcfw-items-center sppcfw-flex-wrap sppcfw-gap-3 ${alignClass}` },
+					isOnSale
+						? h(
+								'div',
+								{ className: 'sppcfw-flex sppcfw-items-center sppcfw-gap-2.5' },
+								showRegularPrice &&
+									h(
+										'span',
+										{
+											className: 'sppcfw-line-through sppcfw-opacity-70 sppcfw-transition-all',
+											style: { color: regularPriceColor, fontSize: `calc(${fontSize} * 0.8)`, fontWeight: '400' },
+											dangerouslySetInnerHTML: { __html: rawReg }
+										}
+									),
+								h(
+									'span',
+									{
+										className: 'sppcfw-font-extrabold sppcfw-transition-all',
+										style: { color: salePriceColor, fontSize: fontSize, fontWeight: fontWeight },
+										dangerouslySetInnerHTML: { __html: rawSale || displaySinglePrice }
+									}
+								)
+						  )
+						: h(
+								'span',
+								{
+									className: 'sppcfw-font-extrabold sppcfw-transition-all',
+									style: { color: priceColor, fontSize: fontSize, fontWeight: fontWeight },
+									dangerouslySetInnerHTML: { __html: displaySinglePrice }
+								}
+						  ),
+					isOnSale && showSaleBadge &&
+						h(
+							'span',
+							{
+								className: 'sppcfw-text-white sppcfw-text-xs sppcfw-px-2 sppcfw-py-0.5 sppcfw-rounded sppcfw-font-bold sppcfw-uppercase sppcfw-shadow-sm',
+								style: { backgroundColor: salePriceColor }
+							},
+							'Sale'
+						)
 				);
 			}
 			case 'product_gallery': {

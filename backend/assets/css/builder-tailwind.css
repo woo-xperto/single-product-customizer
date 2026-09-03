@@ -77,6 +77,36 @@
   outline-offset: -2px;
 }
 
+/* Selected Element Toolbar Badge - Consistent Height Across All Elements */
+.sppcfw-selection-badge {
+  height: 20px !important;
+  min-height: 20px !important;
+  max-height: 20px !important;
+  line-height: 1 !important;
+  font-size: 10px !important;
+  box-sizing: border-box !important;
+  display: flex !important;
+  align-items: center !important;
+}
+.sppcfw-selection-badge span {
+  line-height: 1 !important;
+  font-size: 10px !important;
+  display: inline-flex !important;
+  align-items: center !important;
+}
+.sppcfw-selection-badge button {
+  line-height: 1 !important;
+  font-size: 10px !important;
+  padding: 0 !important;
+  margin: 0 !important;
+  border: none !important;
+  background: transparent !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  cursor: pointer !important;
+}
+
 /* Material Symbol Icon Tweaks */
 .material-symbols-outlined {
   font-variation-settings:

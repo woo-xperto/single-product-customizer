@@ -200,6 +200,31 @@ if (!class_exists('SPPCFW_Builder_Renderer')) {
 					box-sizing: border-box !important;
 				}
 
+				/* Product Price Base Styles */
+				.sppcfw-price-wrapper {
+					width: 100% !important;
+					box-sizing: border-box !important;
+				}
+				.sppcfw-price-wrapper .price {
+					margin: 0 !important;
+					padding: 0 !important;
+					display: flex !important;
+					align-items: center !important;
+					flex-wrap: wrap !important;
+					gap: 8px !important;
+				}
+				.sppcfw-price-wrapper .price del {
+					opacity: 0.65 !important;
+					text-decoration: line-through !important;
+				}
+				.sppcfw-price-wrapper .price ins {
+					text-decoration: none !important;
+					font-weight: inherit !important;
+				}
+				.sppcfw-price-wrapper .price .woocommerce-Price-amount {
+					display: inline-block !important;
+				}
+
 				/* Gallery Component Styles */
 				.sppcfw-product-gallery-frontend-wrapper {
 					position: relative !important;
@@ -602,6 +627,22 @@ if (!class_exists('SPPCFW_Builder_Renderer')) {
 						$css .= ".sppcfw-el-{$id} h1, .sppcfw-el-{$id} h2, .sppcfw-el-{$id} h3, .sppcfw-el-{$id} h4, .sppcfw-el-{$id} h5, .sppcfw-el-{$id} h6, .sppcfw-el-{$id} .product_title, .sppcfw-el-{$id} .sppcfw-custom-heading, .sppcfw-el-{$id} a { color: " . esc_attr($text_color) . ' !important; }';
 					}
 
+					// Product Price specific color styles
+					$price_color = $this->sppcfw_get_device_prop($styles, 'price_color', $device, $text_color);
+					if (!empty($price_color)) {
+						$css .= ".sppcfw-el-{$id} .price, .sppcfw-el-{$id} .price .amount, .sppcfw-el-{$id} .woocommerce-Price-amount, .sppcfw-el-{$id} .sppcfw-price-wrapper { color: " . esc_attr($price_color) . ' !important; }';
+					}
+
+					$sale_price_color = $this->sppcfw_get_device_prop($styles, 'sale_price_color', $device, '');
+					if (!empty($sale_price_color)) {
+						$css .= ".sppcfw-el-{$id} .price ins, .sppcfw-el-{$id} .price ins .amount, .sppcfw-el-{$id} .price ins .woocommerce-Price-amount, .sppcfw-el-{$id} ins, .sppcfw-el-{$id} ins .amount { color: " . esc_attr($sale_price_color) . ' !important; }';
+					}
+
+					$reg_price_color = $this->sppcfw_get_device_prop($styles, 'regular_price_color', $device, '');
+					if (!empty($reg_price_color)) {
+						$css .= ".sppcfw-el-{$id} .price del, .sppcfw-el-{$id} .price del .amount, .sppcfw-el-{$id} del, .sppcfw-el-{$id} del .amount { color: " . esc_attr($reg_price_color) . ' !important; }';
+					}
+
 					$bg_color = $this->sppcfw_get_device_prop($styles, 'bg_color', $device, '');
 					if (!empty($bg_color)) {
 						$css .= 'background-color: ' . esc_attr($bg_color) . ' !important;';
@@ -611,6 +652,7 @@ if (!class_exists('SPPCFW_Builder_Renderer')) {
 					if (!empty($font_size)) {
 						$css .= 'font-size: ' . esc_attr($font_size) . ' !important;';
 						$css .= ".sppcfw-el-{$id} h1, .sppcfw-el-{$id} h2, .sppcfw-el-{$id} h3, .sppcfw-el-{$id} h4, .sppcfw-el-{$id} h5, .sppcfw-el-{$id} h6, .sppcfw-el-{$id} .product_title, .sppcfw-el-{$id} .sppcfw-custom-heading { font-size: " . esc_attr($font_size) . ' !important; }';
+						$css .= ".sppcfw-el-{$id} .price, .sppcfw-el-{$id} .price .amount, .sppcfw-el-{$id} .woocommerce-Price-amount { font-size: " . esc_attr($font_size) . ' !important; }';
 					}
 
 					$font_family = $this->sppcfw_get_device_prop($styles, 'font_family', $device, '');
@@ -623,6 +665,7 @@ if (!class_exists('SPPCFW_Builder_Renderer')) {
 					if (!empty($font_weight) && 'Default' !== $font_weight) {
 						$css .= 'font-weight: ' . esc_attr($font_weight) . ' !important;';
 						$css .= ".sppcfw-el-{$id} h1, .sppcfw-el-{$id} h2, .sppcfw-el-{$id} h3, .sppcfw-el-{$id} h4, .sppcfw-el-{$id} h5, .sppcfw-el-{$id} h6, .sppcfw-el-{$id} .product_title, .sppcfw-el-{$id} .sppcfw-custom-heading, .sppcfw-el-{$id} a { font-weight: " . esc_attr($font_weight) . ' !important; }';
+						$css .= ".sppcfw-el-{$id} .price, .sppcfw-el-{$id} .price .amount, .sppcfw-el-{$id} .woocommerce-Price-amount { font-weight: " . esc_attr($font_weight) . ' !important; }';
 					}
 
 					$line_height = $this->sppcfw_get_device_prop($styles, 'line_height', $device, '');
@@ -716,8 +759,18 @@ if (!class_exists('SPPCFW_Builder_Renderer')) {
 					$alignment = $this->sppcfw_get_device_prop($styles, 'alignment', $device, '');
 					if (!empty($alignment)) {
 						$css .= 'text-align: ' . esc_attr($alignment) . ' !important;';
+						$align_justify = ('center' === $alignment ? 'center' : ('right' === $alignment ? 'flex-end' : 'flex-start'));
+						$css .= ".sppcfw-el-{$id} .sppcfw-price-wrapper, .sppcfw-el-{$id} .price { text-align: " . esc_attr($alignment) . " !important; justify-content: {$align_justify} !important; }";
 					}
 					$css .= '}';
+
+					// Product Price specific del hiding if show_regular_price is disabled
+					if ('product_price' === $type) {
+						$show_reg = isset($settings['show_regular_price']) ? $settings['show_regular_price'] : true;
+						if (false === $show_reg || 'false' === $show_reg || 0 === $show_reg || '0' === $show_reg || 'off' === $show_reg) {
+							$css .= ".sppcfw-el-{$id} .price del, .sppcfw-el-{$id} del { display: none !important; }";
+						}
+					}
 
 					// Specific element component style rules (Add to Cart / Buttons)
 					// Only apply styles if explicitly customized by user (do not override default theme button color)
@@ -978,8 +1031,29 @@ if (!class_exists('SPPCFW_Builder_Renderer')) {
 					echo '<' . $tag . ' class="sppcfw-custom-text-block' . $el_class . '">' . nl2br($content) . '</' . $tag . '>';
 					break;
 				case 'product_price':
+					$basic = get_option('sppcfw_basic', array());
+					$is_price_hidden = (is_array($basic) && isset($basic['hide_product_price']) && 'on' === $basic['hide_product_price']);
+					if ($is_price_hidden) {
+						break;
+					}
+
+					$settings = isset($el['settings']) ? $el['settings'] : array();
+					$show_reg = !isset($settings['show_regular_price']) || true === $settings['show_regular_price'] || 'true' === $settings['show_regular_price'] || 1 === $settings['show_regular_price'] || '1' === $settings['show_regular_price'] || 'on' === $settings['show_regular_price'];
+					if (isset($settings['show_regular_price']) && (false === $settings['show_regular_price'] || 'false' === $settings['show_regular_price'] || 0 === $settings['show_regular_price'] || '0' === $settings['show_regular_price'] || 'off' === $settings['show_regular_price'])) {
+						$show_reg = false;
+					}
+
 					echo '<div class="sppcfw-price-wrapper' . $el_class . '">';
-					woocommerce_template_single_price();
+					if (!$show_reg && $product->is_on_sale()) {
+						$sale_price = $product->get_sale_price();
+						if ($sale_price !== '' && false !== $sale_price) {
+							echo '<p class="price"><ins><span class="woocommerce-Price-amount amount">' . wc_price($sale_price) . '</span></ins></p>';
+						} else {
+							woocommerce_template_single_price();
+						}
+					} else {
+						woocommerce_template_single_price();
+					}
 					echo '</div>';
 					break;
 				case 'product_gallery':
