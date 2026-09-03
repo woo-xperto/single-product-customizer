@@ -22,9 +22,10 @@ if( !class_exists("Sppcfw_Frontend_Change_Add_To_Cart_Button_Text")){
 
         public function sppcfw_get_add_to_cart_button_text(){
             $add_to_cart_button_text='';
-            if(isset(SPPCFW_BASIC['add_to_cart_button_text'])){
-                if(!empty(SPPCFW_BASIC['add_to_cart_button_text'])){
-                    $add_to_cart_button_text=SPPCFW_BASIC['add_to_cart_button_text'];
+            $basic = defined('SPPCFW_BASIC') && is_array(SPPCFW_BASIC) ? SPPCFW_BASIC : get_option('sppcfw_basic', array());
+            if(isset($basic['add_to_cart_button_text'])){
+                if(!empty($basic['add_to_cart_button_text'])){
+                    $add_to_cart_button_text=$basic['add_to_cart_button_text'];
                 }
             }
 

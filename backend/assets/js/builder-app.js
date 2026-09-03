@@ -624,12 +624,35 @@
 		});
 	}
 
-	function moveElementInTree(tree, sourceId, targetParentId, targetIndex) {
+	function moveElementInTree(tree, sourceId, targetParentId, targetSlot) {
 		const elementToMove = findElementInTree(tree, sourceId);
 		if (!elementToMove) return tree;
 
+		const sourceParent = findParentInTree(tree, sourceId);
+		const sourceParentId = sourceParent ? sourceParent.id : null;
+
+		let adjustedTargetIndex = targetSlot;
+
+		// If moving within the same parent (nested or at root level)
+		if (sourceParentId === targetParentId && typeof targetSlot === 'number') {
+			const siblings = sourceParent ? sourceParent.children : tree;
+			if (Array.isArray(siblings)) {
+				const sourceIndex = siblings.findIndex(c => c.id === sourceId);
+				if (sourceIndex !== -1) {
+					// Dropped in the slot immediately before or after itself: position is unchanged
+					if (targetSlot === sourceIndex || targetSlot === sourceIndex + 1) {
+						return tree;
+					}
+					// If moving downward (top to bottom), removing the source shifts subsequent target indices left by 1
+					if (sourceIndex < targetSlot) {
+						adjustedTargetIndex = targetSlot - 1;
+					}
+				}
+			}
+		}
+
 		const cleanedTree = removeElementFromTree(tree, sourceId);
-		return insertChildInTree(cleanedTree, targetParentId, elementToMove, targetIndex);
+		return insertChildInTree(cleanedTree, targetParentId, elementToMove, adjustedTargetIndex);
 	}
 
 	// Searchable Product Select Dropdown Component
@@ -806,6 +829,12 @@
 		const initialTplId = window.SPPCFWBuilderConfig ? window.SPPCFWBuilderConfig.template_id || 'template_default' : 'template_default';
 		const [templateId, setTemplateId] = useState(initialTplId);
 		const [templateTitle, setTemplateTitle] = useState('Single Product Template');
+		const [enablePlusMinus, setEnablePlusMinus] = useState(() => {
+			return !!(window.SPPCFWBuilderConfig && window.SPPCFWBuilderConfig.basic_settings && window.SPPCFWBuilderConfig.basic_settings.enable_plus_minus_button === 'on');
+		});
+		const [addToCartBtnText, setAddToCartBtnText] = useState(() => {
+			return (window.SPPCFWBuilderConfig && window.SPPCFWBuilderConfig.basic_settings && window.SPPCFWBuilderConfig.basic_settings.add_to_cart_button_text) || 'Add to cart';
+		});
 
 		const [products, setProducts] = useState([]);
 		const [categories, setCategories] = useState([]);
@@ -880,6 +909,14 @@
 				if (res && res.success && res.data && res.data.template) {
 					const tpl = res.data.template;
 					applyLoadedTemplateData(tpl);
+					if (res.data.basic_settings) {
+						if (res.data.basic_settings.enable_plus_minus_button !== undefined) {
+							setEnablePlusMinus(res.data.basic_settings.enable_plus_minus_button === 'on');
+						}
+						if (res.data.basic_settings.add_to_cart_button_text !== undefined) {
+							setAddToCartBtnText(res.data.basic_settings.add_to_cart_button_text || 'Add to cart');
+						}
+					}
 					if (window.history && window.history.pushState) {
 						const newUrl = new URL(window.location.href);
 						newUrl.searchParams.set('template_id', tpl.id || targetId);
@@ -904,6 +941,14 @@
 				if (res && res.success && res.data && res.data.template) {
 					const tpl = res.data.template;
 					applyLoadedTemplateData(tpl);
+					if (res.data.basic_settings) {
+						if (res.data.basic_settings.enable_plus_minus_button !== undefined) {
+							setEnablePlusMinus(res.data.basic_settings.enable_plus_minus_button === 'on');
+						}
+						if (res.data.basic_settings.add_to_cart_button_text !== undefined) {
+							setAddToCartBtnText(res.data.basic_settings.add_to_cart_button_text || 'Add to cart');
+						}
+					}
 				} else {
 					fetchProductData(0);
 				}
@@ -1138,6 +1183,8 @@
 				template_title: templateTitle,
 				status: currentStatus,
 				selected_product_id: selectedProductId || '',
+				enable_plus_minus_button: enablePlusMinus ? 'on' : '',
+				add_to_cart_button_text: addToCartBtnText || '',
 				page_settings: JSON.stringify(updatedPageSettings),
 				layout: JSON.stringify(elements),
 				conditions: JSON.stringify(displayConditions),
@@ -1175,7 +1222,7 @@
 			setSelectedElementId(null);
 		}
 
-		// Helper to open live product preview in a new browser tab
+		// Helper to open live product preview in a new browser tab with auto-save
 		function handlePreview() {
 			let targetProduct = null;
 			if (selectedProductId && Array.isArray(products)) {
@@ -1189,7 +1236,35 @@
 			const sep = previewUrl.includes('?') ? '&' : '?';
 			previewUrl += sep + 'sppcfw_preview=1&template_id=' + encodeURIComponent(templateId);
 
-			window.open(previewUrl, '_blank');
+			const previewWindow = window.open('about:blank', '_blank');
+
+			const currentStatus = (pageSettings && pageSettings.status) ? pageSettings.status.toLowerCase() : 'published';
+			const updatedPageSettings = {
+				...pageSettings,
+				selected_product_id: selectedProductId || '',
+			};
+
+			apiPost('sppcfw_save_builder_template', {
+				template_id: templateId,
+				template_title: templateTitle,
+				status: currentStatus,
+				selected_product_id: selectedProductId || '',
+				enable_plus_minus_button: enablePlusMinus ? 'on' : '',
+				page_settings: JSON.stringify(updatedPageSettings),
+				layout: JSON.stringify(elements),
+				conditions: JSON.stringify(displayConditions),
+			}).then(res => {
+				if (res && res.success && res.data && res.data.template_id) {
+					setTemplateId(res.data.template_id);
+				}
+				if (previewWindow) {
+					previewWindow.location.href = previewUrl;
+				}
+			}).catch(() => {
+				if (previewWindow) {
+					previewWindow.location.href = previewUrl;
+				}
+			});
 		}
 
 		const effectiveSampleData = (selectedProductId && productData)
@@ -1264,6 +1339,10 @@
 					pageSettings,
 					setPageSettings,
 					openElementsTab,
+					enablePlusMinus,
+					setEnablePlusMinus,
+					addToCartBtnText,
+					setAddToCartBtnText,
 				}),
 
 				// Central Canvas Workspace
@@ -1650,6 +1729,10 @@
 		pageSettings,
 		setPageSettings,
 		openElementsTab,
+		enablePlusMinus,
+		setEnablePlusMinus,
+		addToCartBtnText,
+		setAddToCartBtnText,
 	}) {
 		// If an element or container is selected, render the LEFT-SIDE "Edit Container" / "Edit Element" Inspector
 		if (selectedElement) {
@@ -1664,6 +1747,10 @@
 				addColumnToContainer,
 				duplicateColumn,
 				removeElement,
+				enablePlusMinus,
+				setEnablePlusMinus,
+				addToCartBtnText,
+				setAddToCartBtnText,
 			});
 		}
 
@@ -2140,7 +2227,7 @@
 	}
 
 	// 3b. Left Inspector & Modular Individual Edit Panels System
-	function LeftInspector({ deviceView = 'desktop', selectedElement, updateElementProperties, closeInspector, categories, products, sampleData, addColumnToContainer, duplicateColumn, removeElement }) {
+	function LeftInspector({ deviceView = 'desktop', selectedElement, updateElementProperties, closeInspector, categories, products, sampleData, addColumnToContainer, duplicateColumn, removeElement, enablePlusMinus, setEnablePlusMinus, addToCartBtnText, setAddToCartBtnText }) {
 		const [activeTab, setActiveTab] = useState('layout'); // 'layout'/'content' | 'style' | 'advanced'
 		const [openAccordions, setOpenAccordions] = useState({
 			general: true,
@@ -3992,8 +4079,77 @@
 			if (isTextEditor) {
 				return renderTextEditorContent();
 			}
+			if (selectedElement.type === 'product_add_to_cart') {
+				return renderAddToCartContent();
+			}
 			// All other Product Elements have dedicated Dynamic Info Card
 			return renderProductElementDynamicCard();
+		}
+
+		// 1h. Add to Cart Content Panel
+		function renderAddToCartContent() {
+			return h(
+				'div',
+				{ className: 'sppcfw-space-y-4' },
+				renderAccordion(
+					'cart_general',
+					'Quantity & Cart Settings',
+					h(
+						'div',
+						{ className: 'sppcfw-space-y-3.5' },
+						h(
+							'div',
+							{ className: 'sppcfw-flex sppcfw-items-start sppcfw-gap-3 sppcfw-p-3 sppcfw-bg-[#16202e] sppcfw-border sppcfw-border-[#3b4b62] sppcfw-rounded-lg' },
+							h('input', {
+								type: 'checkbox',
+								id: 'sppcfw_basic_enable_plus_minus_button',
+								className: 'sppcfw_basic_enable_plus_minus_button sppcfw-mt-0.5 sppcfw-w-4 sppcfw-h-4 sppcfw-rounded sppcfw-text-[#9333ea] focus:sppcfw-ring-[#9333ea] sppcfw-cursor-pointer',
+								checked: !!enablePlusMinus,
+								onChange: e => {
+									const isChecked = e.target.checked;
+									if (typeof setEnablePlusMinus === 'function') {
+										setEnablePlusMinus(isChecked);
+									}
+									handleSettingChange('enable_plus_minus_button', isChecked ? 'on' : '');
+									apiPost('sppcfw_update_builder_basic_setting', {
+										key: 'enable_plus_minus_button',
+										value: isChecked ? 'on' : '',
+									});
+								},
+							}),
+							h(
+								'label',
+								{ htmlFor: 'sppcfw_basic_enable_plus_minus_button', className: 'sppcfw-flex sppcfw-flex-col sppcfw-cursor-pointer' },
+								h('span', { className: 'sppcfw-text-xs sppcfw-font-bold sppcfw-text-[#d9e3f6]' }, 'Enable plus/minus button for quantity change'),
+								h('span', { className: 'sppcfw-text-[11px] sppcfw-text-[#9ca3af] sppcfw-mt-0.5' }, 'Displays interactive + and - stepper buttons next to the quantity input on the product page.')
+							)
+						),
+						h(
+							'div',
+							{ className: 'sppcfw-space-y-1.5' },
+							h('label', { className: 'sppcfw-text-xs sppcfw-text-gray-200 sppcfw-font-medium sppcfw-block' }, 'Change add to cart button text'),
+							h('input', {
+								type: 'text',
+								id: 'sppcfw_basic_add_to_cart_button_text',
+								className: 'sppcfw-w-full sppcfw-bg-[#111827] sppcfw-border sppcfw-border-[#374151] sppcfw-rounded sppcfw-px-2.5 sppcfw-py-1.5 sppcfw-text-xs sppcfw-text-white focus:sppcfw-outline-none focus:sppcfw-border-[#9333ea]',
+								value: (addToCartBtnText !== undefined && addToCartBtnText !== null && addToCartBtnText !== '') ? addToCartBtnText : (getSetting('button_text') || 'Add to cart'),
+								placeholder: 'Add to cart',
+								onChange: e => {
+									const val = e.target.value;
+									if (typeof setAddToCartBtnText === 'function') {
+										setAddToCartBtnText(val);
+									}
+									handleSettingChange('button_text', val);
+									apiPost('sppcfw_update_builder_basic_setting', {
+										key: 'add_to_cart_button_text',
+										value: val,
+									});
+								},
+							})
+						)
+					)
+				)
+			);
 		}
 
 		// ==========================================
@@ -4576,27 +4732,61 @@
 		const isSelected = selectedElementId === item.id;
 		const hasChildren = item.children && item.children.length > 0;
 		const [isCollapsed, setIsCollapsed] = useState(false);
+		const [dropIndicator, setDropIndicator] = useState(null);
 
 		function handleDragStart(e) {
 			e.stopPropagation();
 			e.dataTransfer.setData('text/plain', 'structure_move:' + item.id);
+			window.__sppcfw_dragged_id = item.id;
+		}
+
+		function handleDragEnd(e) {
+			window.__sppcfw_dragged_id = null;
+			setDropIndicator(null);
 		}
 
 		function handleDragOver(e) {
 			e.preventDefault();
 			e.stopPropagation();
+			if (window.__sppcfw_dragged_id === item.id) {
+				if (dropIndicator !== null) setDropIndicator(null);
+				return;
+			}
+			const rect = e.currentTarget.getBoundingClientRect();
+			const isTopHalf = e.clientY < rect.top + rect.height / 2;
+			const pos = isTopHalf ? 'top' : 'bottom';
+			if (dropIndicator !== pos) {
+				setDropIndicator(pos);
+			}
+		}
+
+		function handleDragLeave(e) {
+			e.stopPropagation();
+			if (!e.currentTarget.contains(e.relatedTarget)) {
+				setDropIndicator(null);
+			}
 		}
 
 		function handleDrop(e) {
 			e.preventDefault();
 			e.stopPropagation();
+			const pos = dropIndicator;
+			setDropIndicator(null);
+			window.__sppcfw_dragged_id = null;
+
 			const textData = e.dataTransfer.getData('text/plain');
 			if (textData && textData.indexOf('structure_move:') === 0) {
 				const sourceId = textData.replace('structure_move:', '');
 				if (sourceId && sourceId !== item.id) {
-					const targetParentId = item.type === 'container' || item.type === 'column' ? item.id : parentId;
-					const targetIndex = item.type === 'container' || item.type === 'column' ? (item.children ? item.children.length : 0) : index;
-					setElements(prev => moveElementInTree(prev, sourceId, targetParentId, targetIndex));
+					if (item.type === 'container' || item.type === 'column') {
+						const targetParentId = item.id;
+						const targetIndex = item.children ? item.children.length : 0;
+						setElements(prev => moveElementInTree(prev, sourceId, targetParentId, targetIndex));
+					} else {
+						const targetParentId = parentId;
+						const targetIndex = pos === 'bottom' ? index + 1 : index;
+						setElements(prev => moveElementInTree(prev, sourceId, targetParentId, targetIndex));
+					}
 				}
 			}
 		}
@@ -4628,10 +4818,16 @@
 			{
 				draggable: true,
 				onDragStart: handleDragStart,
+				onDragEnd: handleDragEnd,
 				onDragOver: handleDragOver,
+				onDragLeave: handleDragLeave,
 				onDrop: handleDrop,
-				className: 'sppcfw-select-none',
+				className: 'sppcfw-select-none sppcfw-relative',
 			},
+			dropIndicator === 'top' &&
+				h('div', { className: 'sppcfw-absolute -top-0.5 sppcfw-left-0 sppcfw-right-0 sppcfw-h-0.5 sppcfw-bg-[#9333ea] sppcfw-rounded-full sppcfw-z-30 sppcfw-shadow-[0_0_6px_#9333ea] sppcfw-pointer-events-none' }),
+			dropIndicator === 'bottom' &&
+				h('div', { className: 'sppcfw-absolute -bottom-0.5 sppcfw-left-0 sppcfw-right-0 sppcfw-h-0.5 sppcfw-bg-[#9333ea] sppcfw-rounded-full sppcfw-z-30 sppcfw-shadow-[0_0_6px_#9333ea] sppcfw-pointer-events-none' }),
 			h(
 				'div',
 				{
@@ -4869,6 +5065,7 @@
 	// Canvas Column Renderer
 	function CanvasColumnRenderer({ column, containerId, elements, setElements, selectedElementId, setSelectedElementId, removeElement, sampleData, pageSettings, addWidgetToTarget, addColumnToContainer, duplicateColumn, openElementsTab, deviceView = 'desktop' }) {
 		const isSelected = selectedElementId === column.id;
+		const [isColumnDragOver, setIsColumnDragOver] = useState(false);
 		const flexWidth = getResponsiveProp(column.settings, 'flex_width', deviceView) || '100%';
 		const flexDir = getResponsiveProp(column.settings, 'flex_direction', deviceView) || 'column';
 		const justifyContent = getResponsiveProp(column.settings, 'justify_content', deviceView) || 'flex-start';
@@ -4876,16 +5073,33 @@
 		const gap = getResponsiveProp(column.settings, 'gap', deviceView) || '12px';
 		const minHeight = getResponsiveProp(column.settings, 'min_height', deviceView) || '120px';
 
+		function handleColumnDragOver(e) {
+			e.preventDefault();
+			e.stopPropagation();
+			setIsColumnDragOver(true);
+		}
+
+		function handleColumnDragLeave(e) {
+			e.stopPropagation();
+			if (!e.currentTarget.contains(e.relatedTarget)) {
+				setIsColumnDragOver(false);
+			}
+		}
+
 		function handleColumnDrop(e) {
 			e.preventDefault();
 			e.stopPropagation();
+			setIsColumnDragOver(false);
+			window.__sppcfw_dragged_id = null;
+
+			const targetSlot = column.children ? column.children.length : 0;
 
 			const jsonStr = e.dataTransfer.getData('application/json');
 			if (jsonStr) {
 				try {
 					const data = JSON.parse(jsonStr);
 					if (data && data.type) {
-						addWidgetToTarget(data.type, data.name, data.metaKey, column.id);
+						addWidgetToTarget(data.type, data.name, data.metaKey, column.id, targetSlot);
 						return;
 					}
 				} catch (err) {}
@@ -4895,7 +5109,7 @@
 			if (textData && textData.indexOf('structure_move:') === 0) {
 				const sourceId = textData.replace('structure_move:', '');
 				if (sourceId) {
-					setElements(prev => moveElementInTree(prev, sourceId, column.id, column.children ? column.children.length : 0));
+					setElements(prev => moveElementInTree(prev, sourceId, column.id, targetSlot));
 				}
 			}
 		}
@@ -4907,10 +5121,11 @@
 					e.stopPropagation();
 					setSelectedElementId(column.id);
 				},
-				onDragOver: e => e.preventDefault(),
+				onDragOver: handleColumnDragOver,
+				onDragLeave: handleColumnDragLeave,
 				onDrop: handleColumnDrop,
 				className: `builder-column-item sppcfw-flex-1 sppcfw-min-w-[180px] sppcfw-border sppcfw-border-dashed sppcfw-rounded sppcfw-p-3 sppcfw-relative sppcfw-transition-all sppcfw-min-h-[120px] ${
-					isSelected ? 'sppcfw-border-[#9333ea] sppcfw-bg-[#faf5ff] sppcfw-ring-2 sppcfw-ring-[#9333ea]/30' : 'sppcfw-border-[#d1d5db] hover:sppcfw-border-[#9333ea]/50 sppcfw-bg-[#f9fafb]'
+					isColumnDragOver ? 'sppcfw-border-2 sppcfw-border-dashed sppcfw-border-[#9333ea] sppcfw-bg-[#faf5ff]' : isSelected ? 'sppcfw-border-[#9333ea] sppcfw-bg-[#faf5ff] sppcfw-ring-2 sppcfw-ring-[#9333ea]/30' : 'sppcfw-border-[#d1d5db] hover:sppcfw-border-[#9333ea]/50 sppcfw-bg-[#f9fafb]'
 				}`,
 				style: {
 					flex: `1 1 calc(${flexWidth} - 16px)`,
@@ -4975,10 +5190,11 @@
 				),
 
 			column.children && column.children.length > 0
-				? column.children.map(child =>
+				? column.children.map((child, childIdx) =>
 						h(CanvasWidgetRenderer, {
 							key: child.id,
 							widget: child,
+							widgetIndex: childIdx,
 							columnId: column.id,
 							elements,
 							setElements,
@@ -4988,6 +5204,7 @@
 							sampleData,
 							pageSettings,
 							deviceView,
+							addWidgetToTarget,
 						})
 				  )
 				: h(
@@ -5018,12 +5235,72 @@
 	}
 
 	// Canvas Widget Renderer
-	function CanvasWidgetRenderer({ widget, columnId, elements, setElements, selectedElementId, setSelectedElementId, removeElement, sampleData, pageSettings, deviceView = 'desktop' }) {
+	function CanvasWidgetRenderer({ widget, widgetIndex, columnId, elements, setElements, selectedElementId, setSelectedElementId, removeElement, sampleData, pageSettings, deviceView = 'desktop', addWidgetToTarget }) {
 		const isSelected = selectedElementId === widget.id;
+		const [dropIndicator, setDropIndicator] = useState(null); // 'top' | 'bottom' | null
 
 		function handleWidgetDragStart(e) {
 			e.stopPropagation();
 			e.dataTransfer.setData('text/plain', 'structure_move:' + widget.id);
+			window.__sppcfw_dragged_id = widget.id;
+		}
+
+		function handleWidgetDragEnd(e) {
+			window.__sppcfw_dragged_id = null;
+			setDropIndicator(null);
+		}
+
+		function handleWidgetDragOver(e) {
+			e.preventDefault();
+			e.stopPropagation();
+			if (window.__sppcfw_dragged_id === widget.id) {
+				if (dropIndicator !== null) setDropIndicator(null);
+				return;
+			}
+			const rect = e.currentTarget.getBoundingClientRect();
+			const isTopHalf = e.clientY < rect.top + rect.height / 2;
+			const pos = isTopHalf ? 'top' : 'bottom';
+			if (dropIndicator !== pos) {
+				setDropIndicator(pos);
+			}
+		}
+
+		function handleWidgetDragLeave(e) {
+			e.stopPropagation();
+			if (!e.currentTarget.contains(e.relatedTarget)) {
+				setDropIndicator(null);
+			}
+		}
+
+		function handleWidgetDrop(e) {
+			e.preventDefault();
+			e.stopPropagation();
+			const pos = dropIndicator;
+			setDropIndicator(null);
+			window.__sppcfw_dragged_id = null;
+
+			const targetSlot = pos === 'bottom' ? widgetIndex + 1 : widgetIndex;
+
+			const jsonStr = e.dataTransfer.getData('application/json');
+			if (jsonStr) {
+				try {
+					const data = JSON.parse(jsonStr);
+					if (data && data.type) {
+						if (typeof addWidgetToTarget === 'function') {
+							addWidgetToTarget(data.type, data.name, data.metaKey, columnId, targetSlot);
+						}
+						return;
+					}
+				} catch (err) {}
+			}
+
+			const textData = e.dataTransfer.getData('text/plain');
+			if (textData && textData.indexOf('structure_move:') === 0) {
+				const sourceId = textData.replace('structure_move:', '');
+				if (sourceId && sourceId !== widget.id) {
+					setElements(prev => moveElementInTree(prev, sourceId, columnId, targetSlot));
+				}
+			}
 		}
 
 		return h(
@@ -5031,6 +5308,10 @@
 			{
 				draggable: true,
 				onDragStart: handleWidgetDragStart,
+				onDragEnd: handleWidgetDragEnd,
+				onDragOver: handleWidgetDragOver,
+				onDragLeave: handleWidgetDragLeave,
+				onDrop: handleWidgetDrop,
 				onClick: e => {
 					e.stopPropagation();
 					setSelectedElementId(widget.id);
@@ -5059,6 +5340,15 @@
 					textAlign: getResponsiveProp(widget.settings, 'alignment', deviceView) || 'left',
 				},
 			},
+
+			dropIndicator === 'top' &&
+				h('div', {
+					className: 'sppcfw-absolute -top-1.5 sppcfw-left-0 sppcfw-right-0 sppcfw-h-1 sppcfw-bg-[#9333ea] sppcfw-rounded-full sppcfw-z-30 sppcfw-shadow-[0_0_8px_rgba(147,51,234,0.8)] sppcfw-pointer-events-none sppcfw-transition-all'
+				}),
+			dropIndicator === 'bottom' &&
+				h('div', {
+					className: 'sppcfw-absolute -bottom-1.5 sppcfw-left-0 sppcfw-right-0 sppcfw-h-1 sppcfw-bg-[#9333ea] sppcfw-rounded-full sppcfw-z-30 sppcfw-shadow-[0_0_8px_rgba(147,51,234,0.8)] sppcfw-pointer-events-none sppcfw-transition-all'
+				}),
 
 			isSelected &&
 				h(
@@ -5416,23 +5706,61 @@
 				);
 			}
 			case 'product_add_to_cart': {
-				const btnLabel = (settings && settings.button_text) || 'Add to cart';
-				const btnBg = getResponsiveProp(styles, 'btn_bg_color', deviceView) || getResponsiveProp(styles, 'bg_color', deviceView) || '#9333ea';
-				const btnColor = getResponsiveProp(styles, 'btn_text_color', deviceView) || getResponsiveProp(styles, 'text_color', deviceView) || '#ffffff';
-				const btnRadius = getResponsiveProp(styles, 'btn_border_radius', deviceView) || getResponsiveProp(styles, 'border_radius', deviceView) || '6px';
-				const btnFontSize = getResponsiveProp(styles, 'font_size', deviceView) || '14px';
+				const btnLabel = (settings && settings.button_text) ||
+					(typeof addToCartBtnText !== 'undefined' && addToCartBtnText) ||
+					(typeof window !== 'undefined' && window.SPPCFWBuilderConfig && window.SPPCFWBuilderConfig.basic_settings && window.SPPCFWBuilderConfig.basic_settings.add_to_cart_button_text) ||
+					'Add to cart';
+
+				// Only apply custom styling if explicitly defined, otherwise use default WooCommerce button styling
+				const customBtnBg = getResponsiveProp(styles, 'btn_bg_color', deviceView);
+				const customBtnColor = getResponsiveProp(styles, 'btn_text_color', deviceView);
+				const btnBg = customBtnBg && customBtnBg !== 'transparent' ? customBtnBg : '#111827';
+				const btnColor = customBtnColor || '#ffffff';
+				const btnFontSize = getResponsiveProp(styles, 'btn_font_size', deviceView) || '14px';
+
+				// 4-box or single border radius
+				const radT = getResponsiveProp(styles, 'btn_border_radius_top', deviceView) || '4px';
+				const radR = getResponsiveProp(styles, 'btn_border_radius_right', deviceView) || '4px';
+				const radB = getResponsiveProp(styles, 'btn_border_radius_bottom', deviceView) || '4px';
+				const radL = getResponsiveProp(styles, 'btn_border_radius_left', deviceView) || '4px';
+				const hasFourRad = styles && (styles.btn_border_radius_top !== undefined || styles.btn_border_radius_right !== undefined || styles.btn_border_radius_bottom !== undefined || styles.btn_border_radius_left !== undefined);
+				const btnRadius = hasFourRad ? `${radT} ${radR} ${radB} ${radL}` : (getResponsiveProp(styles, 'btn_border_radius', deviceView) || '4px');
+
+				// 4-box or default button padding
+				const padT = getResponsiveProp(styles, 'btn_padding_top', deviceView) || '10px';
+				const padR = getResponsiveProp(styles, 'btn_padding_right', deviceView) || '24px';
+				const padB = getResponsiveProp(styles, 'btn_padding_bottom', deviceView) || '10px';
+				const padL = getResponsiveProp(styles, 'btn_padding_left', deviceView) || '24px';
+				const btnPadding = `${padT} ${padR} ${padB} ${padL}`;
+
+				// Alignment
+				const alignVal = getResponsiveProp(styles, 'alignment', deviceView) || 'left';
+				const alignFlex = alignVal === 'center' ? 'sppcfw-justify-center' : (alignVal === 'right' ? 'sppcfw-justify-end' : 'sppcfw-justify-start');
+
+				// Check if plus/minus button is enabled
+				const isPlusMinusOn = (settings && settings.enable_plus_minus_button === 'on') ||
+					(typeof window !== 'undefined' && window.SPPCFWBuilderConfig && window.SPPCFWBuilderConfig.basic_settings && window.SPPCFWBuilderConfig.basic_settings.enable_plus_minus_button === 'on');
 
 				return h(
 					'div',
-					{ className: `sppcfw-flex sppcfw-items-center sppcfw-gap-3 ${alignClass}` },
-					h('input', { type: 'number', defaultValue: 1, min: 1, className: 'sppcfw-w-16 sppcfw-p-2 sppcfw-border sppcfw-border-[#d1d5db] sppcfw-rounded sppcfw-text-center sppcfw-font-bold sppcfw-text-[#111827]' }),
+					{ className: `sppcfw-flex sppcfw-items-center sppcfw-gap-3 ${alignFlex}` },
+					isPlusMinusOn
+						? h(
+								'div',
+								{ className: 'sppcfw-flex sppcfw-items-center sppcfw-border sppcfw-border-[#d1d5db] sppcfw-rounded sppcfw-overflow-hidden sppcfw-bg-white' },
+								h('button', { type: 'button', className: 'sppcfw-w-8 sppcfw-h-10 sppcfw-bg-[#f3f4f6] hover:sppcfw-bg-[#e5e7eb] sppcfw-font-bold sppcfw-text-[#374151] sppcfw-flex sppcfw-items-center sppcfw-justify-center sppcfw-border-r sppcfw-border-[#d1d5db] sppcfw-cursor-pointer sppcfw-select-none' }, '-'),
+								h('input', { type: 'number', defaultValue: 1, min: 1, className: 'sppcfw-w-12 sppcfw-h-10 sppcfw-text-center sppcfw-font-bold sppcfw-text-[#111827] sppcfw-border-0 sppcfw-outline-none focus:sppcfw-ring-0' }),
+								h('button', { type: 'button', className: 'sppcfw-w-8 sppcfw-h-10 sppcfw-bg-[#f3f4f6] hover:sppcfw-bg-[#e5e7eb] sppcfw-font-bold sppcfw-text-[#374151] sppcfw-flex sppcfw-items-center sppcfw-justify-center sppcfw-border-l sppcfw-border-[#d1d5db] sppcfw-cursor-pointer sppcfw-select-none' }, '+')
+						  )
+						: h('input', { type: 'number', defaultValue: 1, min: 1, className: 'sppcfw-w-16 sppcfw-p-2 sppcfw-border sppcfw-border-[#d1d5db] sppcfw-rounded sppcfw-text-center sppcfw-font-bold sppcfw-text-[#111827]' }),
 					h('button', {
-						className: 'sppcfw-px-6 sppcfw-py-2.5 sppcfw-font-bold sppcfw-shadow sppcfw-transition-all',
+						className: 'sppcfw-font-bold sppcfw-shadow sppcfw-transition-all',
 						style: {
 							backgroundColor: btnBg,
 							color: btnColor,
 							borderRadius: btnRadius,
 							fontSize: btnFontSize,
+							padding: btnPadding,
 						}
 					}, btnLabel)
 				);

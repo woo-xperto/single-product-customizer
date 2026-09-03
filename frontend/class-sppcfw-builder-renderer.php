@@ -244,6 +244,7 @@ if (!class_exists('SPPCFW_Builder_Renderer')) {
 					text-transform: uppercase !important;
 					box-shadow: 0 2px 4px rgba(0,0,0,0.15) !important;
 					line-height: 1 !important;
+					min-height: auto !important;
 				}
 
 				.sppcfw-gallery-lightbox-btn {
@@ -574,7 +575,7 @@ if (!class_exists('SPPCFW_Builder_Renderer')) {
 				$settings = isset($el['settings']) ? $el['settings'] : array();
 				$styles = isset($el['styles']) ? $el['styles'] : array();
 
-				if ($id) {
+				if ($id && 'product_add_to_cart' !== $type) {
 					$css .= ".sppcfw-el-{$id} {";
 					if ('container' === $type) {
 						$width_mode = $this->sppcfw_get_device_prop($settings, 'width_mode', $device, 'boxed');
@@ -718,22 +719,68 @@ if (!class_exists('SPPCFW_Builder_Renderer')) {
 					}
 					$css .= '}';
 
-					// Specific element component style rules
+					// Specific element component style rules (Add to Cart / Buttons)
+					// Only apply styles if explicitly customized by user (do not override default theme button color)
 					$btn_bg = $this->sppcfw_get_device_prop($styles, 'btn_bg_color', $device, '');
+					if ('transparent' === $btn_bg) {
+						$btn_bg = '';
+					}
 					$btn_color = $this->sppcfw_get_device_prop($styles, 'btn_text_color', $device, '');
+					$btn_font_size = $this->sppcfw_get_device_prop($styles, 'btn_font_size', $device, '');
+					if (empty($btn_font_size) && !empty($styles['btn_font_size'])) {
+						$btn_font_size = $styles['btn_font_size'];
+					}
+
+					// 4-box or single border radius (only if customized)
+					$btn_rad_top = $this->sppcfw_get_device_prop($styles, 'btn_border_radius_top', $device, '');
+					$btn_rad_right = $this->sppcfw_get_device_prop($styles, 'btn_border_radius_right', $device, '');
+					$btn_rad_bottom = $this->sppcfw_get_device_prop($styles, 'btn_border_radius_bottom', $device, '');
+					$btn_rad_left = $this->sppcfw_get_device_prop($styles, 'btn_border_radius_left', $device, '');
 					$btn_radius = $this->sppcfw_get_device_prop($styles, 'btn_border_radius', $device, '');
-					if (!empty($btn_bg) || !empty($btn_color) || !empty($btn_radius)) {
-						$css .= ".sppcfw-el-{$id} button, .sppcfw-el-{$id} .button, .sppcfw-el-{$id} .single_add_to_cart_button {";
+					if ('' !== $btn_rad_top || '' !== $btn_rad_right || '' !== $btn_rad_bottom || '' !== $btn_rad_left) {
+						$btn_radius_css = ($btn_rad_top ? $btn_rad_top : '0px') . ' ' . ($btn_rad_right ? $btn_rad_right : '0px') . ' ' . ($btn_rad_bottom ? $btn_rad_bottom : '0px') . ' ' . ($btn_rad_left ? $btn_rad_left : '0px');
+					} elseif (!empty($btn_radius)) {
+						$btn_radius_css = $btn_radius;
+					} else {
+						$btn_radius_css = '';
+					}
+
+					// 4-box button padding (only if customized)
+					$btn_pad_top = $this->sppcfw_get_device_prop($styles, 'btn_padding_top', $device, '');
+					$btn_pad_right = $this->sppcfw_get_device_prop($styles, 'btn_padding_right', $device, '');
+					$btn_pad_bottom = $this->sppcfw_get_device_prop($styles, 'btn_padding_bottom', $device, '');
+					$btn_pad_left = $this->sppcfw_get_device_prop($styles, 'btn_padding_left', $device, '');
+					if ('' !== $btn_pad_top || '' !== $btn_pad_right || '' !== $btn_pad_bottom || '' !== $btn_pad_left) {
+						$btn_padding_css = ($btn_pad_top ? $btn_pad_top : '0px') . ' ' . ($btn_pad_right ? $btn_pad_right : '0px') . ' ' . ($btn_pad_bottom ? $btn_pad_bottom : '0px') . ' ' . ($btn_pad_left ? $btn_pad_left : '0px');
+					} else {
+						$btn_padding_css = '';
+					}
+
+					if (!empty($btn_bg) || !empty($btn_color) || !empty($btn_radius_css) || !empty($btn_padding_css) || !empty($btn_font_size)) {
+						$css .= ".sppcfw-add-to-cart-wrapper .single_add_to_cart_button, .sppcfw-add-to-cart-wrapper button.single_add_to_cart_button, .sppcfw-add-to-cart-wrapper button.button {";
 						if (!empty($btn_bg)) {
 							$css .= 'background-color: ' . esc_attr($btn_bg) . ' !important;';
 						}
 						if (!empty($btn_color)) {
 							$css .= 'color: ' . esc_attr($btn_color) . ' !important;';
 						}
-						if (!empty($btn_radius)) {
-							$css .= 'border-radius: ' . esc_attr($btn_radius) . ' !important;';
+						if (!empty($btn_font_size)) {
+							$css .= 'font-size: ' . esc_attr($btn_font_size) . ' !important;';
+						}
+						if (!empty($btn_radius_css)) {
+							$css .= 'border-radius: ' . esc_attr($btn_radius_css) . ' !important;';
+						}
+						if (!empty($btn_padding_css)) {
+							$css .= 'padding: ' . esc_attr($btn_padding_css) . ' !important;';
 						}
 						$css .= '}';
+					}
+
+					// Alignment for Cart Form & Add to Cart Wrapper
+					$cart_align = $this->sppcfw_get_device_prop($styles, 'alignment', $device, '');
+					if (!empty($cart_align)) {
+						$justify = 'left' === $cart_align ? 'flex-start' : ('right' === $cart_align ? 'flex-end' : 'center');
+						$css .= ".sppcfw-add-to-cart-wrapper form.cart, .sppcfw-add-to-cart-wrapper { display: flex !important; flex-wrap: wrap !important; align-items: center !important; }";
 					}
 
 					$price_color = $this->sppcfw_get_device_prop($styles, 'price_color', $device, '');
@@ -853,8 +900,9 @@ if (!class_exists('SPPCFW_Builder_Renderer')) {
 					}
 					echo '</div>';
 				} else {
-					// Render Widget
-					echo '<div class="sppcfw-widget-item' . (!empty($css_class) ? ' ' . $css_class : '') . '">';
+					// Render Widget (Do not place sppcfw-el-{$id} on wrapper div for product_add_to_cart)
+					$widget_el_class = ('product_add_to_cart' === $type) ? '' : ' sppcfw-el-' . $id;
+					echo '<div class="sppcfw-widget-item' . $widget_el_class . (!empty($css_class) ? ' ' . $css_class : '') . '">';
 					$this->sppcfw_render_single_widget($el);
 					echo '</div>';
 				}
@@ -1149,8 +1197,28 @@ if (!class_exists('SPPCFW_Builder_Renderer')) {
 					}
 					break;
 				case 'product_add_to_cart':
-					echo '<div class="sppcfw-add-to-cart-wrapper' . $el_class . '">';
+					$custom_class = !empty($advanced['custom_class']) ? ' ' . esc_attr($advanced['custom_class']) : '';
+					$cart_btn_text = '';
+					$basic = get_option('sppcfw_basic', array());
+					if (is_array($basic) && !empty($basic['add_to_cart_button_text'])) {
+						$cart_btn_text = $basic['add_to_cart_button_text'];
+					} elseif (!empty($settings['button_text'])) {
+						$cart_btn_text = $settings['button_text'];
+					}
+
+					echo '<div class="sppcfw-add-to-cart-wrapper' . $custom_class . '">';
+					ob_start();
 					woocommerce_template_single_add_to_cart();
+					$cart_html = ob_get_clean();
+
+					if (!empty($cart_btn_text)) {
+						// Ensure button text is updated to configured "Change add to cart button text"
+						$cart_html = preg_replace_callback('/(<button[^>]*class=["\'][^"\']*single_add_to_cart_button[^"\']*["\'][^>]*>)(.*?)(<\/button>)/is', function($matches) use ($cart_btn_text) {
+							return $matches[1] . esc_html($cart_btn_text) . $matches[3];
+						}, $cart_html);
+					}
+
+					echo $cart_html;
 					echo '</div>';
 					break;
 				case 'product_rating':

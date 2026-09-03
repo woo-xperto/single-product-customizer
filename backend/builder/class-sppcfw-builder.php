@@ -27,6 +27,7 @@ if (!class_exists('SPPCFW_Builder')) {
 			add_action('wp_ajax_sppcfw_load_builder_template', array($this, 'sppcfw_ajax_load_builder_template'));
 			add_action('wp_ajax_sppcfw_get_builder_templates', array($this, 'sppcfw_ajax_get_builder_templates'));
 			add_action('wp_ajax_sppcfw_toggle_builder_status', array($this, 'sppcfw_ajax_toggle_builder_status'));
+			add_action('wp_ajax_sppcfw_update_builder_basic_setting', array($this, 'sppcfw_ajax_update_builder_basic_setting'));
 		}
 
 		/**
@@ -120,6 +121,9 @@ if (!class_exists('SPPCFW_Builder')) {
 				);
 
 				$template_id = isset($_GET['template_id']) ? sanitize_text_field($_GET['template_id']) : 'template_default';
+				$sppcfw_basic = get_option('sppcfw_basic', array());
+				$enable_pm = (is_array($sppcfw_basic) && isset($sppcfw_basic['enable_plus_minus_button']) && 'on' === $sppcfw_basic['enable_plus_minus_button']) ? 'on' : '';
+				$btn_text = (is_array($sppcfw_basic) && isset($sppcfw_basic['add_to_cart_button_text'])) ? $sppcfw_basic['add_to_cart_button_text'] : 'Add to cart';
 
 				wp_localize_script(
 					'sppcfw-builder-app',
@@ -129,6 +133,10 @@ if (!class_exists('SPPCFW_Builder')) {
 						'nonce' => wp_create_nonce('sppcfw_builder_nonce'),
 						'plugin_url' => SPPCFW_DIR_URL,
 						'template_id' => $template_id,
+						'basic_settings' => array(
+							'enable_plus_minus_button' => $enable_pm,
+							'add_to_cart_button_text' => $btn_text,
+						),
 					)
 				);
 			}
@@ -453,6 +461,24 @@ if (!class_exists('SPPCFW_Builder')) {
 			$layout = isset($_POST['layout']) ? wp_unslash($_POST['layout']) : '';
 			$conditions = isset($_POST['conditions']) ? wp_unslash($_POST['conditions']) : '';
 
+			if (isset($_POST['enable_plus_minus_button'])) {
+				$basic = get_option('sppcfw_basic', array());
+				if (!is_array($basic)) {
+					$basic = array();
+				}
+				$basic['enable_plus_minus_button'] = ('on' === sanitize_text_field($_POST['enable_plus_minus_button'])) ? 'on' : '';
+				update_option('sppcfw_basic', $basic);
+			}
+
+			if (isset($_POST['add_to_cart_button_text'])) {
+				$basic = get_option('sppcfw_basic', array());
+				if (!is_array($basic)) {
+					$basic = array();
+				}
+				$basic['add_to_cart_button_text'] = sanitize_text_field($_POST['add_to_cart_button_text']);
+				update_option('sppcfw_basic', $basic);
+			}
+
 			$selected_product_id = isset($_POST['selected_product_id']) ? sanitize_text_field($_POST['selected_product_id']) : (isset($page_settings['selected_product_id']) ? sanitize_text_field($page_settings['selected_product_id']) : '');
 
 			if (empty($template_id) || 'new' === $template_id) {
@@ -513,9 +539,19 @@ if (!class_exists('SPPCFW_Builder')) {
 			}
 
 			$templates = get_option('sppcfw_builder_templates', array());
+			$sppcfw_basic = get_option('sppcfw_basic', array());
+			$enable_pm = (is_array($sppcfw_basic) && isset($sppcfw_basic['enable_plus_minus_button']) && 'on' === $sppcfw_basic['enable_plus_minus_button']) ? 'on' : '';
+
+			$btn_text = (is_array($sppcfw_basic) && isset($sppcfw_basic['add_to_cart_button_text'])) ? $sppcfw_basic['add_to_cart_button_text'] : 'Add to cart';
 
 			if (isset($templates[$template_id])) {
-				wp_send_json_success(array('template' => $templates[$template_id]));
+				wp_send_json_success(array(
+					'template' => $templates[$template_id],
+					'basic_settings' => array(
+						'enable_plus_minus_button' => $enable_pm,
+						'add_to_cart_button_text' => $btn_text,
+					),
+				));
 				return;
 			}
 
@@ -589,6 +625,47 @@ if (!class_exists('SPPCFW_Builder')) {
 		 *
 		 * @return void
 		 */
+		/**
+		 * AJAX: Update basic setting directly from builder.
+		 *
+		 * @return void
+		 */
+		public function sppcfw_ajax_update_builder_basic_setting()
+		{
+			check_ajax_referer('sppcfw_builder_nonce', 'nonce');
+
+			if (!current_user_can(function_exists('sppcfw_admin_capability') ? sppcfw_admin_capability() : 'manage_options')) {
+				wp_send_json_error(array('message' => __('Permission denied', 'single-product-customizer')));
+			}
+
+			$key = isset($_POST['key']) ? sanitize_key($_POST['key']) : '';
+			$value = isset($_POST['value']) ? sanitize_text_field($_POST['value']) : '';
+
+			if ('enable_plus_minus_button' === $key) {
+				$basic = get_option('sppcfw_basic', array());
+				if (!is_array($basic)) {
+					$basic = array();
+				}
+				$basic['enable_plus_minus_button'] = ('on' === $value) ? 'on' : '';
+				update_option('sppcfw_basic', $basic);
+				wp_send_json_success(array('message' => __('Basic setting updated', 'single-product-customizer'), 'value' => $basic['enable_plus_minus_button']));
+				return;
+			}
+
+			if ('add_to_cart_button_text' === $key) {
+				$basic = get_option('sppcfw_basic', array());
+				if (!is_array($basic)) {
+					$basic = array();
+				}
+				$basic['add_to_cart_button_text'] = sanitize_text_field($value);
+				update_option('sppcfw_basic', $basic);
+				wp_send_json_success(array('message' => __('Basic setting updated', 'single-product-customizer'), 'value' => $basic['add_to_cart_button_text']));
+				return;
+			}
+
+			wp_send_json_error(array('message' => __('Invalid setting key', 'single-product-customizer')));
+		}
+
 		public function sppcfw_ajax_toggle_builder_status()
 		{
 			check_ajax_referer('sppcfw_builder_nonce', 'nonce');
